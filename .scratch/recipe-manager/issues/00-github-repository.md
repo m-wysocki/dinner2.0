@@ -16,4 +16,4 @@
 
 ## Comments
 
-- GitHub normalized the requested `d!nner2.0` name to `d-nner2.0`; the repository is public at https://github.com/m-wysocki/d-nner2.0.
+- The repository is public at https://github.com/m-wysocki/dinner2.0. GitHub does not allow `!` in repository names, so the requested spelling uses `i`: `dinner2.0`.
