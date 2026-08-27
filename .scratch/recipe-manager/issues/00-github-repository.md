@@ -4,12 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
 
-- [ ] A GitHub repository is created with the agreed name and visibility.
-- [ ] The local project is initialized as a Git repository.
-- [ ] The GitHub repository is configured as the local remote.
-- [ ] `.gitignore` excludes dependencies, build output, Expo artifacts, local environment files, secrets, logs, coverage, editor files, and operating-system metadata.
-- [ ] Existing project documentation and agent configuration remain tracked.
-- [ ] An initial commit is created and pushed to the default branch.
-- [ ] The remote repository can be cloned and starts from a clean working tree.
+- [x] A GitHub repository is created with the agreed name and visibility.
+- [x] The local project is initialized as a Git repository.
+- [x] The GitHub repository is configured as the local remote.
+- [x] `.gitignore` excludes dependencies, build output, Expo artifacts, local environment files, secrets, logs, coverage, editor files, and operating-system metadata.
+- [x] Existing project documentation and agent configuration remain tracked.
+- [x] An initial commit is created and pushed to the default branch.
+- [x] The remote repository can be cloned and starts from a clean working tree.
+
+## Comments
+
+- GitHub normalized the requested `d!nner2.0` name to `d-nner2.0`; the repository is public at https://github.com/m-wysocki/d-nner2.0.
