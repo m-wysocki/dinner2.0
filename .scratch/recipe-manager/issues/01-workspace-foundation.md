@@ -4,8 +4,8 @@
 
 **Blocked by:** 00: GitHub repository and Git ignore
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Workspace installs reproducibly with pnpm.
-- [ ] Mobile, API, and shared package have TypeScript configuration.
-- [ ] Linting, formatting, tests, and basic CI checks run successfully.
+- [x] Workspace installs reproducibly with pnpm.
+- [x] Mobile, API, and shared package have TypeScript configuration.
+- [x] Linting, formatting, tests, and basic CI checks run successfully.

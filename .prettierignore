@@ -1,0 +1,5 @@
+.opencode/
+.scratch/
+docs/
+pnpm-lock.yaml
+node_modules/

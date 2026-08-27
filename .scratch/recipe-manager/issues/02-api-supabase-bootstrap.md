@@ -4,9 +4,9 @@
 
 **Blocked by:** 01: Workspace foundation
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] API starts through the workspace tooling.
-- [ ] Environment variables are validated without exposing secrets.
-- [ ] Prisma can connect to Supabase PostgreSQL.
-- [ ] A health check and relevant automated checks pass.
+- [x] API starts through the workspace tooling.
+- [x] Environment variables are validated without exposing secrets.
+- [x] Prisma can connect to Supabase PostgreSQL.
+- [x] A health check and relevant automated checks pass.

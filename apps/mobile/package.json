@@ -1,0 +1,26 @@
+{
+  "name": "@dinner/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "dev": "expo start",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dinner/shared": "workspace:*",
+    "@tanstack/react-query": "^5.85.5",
+    "expo": "^54.0.5",
+    "expo-router": "^6.0.4",
+    "react": "^19.1.0",
+    "react-native": "^0.81.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
