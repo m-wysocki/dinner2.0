@@ -1,5 +1,6 @@
 .opencode/
 .scratch/
 docs/
+dist/
 pnpm-lock.yaml
 node_modules/
