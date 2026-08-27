@@ -4,9 +4,13 @@
 
 **Blocked by:** 01: Workspace foundation
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Mobile app starts through the workspace tooling.
-- [ ] Base navigation and loading/error states exist.
-- [ ] Mobile configuration can target the local API without hard-coded secrets.
-- [ ] TanStack Query is configured for API requests.
+- [x] Mobile app starts through the workspace tooling.
+- [x] Base navigation and loading/error states exist.
+- [x] Mobile configuration can target the local API without hard-coded secrets.
+- [x] TanStack Query is configured for API requests.
+
+## Resolution
+
+Added the Expo Router shell with a TanStack Query provider, a configurable API URL, a typed and schema-validated API client, and a health screen covering loading, success, error, and retry states. Mobile type checking, tests, linting, formatting, and the workspace test suite pass. Expo iOS export remains blocked by a `react-native-screens` dependency/toolchain compatibility error.

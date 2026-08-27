@@ -23,15 +23,18 @@
     "@nestjs/platform-express": "^11.1.6",
     "@prisma/client": "^6.16.2",
     "@supabase/supabase-js": "^2.112.4",
+    "reflect-metadata": "^0.2.2",
     "zod": "^4.1.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.7",
     "@nestjs/testing": "^11.1.6",
+    "@swc/core": "^1.7.0",
     "@types/node": "^22.15.0",
     "prisma": "6.16.2",
     "typescript": "^5.9.2",
+    "unplugin-swc": "^1.5.1",
     "vitest": "^3.2.4"
   }
 }
