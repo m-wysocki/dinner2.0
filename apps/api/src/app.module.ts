@@ -15,6 +15,7 @@ import { SupabaseModule } from './supabase.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnvironment,
+      envFilePath: ['.env', '../../.env'],
     }),
     AuthModule,
   ],
