@@ -18,28 +18,22 @@ export const registerRequestSchema = z.object({
 });
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 
-export const registerResponseSchema = z.object({
+export const authUserResponseSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   emailConfirmedAt: z.string().datetime().nullable(),
   accessStatus: accessStatusSchema,
   interfaceLanguage: interfaceLanguageSchema,
 });
-export type RegisterResponse = z.infer<typeof registerResponseSchema>;
+export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
+
+export type RegisterResponse = AuthUserResponse;
+export type ConfirmEmailResponse = AuthUserResponse;
 
 export const confirmEmailRequestSchema = z.object({
   url: z.string().min(1),
 });
 export type ConfirmEmailRequest = z.infer<typeof confirmEmailRequestSchema>;
-
-export const confirmEmailResponseSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  emailConfirmedAt: z.string().datetime().nullable(),
-  accessStatus: accessStatusSchema,
-  interfaceLanguage: interfaceLanguageSchema,
-});
-export type ConfirmEmailResponse = z.infer<typeof confirmEmailResponseSchema>;
 
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',

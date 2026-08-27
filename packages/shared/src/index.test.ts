@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   apiErrorSchema,
   accessStatusSchema,
+  authUserResponseSchema,
   confirmEmailRequestSchema,
-  confirmEmailResponseSchema,
   interfaceLanguageSchema,
   registerRequestSchema,
-  registerResponseSchema,
 } from './index.js';
 
 describe('shared contracts', () => {
@@ -68,7 +67,7 @@ describe('register request contract', () => {
   });
 });
 
-describe('register response contract', () => {
+describe('auth user response contract', () => {
   it('accepts a pending registration response', () => {
     const response = {
       id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -78,12 +77,24 @@ describe('register response contract', () => {
       interfaceLanguage: 'pl',
     };
 
-    expect(registerResponseSchema.parse(response)).toEqual(response);
+    expect(authUserResponseSchema.parse(response)).toEqual(response);
   });
 
-  it('rejects a response with an unsupported access status', () => {
+  it('accepts a confirmed-email response', () => {
+    const response = {
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      email: 'user@example.com',
+      emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+      accessStatus: 'PENDING',
+      interfaceLanguage: 'pl',
+    };
+
+    expect(authUserResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it('rejects an unsupported access status', () => {
     expect(
-      registerResponseSchema.safeParse({
+      authUserResponseSchema.safeParse({
         id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
         email: 'user@example.com',
         emailConfirmedAt: null,
@@ -93,11 +104,23 @@ describe('register response contract', () => {
     ).toBe(true);
 
     expect(
-      registerResponseSchema.safeParse({
+      authUserResponseSchema.safeParse({
         id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
         email: 'user@example.com',
         emailConfirmedAt: null,
         accessStatus: 'GONE',
+        interfaceLanguage: 'pl',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a non-datetime confirmation timestamp', () => {
+    expect(
+      authUserResponseSchema.safeParse({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: 'not-a-date',
+        accessStatus: 'PENDING',
         interfaceLanguage: 'pl',
       }).success,
     ).toBe(false);
@@ -115,44 +138,6 @@ describe('confirm email request contract', () => {
     expect(confirmEmailRequestSchema.safeParse({ url: '' }).success).toBe(
       false,
     );
-  });
-});
-
-describe('confirm email response contract', () => {
-  it('accepts a confirmed response', () => {
-    const response = {
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      email: 'user@example.com',
-      emailConfirmedAt: '2026-08-27T12:00:00.000Z',
-      accessStatus: 'PENDING',
-      interfaceLanguage: 'pl',
-    };
-
-    expect(confirmEmailResponseSchema.parse(response)).toEqual(response);
-  });
-
-  it('accepts an unconfirmed response', () => {
-    const response = {
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      email: 'user@example.com',
-      emailConfirmedAt: null,
-      accessStatus: 'PENDING',
-      interfaceLanguage: 'pl',
-    };
-
-    expect(confirmEmailResponseSchema.parse(response)).toEqual(response);
-  });
-
-  it('rejects a non-datetime confirmation timestamp', () => {
-    expect(
-      confirmEmailResponseSchema.safeParse({
-        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        email: 'user@example.com',
-        emailConfirmedAt: 'not-a-date',
-        accessStatus: 'PENDING',
-        interfaceLanguage: 'pl',
-      }).success,
-    ).toBe(false);
   });
 });
 

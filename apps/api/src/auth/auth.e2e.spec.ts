@@ -189,7 +189,7 @@ describe('POST /api/v1/auth (HTTP)', () => {
       expect(getUser).toHaveBeenCalledWith('header.payload.signature');
       expect(userUpdate).toHaveBeenCalledWith({
         where: { supabaseAuthId: 'auth-user-id' },
-        data: { emailConfirmedAt: expect.any(Date) },
+        data: { emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z') },
       });
     });
 
@@ -198,6 +198,27 @@ describe('POST /api/v1/auth (HTTP)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: 'dinner2://confirm' }),
+      });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: 'INVALID_CONFIRMATION_LINK',
+          message: 'Link potwierdzający jest nieprawidłowy lub wygasł.',
+        },
+      });
+
+      expect(getUser).not.toHaveBeenCalled();
+      expect(userUpdate).not.toHaveBeenCalled();
+    });
+
+    it('rejects a link that is not a confirmation link', async () => {
+      const response = await fetch(`${baseUrl}/auth/confirm-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'dinner2://confirm#access_token=header.payload.signature&type=magiclink',
+        }),
       });
 
       expect(response.status).toBe(400);
@@ -222,7 +243,7 @@ describe('POST /api/v1/auth (HTTP)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url: 'dinner2://confirm#access_token=expired.payload.signature',
+          url: 'dinner2://confirm#access_token=expired.payload.signature&type=signup',
         }),
       });
 

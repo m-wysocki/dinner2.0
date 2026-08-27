@@ -1,15 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { User } from '@prisma/client';
 import type {
   ConfirmEmailRequest,
   ConfirmEmailResponse,
   RegisterRequest,
   RegisterResponse,
 } from '@dinner/shared';
-import {
-  confirmEmailResponseSchema,
-  registerResponseSchema,
-} from '@dinner/shared';
+import { authUserResponseSchema } from '@dinner/shared';
+import type { AuthUserResponse } from '@dinner/shared';
 import { ApiException } from '../common/api-error';
 import { PrismaService } from '../prisma.service';
 import { SUPABASE_CLIENT } from '../supabase';
@@ -98,7 +97,7 @@ export class AuthService {
         },
       });
     } catch (error) {
-      if (this.isEmailUniqueViolation(error)) {
+      if (this.isPrismaError(error, 'P2002') && this.targetsEmail(error)) {
         throw new ApiException(
           EMAIL_ALREADY_REGISTERED.code,
           EMAIL_ALREADY_REGISTERED.message,
@@ -109,21 +108,15 @@ export class AuthService {
       throw error;
     }
 
-    return registerResponseSchema.parse({
-      id: user.id,
-      email: user.email,
-      emailConfirmedAt: this.toIsoOrNull(user.emailConfirmedAt),
-      accessStatus: user.accessStatus,
-      interfaceLanguage: user.interfaceLanguage,
-    });
+    return this.toAuthUserResponse(user);
   }
 
   async confirmEmail(
     input: ConfirmEmailRequest,
   ): Promise<ConfirmEmailResponse> {
-    const accessToken = extractAccessToken(input.url);
+    const confirmationLink = parseConfirmationLink(input.url);
 
-    if (!accessToken) {
+    if (!confirmationLink || confirmationLink.type !== 'signup') {
       throw new ApiException(
         INVALID_CONFIRMATION_LINK.code,
         INVALID_CONFIRMATION_LINK.message,
@@ -131,7 +124,9 @@ export class AuthService {
       );
     }
 
-    const { data, error } = await this.supabase.auth.getUser(accessToken);
+    const { data, error } = await this.supabase.auth.getUser(
+      confirmationLink.accessToken,
+    );
 
     if (error || !data.user) {
       throw new ApiException(
@@ -141,7 +136,9 @@ export class AuthService {
       );
     }
 
-    if (!data.user.email_confirmed_at) {
+    const emailConfirmedAt = data.user.email_confirmed_at;
+
+    if (!emailConfirmedAt) {
       throw new ApiException(
         EMAIL_NOT_CONFIRMED.code,
         EMAIL_NOT_CONFIRMED.message,
@@ -154,10 +151,10 @@ export class AuthService {
     try {
       user = await this.prisma.user.update({
         where: { supabaseAuthId: data.user.id },
-        data: { emailConfirmedAt: new Date() },
+        data: { emailConfirmedAt: new Date(emailConfirmedAt) },
       });
     } catch (error) {
-      if (this.isRecordNotFound(error)) {
+      if (this.isPrismaError(error, 'P2025')) {
         throw new ApiException(
           USER_NOT_FOUND.code,
           USER_NOT_FOUND.message,
@@ -168,7 +165,11 @@ export class AuthService {
       throw error;
     }
 
-    return confirmEmailResponseSchema.parse({
+    return this.toAuthUserResponse(user);
+  }
+
+  private toAuthUserResponse(user: User): AuthUserResponse {
+    return authUserResponseSchema.parse({
       id: user.id,
       email: user.email,
       emailConfirmedAt: this.toIsoOrNull(user.emailConfirmedAt),
@@ -181,54 +182,42 @@ export class AuthService {
     return value?.toISOString() ?? null;
   }
 
-  private isEmailUniqueViolation(error: unknown): boolean {
+  private isPrismaError(error: unknown, code: string): boolean {
     return (
       typeof error === 'object' &&
       error !== null &&
       'code' in error &&
-      (error as { code?: unknown }).code === 'P2002' &&
-      this.targetsEmail(error)
+      (error as { code?: unknown }).code === code
     );
   }
 
-  private targetsEmail(error: object): boolean {
+  private targetsEmail(error: unknown): boolean {
+    if (typeof error !== 'object' || error === null) {
+      return false;
+    }
+
     const target = (error as { meta?: { target?: unknown } }).meta?.target;
     return Array.isArray(target) && target.includes('email');
   }
-
-  private isRecordNotFound(error: unknown): boolean {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as { code?: unknown }).code === 'P2025'
-    );
-  }
 }
 
-function extractAccessToken(url: string): string | null {
-  const fragmentIndex = url.indexOf('#');
+function parseConfirmationLink(
+  url: string,
+): { accessToken: string; type: string | null } | null {
+  let parsed: URL;
 
-  if (fragmentIndex === -1) {
+  try {
+    parsed = new URL(url);
+  } catch {
     return null;
   }
 
-  const fragment = url.slice(fragmentIndex + 1);
+  const params = new URLSearchParams(parsed.hash.slice(1));
+  const accessToken = params.get('access_token');
 
-  for (const part of fragment.split('&')) {
-    const separatorIndex = part.indexOf('=');
-
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const key = part.slice(0, separatorIndex);
-    const value = part.slice(separatorIndex + 1);
-
-    if (key === 'access_token' && value.length > 0) {
-      return decodeURIComponent(value);
-    }
+  if (!accessToken) {
+    return null;
   }
 
-  return null;
+  return { accessToken, type: params.get('type') };
 }

@@ -155,14 +155,16 @@ describe('AuthService', () => {
     const url =
       'dinner2://confirm#access_token=header.payload.signature&refresh_token=refresh&type=signup';
 
-    it('confirms the email and records the confirmation on the application user', async () => {
+    it('confirms the email and records the Supabase-reported confirmation time', async () => {
       const { supabase, prisma, service } = setup();
+
+      const confirmedAt = '2026-08-27T12:00:00.000Z';
 
       (supabase.auth.getUser as Mock).mockResolvedValue({
         data: {
           user: {
             id: 'auth-user-id',
-            email_confirmed_at: '2026-08-27T12:00:00.000Z',
+            email_confirmed_at: confirmedAt,
           },
         },
         error: null,
@@ -171,7 +173,7 @@ describe('AuthService', () => {
       (prisma.user.update as Mock).mockResolvedValue({
         id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
         email: validInput.email,
-        emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z'),
+        emailConfirmedAt: new Date(confirmedAt),
         accessStatus: 'PENDING',
         interfaceLanguage: 'pl',
       });
@@ -179,7 +181,7 @@ describe('AuthService', () => {
       await expect(service.confirmEmail({ url })).resolves.toEqual({
         id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
         email: validInput.email,
-        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        emailConfirmedAt: confirmedAt,
         accessStatus: 'PENDING',
         interfaceLanguage: 'pl',
       });
@@ -189,7 +191,7 @@ describe('AuthService', () => {
       );
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { supabaseAuthId: 'auth-user-id' },
-        data: { emailConfirmedAt: expect.any(Date) },
+        data: { emailConfirmedAt: new Date(confirmedAt) },
       });
     });
 
@@ -198,6 +200,31 @@ describe('AuthService', () => {
 
       await expect(
         service.confirmEmail({ url: 'dinner2://confirm' }),
+      ).rejects.toMatchObject({
+        code: 'INVALID_CONFIRMATION_LINK',
+        status: 400,
+      });
+
+      expect(supabase.auth.getUser).not.toHaveBeenCalled();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a link that is not a confirmation link', async () => {
+      const { supabase, prisma, service } = setup();
+
+      await expect(
+        service.confirmEmail({
+          url: 'dinner2://confirm#access_token=header.payload.signature&type=magiclink',
+        }),
+      ).rejects.toMatchObject({
+        code: 'INVALID_CONFIRMATION_LINK',
+        status: 400,
+      });
+
+      await expect(
+        service.confirmEmail({
+          url: 'dinner2://confirm#access_token=header.payload.signature',
+        }),
       ).rejects.toMatchObject({
         code: 'INVALID_CONFIRMATION_LINK',
         status: 400,
