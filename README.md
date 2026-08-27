@@ -2,9 +2,9 @@
 
 **Your recipes. One place.**
 
-dinner2.0 is a mobile app for storing, organizing, and enjoying your own recipes. Users can build a private recipe collection, add ingredients and preparation steps, edit recipes, and scale ingredient quantities to match the desired number of servings.
+dinner2.0 is a mobile recipe manager for people who want one simple, reliable place for the recipes they collect and use every day. I am building it to solve a practical need: keeping recipes organized, easy to update, and genuinely useful while cooking.
 
-The project is being built as a full-stack portfolio application, with a focus on secure architecture, clear separation of responsibilities, and practical use of modern technologies.
+The app will let users create a private recipe collection, add structured ingredients and preparation steps, edit recipes over time, and scale quantities to match the desired number of servings.
 
 ## Planned Features
 
@@ -13,7 +13,7 @@ The project is being built as a full-stack portfolio application, with a focus o
 - structured ingredients, units, notes, and preparation steps;
 - ingredient scaling for a selected number of servings;
 - Polish and English interface languages;
-- future additions: recipe imports from photos, URLs, YouTube, and voice, plus shopping-list generation.
+- future additions: recipe imports from photos, URLs, YouTube, and voice, followed by shopping-list generation and better recipe organization.
 
 ## Technology Stack
 
@@ -25,6 +25,6 @@ The project is being built as a full-stack portfolio application, with a focus o
 
 The mobile app communicates with application data exclusively through the backend REST API. User data and recipes are isolated and protected on the server side.
 
-## Status
+## Development Status
 
-The project is being developed incrementally. The monorepo and runtime foundation are currently being prepared.
+The project is being developed incrementally. The current focus is on building the monorepo and runtime foundation, followed by authentication and the core recipe workflow.
