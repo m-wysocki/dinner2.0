@@ -69,9 +69,7 @@ describe('Register screen', () => {
 
     expect(await screen.findByText('Konto utworzone')).toBeOnTheScreen();
     expect(
-      screen.getByText(
-        /Twoje konto oczekuje na aktywację przez administratora/,
-      ),
+      screen.getByText(/oczekiwać na aktywację przez administratora/),
     ).toBeOnTheScreen();
   });
 

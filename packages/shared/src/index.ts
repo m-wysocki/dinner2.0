@@ -21,15 +21,33 @@ export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export const registerResponseSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
+  emailConfirmedAt: z.string().datetime().nullable(),
   accessStatus: accessStatusSchema,
   interfaceLanguage: interfaceLanguageSchema,
 });
 export type RegisterResponse = z.infer<typeof registerResponseSchema>;
 
+export const confirmEmailRequestSchema = z.object({
+  url: z.string().min(1),
+});
+export type ConfirmEmailRequest = z.infer<typeof confirmEmailRequestSchema>;
+
+export const confirmEmailResponseSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  emailConfirmedAt: z.string().datetime().nullable(),
+  accessStatus: accessStatusSchema,
+  interfaceLanguage: interfaceLanguageSchema,
+});
+export type ConfirmEmailResponse = z.infer<typeof confirmEmailResponseSchema>;
+
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',
   'EMAIL_ALREADY_REGISTERED',
   'REGISTRATION_FAILED',
+  'INVALID_CONFIRMATION_LINK',
+  'EMAIL_NOT_CONFIRMED',
+  'USER_NOT_FOUND',
   'HTTP_ERROR',
   'INTERNAL_ERROR',
 ]);

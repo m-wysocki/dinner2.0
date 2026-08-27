@@ -17,18 +17,24 @@ import { PrismaService } from '../prisma.service';
 import { SUPABASE_CLIENT } from '../supabase';
 
 const signUp = vi.fn();
+const getUser = vi.fn();
 const userCreate = vi.fn();
+const userUpdate = vi.fn();
 
-describe('POST /api/v1/auth/register (HTTP)', () => {
+describe('POST /api/v1/auth (HTTP)', () => {
   let app: INestApplication;
   let baseUrl: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(SUPABASE_CLIENT)
-      .useValue({ auth: { signUp } } as unknown as SupabaseClient)
+      .useValue({
+        auth: { signUp, getUser },
+      } as unknown as SupabaseClient)
       .overrideProvider(PrismaService)
-      .useValue({ user: { create: userCreate } } as unknown as PrismaService)
+      .useValue({
+        user: { create: userCreate, update: userUpdate },
+      } as unknown as PrismaService)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -44,96 +50,189 @@ describe('POST /api/v1/auth/register (HTTP)', () => {
 
   beforeEach(() => {
     signUp.mockReset();
+    getUser.mockReset();
     userCreate.mockReset();
+    userUpdate.mockReset();
   });
 
-  it('creates a pending application user and returns its representation', async () => {
-    signUp.mockResolvedValue({
-      data: { user: { id: 'auth-user-id' } },
-      error: null,
-    });
-    userCreate.mockResolvedValue({
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      email: 'user@example.com',
-      accessStatus: 'PENDING',
-      interfaceLanguage: 'pl',
-    });
+  describe('/auth/register', () => {
+    it('creates a pending application user and returns its representation', async () => {
+      signUp.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      });
+      userCreate.mockResolvedValue({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
 
-    const response = await fetch(`${baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: 'User@Example.com',
-        password: 'correct horse',
-      }),
-    });
+      const response = await fetch(`${baseUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'User@Example.com',
+          password: 'correct horse',
+        }),
+      });
 
-    expect(response.status).toBe(201);
-    await expect(response.json()).resolves.toEqual({
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      email: 'user@example.com',
-      accessStatus: 'PENDING',
-      interfaceLanguage: 'pl',
-    });
+      expect(response.status).toBe(201);
+      await expect(response.json()).resolves.toEqual({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
 
-    expect(signUp).toHaveBeenCalledWith({
-      email: 'user@example.com',
-      password: 'correct horse',
-    });
-    expect(userCreate).toHaveBeenCalledWith({
-      data: { supabaseAuthId: 'auth-user-id', email: 'user@example.com' },
-    });
-  });
-
-  it('rejects invalid registration data with the predictable error shape', async () => {
-    const response = await fetch(`${baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: 'not-an-email',
-        password: 'short',
-      }),
-    });
-
-    expect(response.status).toBe(400);
-    const body = await response.json();
-
-    expect(body.error.code).toBe('VALIDATION_ERROR');
-    expect(body.error.message).toEqual(expect.any(String));
-    expect(body.error.details).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ path: 'email' }),
-        expect.objectContaining({ path: 'password' }),
-      ]),
-    );
-
-    expect(signUp).not.toHaveBeenCalled();
-  });
-
-  it('rejects an already registered email with a safe 409', async () => {
-    signUp.mockResolvedValue({
-      data: { user: null },
-      error: {
-        code: 'user_already_exists',
-        message: 'User already registered',
-      },
-    });
-
-    const response = await fetch(`${baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      expect(signUp).toHaveBeenCalledWith({
         email: 'user@example.com',
         password: 'correct horse',
-      }),
+        options: { emailRedirectTo: 'dinner2://confirm' },
+      });
+      expect(userCreate).toHaveBeenCalledWith({
+        data: { supabaseAuthId: 'auth-user-id', email: 'user@example.com' },
+      });
     });
 
-    expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toEqual({
-      error: {
-        code: 'EMAIL_ALREADY_REGISTERED',
-        message: 'Konto z tym adresem e-mail już istnieje.',
-      },
+    it('rejects invalid registration data with the predictable error shape', async () => {
+      const response = await fetch(`${baseUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'not-an-email',
+          password: 'short',
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toEqual(expect.any(String));
+      expect(body.error.details).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ path: 'email' }),
+          expect.objectContaining({ path: 'password' }),
+        ]),
+      );
+
+      expect(signUp).not.toHaveBeenCalled();
+    });
+
+    it('rejects an already registered email with a safe 409', async () => {
+      signUp.mockResolvedValue({
+        data: { user: null },
+        error: {
+          code: 'user_already_exists',
+          message: 'User already registered',
+        },
+      });
+
+      const response = await fetch(`${baseUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'user@example.com',
+          password: 'correct horse',
+        }),
+      });
+
+      expect(response.status).toBe(409);
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: 'EMAIL_ALREADY_REGISTERED',
+          message: 'Konto z tym adresem e-mail już istnieje.',
+        },
+      });
+    });
+  });
+
+  describe('/auth/confirm-email', () => {
+    it('confirms the email and returns the confirmed application user', async () => {
+      getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'auth-user-id',
+            email_confirmed_at: '2026-08-27T12:00:00.000Z',
+          },
+        },
+        error: null,
+      });
+      userUpdate.mockResolvedValue({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z'),
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
+
+      const response = await fetch(`${baseUrl}/auth/confirm-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'dinner2://confirm#access_token=header.payload.signature&refresh_token=refresh&type=signup',
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
+
+      expect(getUser).toHaveBeenCalledWith('header.payload.signature');
+      expect(userUpdate).toHaveBeenCalledWith({
+        where: { supabaseAuthId: 'auth-user-id' },
+        data: { emailConfirmedAt: expect.any(Date) },
+      });
+    });
+
+    it('rejects a confirmation link without an access token', async () => {
+      const response = await fetch(`${baseUrl}/auth/confirm-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: 'dinner2://confirm' }),
+      });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: 'INVALID_CONFIRMATION_LINK',
+          message: 'Link potwierdzający jest nieprawidłowy lub wygasł.',
+        },
+      });
+
+      expect(getUser).not.toHaveBeenCalled();
+      expect(userUpdate).not.toHaveBeenCalled();
+    });
+
+    it('rejects an invalid or expired access token', async () => {
+      getUser.mockResolvedValue({
+        data: { user: null },
+        error: { code: 'invalid_jwt', message: 'Invalid JWT' },
+      });
+
+      const response = await fetch(`${baseUrl}/auth/confirm-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'dinner2://confirm#access_token=expired.payload.signature',
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: 'INVALID_CONFIRMATION_LINK',
+          message: 'Link potwierdzający jest nieprawidłowy lub wygasł.',
+        },
+      });
     });
   });
 });

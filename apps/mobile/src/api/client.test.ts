@@ -71,6 +71,7 @@ describe('apiClient.register', () => {
         json: async () => ({
           id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
           email: 'user@example.com',
+          emailConfirmedAt: null,
           accessStatus: 'PENDING',
           interfaceLanguage: 'pl',
         }),
@@ -125,6 +126,71 @@ describe('apiClient.register', () => {
       status: 409,
       code: 'EMAIL_ALREADY_REGISTERED',
       message: 'Konto z tym adresem e-mail już istnieje.',
+    });
+  });
+});
+
+describe('apiClient.confirmEmail', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('POSTs the confirmation deep link and returns the confirmed user', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          email: 'user@example.com',
+          emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+          accessStatus: 'PENDING',
+          interfaceLanguage: 'pl',
+        }),
+      }),
+    );
+
+    const url =
+      'dinner2://confirm#access_token=header.payload.signature&type=signup';
+
+    await expect(apiClient.confirmEmail(url)).resolves.toMatchObject({
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/auth/confirm-email',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      },
+    );
+  });
+
+  it('surfaces the safe message from a rejected confirmation', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: {
+            code: 'INVALID_CONFIRMATION_LINK',
+            message: 'Link potwierdzający jest nieprawidłowy lub wygasł.',
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      apiClient.confirmEmail('dinner2://confirm#access_token=expired'),
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 400,
+      code: 'INVALID_CONFIRMATION_LINK',
+      message: 'Link potwierdzający jest nieprawidłowy lub wygasł.',
     });
   });
 });

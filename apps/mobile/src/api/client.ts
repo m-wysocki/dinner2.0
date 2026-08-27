@@ -1,8 +1,10 @@
 import {
   apiErrorSchema,
+  confirmEmailResponseSchema,
   healthResponseSchema,
   registerResponseSchema,
   type ApiErrorCode,
+  type ConfirmEmailResponse,
   type HealthResponse,
   type RegisterRequest,
   type RegisterResponse,
@@ -84,6 +86,13 @@ export const apiClient = {
     return request('/auth/register', registerResponseSchema, {
       method: 'POST',
       body: input,
+    });
+  },
+
+  confirmEmail(url: string): Promise<ConfirmEmailResponse> {
+    return request('/auth/confirm-email', confirmEmailResponseSchema, {
+      method: 'POST',
+      body: { url },
     });
   },
 };

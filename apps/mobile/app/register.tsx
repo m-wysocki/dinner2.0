@@ -45,8 +45,9 @@ export default function Register() {
       <View style={styles.container}>
         <Text style={styles.title}>Konto utworzone</Text>
         <Text style={styles.message}>
-          Twoje konto oczekuje na aktywację przez administratora. Zanim będzie
-          dostępne, potwierdzimy adres e-mail.
+          Sprawdź swoją skrzynkę e-mail i kliknij link potwierdzający w
+          wiadomości od nas. Po potwierdzeniu adresu Twoje konto będzie
+          oczekiwać na aktywację przez administratora.
         </Text>
         <Link href="/" style={styles.button}>
           <Text style={styles.buttonText}>Wróć do ekranu głównego</Text>

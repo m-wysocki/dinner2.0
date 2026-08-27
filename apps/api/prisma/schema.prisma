@@ -16,6 +16,7 @@ model User {
   id                String        @id @default(uuid())
   supabaseAuthId    String        @unique
   email             String        @unique
+  emailConfirmedAt  DateTime?
   accessStatus      AccessStatus  @default(PENDING)
   interfaceLanguage String        @default("pl")
   createdAt         DateTime      @default(now())
