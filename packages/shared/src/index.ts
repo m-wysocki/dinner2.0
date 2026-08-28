@@ -35,6 +35,24 @@ export const confirmEmailRequestSchema = z.object({
 });
 export type ConfirmEmailRequest = z.infer<typeof confirmEmailRequestSchema>;
 
+export const loginRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(8).max(72),
+});
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
+
+export const authSessionSchema = z.object({
+  accessToken: z.string().min(1),
+  refreshToken: z.string().min(1),
+  expiresAt: z.number().positive(),
+});
+export type AuthSession = z.infer<typeof authSessionSchema>;
+
+export const loginResponseSchema = authSessionSchema.extend({
+  user: authUserResponseSchema,
+});
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
+
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',
   'EMAIL_ALREADY_REGISTERED',
@@ -42,6 +60,7 @@ export const apiErrorCodeSchema = z.enum([
   'INVALID_CONFIRMATION_LINK',
   'EMAIL_NOT_CONFIRMED',
   'USER_NOT_FOUND',
+  'INVALID_CREDENTIALS',
   'HTTP_ERROR',
   'INTERNAL_ERROR',
 ]);

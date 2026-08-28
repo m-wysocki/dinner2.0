@@ -34,9 +34,18 @@ describe('mobile shell routing', () => {
     const user = userEvent.setup();
     await renderRootScreen();
 
-    await user.press(screen.getByText('Zarejestruj się'));
+    await user.press(screen.getByText('Nie masz konta? Zarejestruj się.'));
 
     expect(router.push).toHaveBeenCalledWith('/register');
+  });
+
+  it('navigates from the root screen to the login route', async () => {
+    const user = userEvent.setup();
+    await renderRootScreen();
+
+    await user.press(screen.getByText('Zaloguj się'));
+
+    expect(router.push).toHaveBeenCalledWith('/login');
   });
 
   it('navigates back from the register screen to the root', async () => {

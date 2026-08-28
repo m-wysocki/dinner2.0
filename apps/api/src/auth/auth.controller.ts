@@ -1,9 +1,12 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
   confirmEmailRequestSchema,
+  loginRequestSchema,
   registerRequestSchema,
   type ConfirmEmailRequest,
   type ConfirmEmailResponse,
+  type LoginRequest,
+  type LoginResponse,
   type RegisterRequest,
   type RegisterResponse,
 } from '@dinner/shared';
@@ -28,5 +31,13 @@ export class AuthController {
     input: ConfirmEmailRequest,
   ): Promise<ConfirmEmailResponse> {
     return this.authService.confirmEmail(input);
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  login(
+    @Body(new ZodValidationPipe(loginRequestSchema)) input: LoginRequest,
+  ): Promise<LoginResponse> {
+    return this.authService.login(input);
   }
 }

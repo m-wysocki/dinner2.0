@@ -2,9 +2,12 @@ import {
   apiErrorSchema,
   authUserResponseSchema,
   healthResponseSchema,
+  loginResponseSchema,
   type ApiErrorCode,
   type ConfirmEmailResponse,
   type HealthResponse,
+  type LoginRequest,
+  type LoginResponse,
   type RegisterRequest,
   type RegisterResponse,
 } from '@dinner/shared';
@@ -92,6 +95,13 @@ export const apiClient = {
     return request('/auth/confirm-email', authUserResponseSchema, {
       method: 'POST',
       body: { url },
+    });
+  },
+
+  login(input: LoginRequest): Promise<LoginResponse> {
+    return request('/auth/login', loginResponseSchema, {
+      method: 'POST',
+      body: input,
     });
   },
 };

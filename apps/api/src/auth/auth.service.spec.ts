@@ -7,11 +7,15 @@ type Mock = ReturnType<typeof vi.fn>;
 
 function setup() {
   const supabase = {
-    auth: { signUp: vi.fn(), getUser: vi.fn() },
+    auth: {
+      signUp: vi.fn(),
+      getUser: vi.fn(),
+      signInWithPassword: vi.fn(),
+    },
   } as unknown as SupabaseClient;
 
   const prisma = {
-    user: { create: vi.fn(), update: vi.fn() },
+    user: { create: vi.fn(), update: vi.fn(), findUnique: vi.fn() },
   } as unknown as PrismaService;
 
   const service = new AuthService(supabase, prisma);
@@ -306,6 +310,127 @@ describe('AuthService', () => {
       (prisma.user.update as Mock).mockRejectedValue(failure);
 
       await expect(service.confirmEmail({ url })).rejects.toBe(failure);
+    });
+  });
+
+  describe('login', () => {
+    const session = {
+      access_token: 'header.payload.signature',
+      refresh_token: 'refresh-token',
+      expires_at: 1785302400,
+    };
+
+    const confirmedUser = {
+      ...pendingUser,
+      emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z'),
+    };
+
+    it('establishes a session and returns it with the application user', async () => {
+      const { supabase, prisma, service } = setup();
+
+      (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
+        data: {
+          user: { id: 'auth-user-id' },
+          session,
+        },
+        error: null,
+      });
+      (prisma.user.findUnique as Mock).mockResolvedValue(confirmedUser);
+
+      await expect(service.login(validInput)).resolves.toEqual({
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        expiresAt: session.expires_at,
+        user: {
+          id: confirmedUser.id,
+          email: confirmedUser.email,
+          emailConfirmedAt: confirmedUser.emailConfirmedAt.toISOString(),
+          accessStatus: 'PENDING',
+          interfaceLanguage: 'pl',
+        },
+      });
+
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: validInput.email,
+        password: validInput.password,
+      });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { supabaseAuthId: 'auth-user-id' },
+      });
+    });
+
+    it('falls back to a computed expiry when Supabase omits it', async () => {
+      const { supabase, prisma, service } = setup();
+
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-08-28T12:00:00.000Z'));
+
+      (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
+        data: {
+          user: { id: 'auth-user-id' },
+          session: { ...session, expires_at: undefined },
+        },
+        error: null,
+      });
+      (prisma.user.findUnique as Mock).mockResolvedValue(confirmedUser);
+
+      const result = await service.login(validInput);
+
+      vi.useRealTimers();
+
+      expect(result.expiresAt).toBe(
+        new Date('2026-08-28T13:00:00.000Z').getTime(),
+      );
+    });
+
+    it('rejects an unconfirmed account with an actionable message', async () => {
+      const { supabase, prisma, service } = setup();
+
+      (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
+        data: { user: null, session: null },
+        error: { code: 'email_not_confirmed', message: 'Email not confirmed' },
+      });
+
+      await expect(service.login(validInput)).rejects.toMatchObject({
+        code: 'EMAIL_NOT_CONFIRMED',
+        status: 422,
+      });
+
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('rejects invalid credentials with a safe 401', async () => {
+      const { supabase, prisma, service } = setup();
+
+      (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
+        data: { user: null, session: null },
+        error: {
+          code: 'invalid_credentials',
+          message: 'Invalid login credentials',
+        },
+      });
+
+      await expect(service.login(validInput)).rejects.toMatchObject({
+        code: 'INVALID_CREDENTIALS',
+        status: 401,
+      });
+
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('rejects a missing application user record', async () => {
+      const { supabase, prisma, service } = setup();
+
+      (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
+        data: { user: { id: 'auth-user-id' }, session },
+        error: null,
+      });
+      (prisma.user.findUnique as Mock).mockResolvedValue(null);
+
+      await expect(service.login(validInput)).rejects.toMatchObject({
+        code: 'INVALID_CREDENTIALS',
+        status: 401,
+      });
     });
   });
 });

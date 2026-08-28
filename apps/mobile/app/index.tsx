@@ -47,8 +47,11 @@ export default function Index() {
         </View>
       )}
 
-      <Link href="/register" style={styles.button}>
-        <Text style={styles.buttonText}>Zarejestruj się</Text>
+      <Link href="/login" style={styles.button}>
+        <Text style={styles.buttonText}>Zaloguj się</Text>
+      </Link>
+      <Link href="/register" style={styles.link}>
+        <Text style={styles.linkText}>Nie masz konta? Zarejestruj się.</Text>
       </Link>
     </View>
   );
@@ -82,4 +85,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   buttonText: { color: '#fff', fontWeight: '600' },
+  link: { marginTop: 12 },
+  linkText: { color: '#68736d', fontSize: 15 },
 });

@@ -17,6 +17,10 @@ export function useSegments() {
   return [];
 }
 
+export function Redirect({ href }: { href: string }) {
+  return null;
+}
+
 type RouterLinkProps = {
   href: string;
   onPress?: () => void;

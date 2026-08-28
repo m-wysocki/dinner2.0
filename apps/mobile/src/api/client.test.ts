@@ -194,3 +194,82 @@ describe('apiClient.confirmEmail', () => {
     });
   });
 });
+
+describe('apiClient.login', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('POSTs credentials and returns the authenticated session', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          accessToken: 'header.payload.signature',
+          refreshToken: 'refresh-token',
+          expiresAt: 1785302400,
+          user: {
+            id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            email: 'user@example.com',
+            emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+            accessStatus: 'ACTIVE',
+            interfaceLanguage: 'pl',
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      apiClient.login({
+        email: 'user@example.com',
+        password: 'correct horse',
+      }),
+    ).resolves.toMatchObject({
+      accessToken: 'header.payload.signature',
+      refreshToken: 'refresh-token',
+      expiresAt: 1785302400,
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/auth/login',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'user@example.com',
+          password: 'correct horse',
+        }),
+      },
+    );
+  });
+
+  it('surfaces the safe message and code from rejected credentials', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          error: {
+            code: 'INVALID_CREDENTIALS',
+            message: 'Nieprawidłowy adres e-mail lub hasło.',
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      apiClient.login({
+        email: 'user@example.com',
+        password: 'wrong password',
+      }),
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 401,
+      code: 'INVALID_CREDENTIALS',
+      message: 'Nieprawidłowy adres e-mail lub hasło.',
+    });
+  });
+});

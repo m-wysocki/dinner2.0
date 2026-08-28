@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: User registration
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 - [ ] Valid credentials establish an authenticated Supabase session.
 - [ ] Invalid credentials produce a safe, localized user-facing error.

@@ -4,6 +4,8 @@ import type { User } from '@prisma/client';
 import type {
   ConfirmEmailRequest,
   ConfirmEmailResponse,
+  LoginRequest,
+  LoginResponse,
   RegisterRequest,
   RegisterResponse,
 } from '@dinner/shared';
@@ -41,6 +43,12 @@ const USER_NOT_FOUND = {
   code: 'USER_NOT_FOUND' as const,
   message: 'Nie znaleziono konta powiązanego z tym linkiem.',
   status: 404,
+};
+
+const INVALID_CREDENTIALS = {
+  code: 'INVALID_CREDENTIALS' as const,
+  message: 'Nieprawidłowy adres e-mail lub hasło.',
+  status: 401,
 };
 
 // The confirmation email link must return to the mobile app so the
@@ -166,6 +174,56 @@ export class AuthService {
     }
 
     return this.toAuthUserResponse(user);
+  }
+
+  async login(input: LoginRequest): Promise<LoginResponse> {
+    const { data, error } = await this.supabase.auth.signInWithPassword({
+      email: input.email,
+      password: input.password,
+    });
+
+    if (error) {
+      if (error.code === 'email_not_confirmed') {
+        throw new ApiException(
+          EMAIL_NOT_CONFIRMED.code,
+          'Potwierdź najpierw adres e-mail. Sprawdź link potwierdzający wysłany w wiadomości od nas.',
+          EMAIL_NOT_CONFIRMED.status,
+        );
+      }
+
+      throw new ApiException(
+        INVALID_CREDENTIALS.code,
+        INVALID_CREDENTIALS.message,
+        INVALID_CREDENTIALS.status,
+      );
+    }
+
+    if (!data.session || !data.user) {
+      throw new ApiException(
+        INVALID_CREDENTIALS.code,
+        INVALID_CREDENTIALS.message,
+        INVALID_CREDENTIALS.status,
+      );
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { supabaseAuthId: data.user.id },
+    });
+
+    if (!user) {
+      throw new ApiException(
+        INVALID_CREDENTIALS.code,
+        INVALID_CREDENTIALS.message,
+        INVALID_CREDENTIALS.status,
+      );
+    }
+
+    return {
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+      expiresAt: data.session.expires_at ?? Date.now() + 3600_000,
+      user: this.toAuthUserResponse(user),
+    };
   }
 
   private toAuthUserResponse(user: User): AuthUserResponse {

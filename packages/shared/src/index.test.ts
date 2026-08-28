@@ -5,6 +5,8 @@ import {
   authUserResponseSchema,
   confirmEmailRequestSchema,
   interfaceLanguageSchema,
+  loginRequestSchema,
+  loginResponseSchema,
   registerRequestSchema,
 } from './index.js';
 
@@ -127,6 +129,74 @@ describe('auth user response contract', () => {
   });
 });
 
+describe('login request contract', () => {
+  it('accepts valid credentials and normalizes the email', () => {
+    const parsed = loginRequestSchema.parse({
+      email: '  User@Example.COM ',
+      password: 'correct horse',
+    });
+
+    expect(parsed).toEqual({
+      email: 'user@example.com',
+      password: 'correct horse',
+    });
+  });
+
+  it('rejects an invalid email', () => {
+    expect(
+      loginRequestSchema.safeParse({
+        email: 'not-an-email',
+        password: 'correct horse',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a password that is too short', () => {
+    expect(
+      loginRequestSchema.safeParse({
+        email: 'user@example.com',
+        password: 'short',
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('login response contract', () => {
+  it('accepts a session with its authenticated user', () => {
+    const response = {
+      accessToken: 'header.payload.signature',
+      refreshToken: 'refresh-token',
+      expiresAt: 1785302400,
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    };
+
+    expect(loginResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it('rejects a response without session tokens', () => {
+    expect(
+      loginResponseSchema.safeParse({
+        accessToken: '',
+        refreshToken: 'refresh-token',
+        expiresAt: 1785302400,
+        user: {
+          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          email: 'user@example.com',
+          emailConfirmedAt: null,
+          accessStatus: 'PENDING',
+          interfaceLanguage: 'pl',
+        },
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('confirm email request contract', () => {
   it('accepts a confirmation deep link', () => {
     const url =
@@ -166,6 +236,11 @@ describe('api error contract', () => {
         error: { code: 'USER_NOT_FOUND', message: 'safe message' },
       }).error.code,
     ).toBe('USER_NOT_FOUND');
+    expect(
+      apiErrorSchema.parse({
+        error: { code: 'INVALID_CREDENTIALS', message: 'safe message' },
+      }).error.code,
+    ).toBe('INVALID_CREDENTIALS');
   });
 
   it('accepts optional validation details', () => {

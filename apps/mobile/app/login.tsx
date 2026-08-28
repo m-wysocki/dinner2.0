@@ -1,0 +1,144 @@
+import { useState } from 'react';
+import { Link, router } from 'expo-router';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { submitLogin } from '../src/auth/login';
+
+type SubmitState =
+  | { kind: 'idle' }
+  | { kind: 'submitting' }
+  | { kind: 'failure'; message: string };
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submit, setSubmit] = useState<SubmitState>({ kind: 'idle' });
+
+  async function handleSubmit() {
+    if (submit.kind === 'submitting') {
+      return;
+    }
+
+    setSubmit({ kind: 'submitting' });
+
+    const result = await submitLogin({ email, password });
+
+    if (result.kind === 'success') {
+      router.replace('/account');
+      return;
+    }
+
+    setSubmit({ kind: 'failure', message: result.message });
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Text style={styles.title}>Logowanie</Text>
+      <Text style={styles.subtitle}>
+        Wpisz dane konta, aby zarządzać swoimi przepisami.
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Adres e-mail"
+        placeholderTextColor="#9aa39e"
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        editable={submit.kind !== 'submitting'}
+      />
+
+      <TextInput
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Hasło"
+        placeholderTextColor="#9aa39e"
+        secureTextEntry
+        autoCapitalize="none"
+        editable={submit.kind !== 'submitting'}
+      />
+
+      {submit.kind === 'failure' && (
+        <Text style={styles.error}>{submit.message}</Text>
+      )}
+
+      <Pressable
+        style={[
+          styles.button,
+          submit.kind === 'submitting' && styles.buttonDisabled,
+        ]}
+        onPress={() => void handleSubmit()}
+        disabled={submit.kind === 'submitting'}
+      >
+        {submit.kind === 'submitting' ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Zaloguj się</Text>
+        )}
+      </Pressable>
+
+      <Link href="/register" style={styles.link}>
+        <Text style={styles.linkText}>
+          Nie masz jeszcze konta? Zarejestruj się.
+        </Text>
+      </Link>
+      <Link href="/" style={styles.link}>
+        <Text style={styles.linkText}>Wróć</Text>
+      </Link>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#fffaf3',
+  },
+  title: { color: '#25352d', fontSize: 28, fontWeight: '700' },
+  subtitle: { color: '#68736d', fontSize: 16, marginTop: 8, marginBottom: 24 },
+  input: {
+    backgroundColor: '#fff',
+    borderColor: '#d8ddd9',
+    borderRadius: 8,
+    borderWidth: 1,
+    color: '#25352d',
+    fontSize: 16,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  error: {
+    color: '#a43b32',
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  button: {
+    alignItems: 'center',
+    backgroundColor: '#25352d',
+    borderRadius: 8,
+    marginTop: 4,
+    paddingVertical: 14,
+  },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  link: { alignItems: 'center', marginTop: 20 },
+  linkText: { color: '#68736d', fontSize: 15 },
+});
