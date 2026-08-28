@@ -12,13 +12,89 @@ enum AccessStatus {
   ACTIVE
 }
 
+enum CanonicalUnit {
+  G
+  KG
+  ML
+  L
+  PCS
+  TSP
+  TBSP
+  OTHER
+}
+
 model User {
-  id                String        @id @default(uuid())
-  supabaseAuthId    String        @unique
-  email             String        @unique
+  id                String       @id @default(uuid())
+  supabaseAuthId    String       @unique
+  email             String       @unique
   emailConfirmedAt  DateTime?
-  accessStatus      AccessStatus  @default(PENDING)
-  interfaceLanguage String        @default("pl")
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  accessStatus      AccessStatus @default(PENDING)
+  interfaceLanguage String       @default("pl")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  recipes                 Recipe[]
+  customIngredientEntries IngredientCatalogEntry[] @relation("CustomIngredientOwner")
+}
+
+model Recipe {
+  id           String   @id @default(uuid())
+  ownerId      String
+  title        String
+  description  String?
+  servingCount Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  owner            User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ingredients      RecipeIngredient[]
+  preparationSteps PreparationStep[]
+
+  @@index([ownerId, createdAt])
+}
+
+model RecipeIngredient {
+  id                String        @id @default(uuid())
+  recipeId          String
+  catalogEntryId    String
+  nameSnapshot      String
+  quantity          Decimal?      @db.Decimal(20, 6)
+  unit              CanonicalUnit
+  note              String?
+  position          Int
+  identityConfirmed Boolean       @default(false)
+
+  recipe       Recipe                 @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  catalogEntry IngredientCatalogEntry @relation(fields: [catalogEntryId], references: [id], onDelete: Restrict)
+
+  @@unique([recipeId, position])
+  @@index([catalogEntryId])
+}
+
+model PreparationStep {
+  id       String @id @default(uuid())
+  recipeId String
+  text     String
+  position Int
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, position])
+}
+
+model IngredientCatalogEntry {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  namePl    String
+  nameEn    String
+  isActive  Boolean  @default(true)
+  isSystem  Boolean  @default(true)
+  ownerId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner             User?              @relation("CustomIngredientOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  recipeIngredients RecipeIngredient[]
+
+  @@index([ownerId, isActive])
 }

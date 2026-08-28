@@ -3,6 +3,7 @@ import {
   apiErrorSchema,
   accessStatusSchema,
   authUserResponseSchema,
+  canonicalUnitSchema,
   confirmEmailRequestSchema,
   interfaceLanguageSchema,
   loginRequestSchema,
@@ -27,6 +28,13 @@ describe('shared contracts', () => {
 
   it('rejects unsupported access statuses', () => {
     expect(accessStatusSchema.safeParse('BLOCKED').success).toBe(false);
+  });
+
+  it('accepts only canonical ingredient units', () => {
+    expect(canonicalUnitSchema.parse('G')).toBe('G');
+    expect(canonicalUnitSchema.parse('TBSP')).toBe('TBSP');
+    expect(canonicalUnitSchema.parse('OTHER')).toBe('OTHER');
+    expect(canonicalUnitSchema.safeParse('gram').success).toBe(false);
   });
 });
 
