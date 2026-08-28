@@ -349,6 +349,40 @@ describe('POST /api/v1/auth (HTTP)', () => {
       expect(userFindUnique).not.toHaveBeenCalled();
     });
 
+    it('rejects a pending account until an administrator activates it', async () => {
+      signInWithPassword.mockResolvedValue({
+        data: {
+          user: { id: 'auth-user-id' },
+          session,
+        },
+        error: null,
+      });
+      userFindUnique.mockResolvedValue({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z'),
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
+
+      const response = await fetch(`${baseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'user@example.com',
+          password: 'correct horse',
+        }),
+      });
+
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: 'ACCESS_PENDING',
+          message: 'Konto oczekuje na akceptację administratora.',
+        },
+      });
+    });
+
     it('tells unconfirmed accounts to confirm their email first', async () => {
       signInWithPassword.mockResolvedValue({
         data: { user: null, session: null },

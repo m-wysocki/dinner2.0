@@ -10,6 +10,8 @@ export type LoginFormResult =
   | { kind: 'invalid'; message: string }
   | { kind: 'error'; message: string };
 
+const ACCESS_PENDING_MESSAGE = 'Konto oczekuje na akceptację administratora.';
+
 export async function submitLogin(form: LoginForm): Promise<LoginFormResult> {
   const parsed = loginRequestSchema.safeParse(form);
 
@@ -22,6 +24,10 @@ export async function submitLogin(form: LoginForm): Promise<LoginFormResult> {
 
   try {
     const response = await apiClient.login(parsed.data);
+
+    if (response.user.accessStatus !== 'ACTIVE') {
+      return { kind: 'error', message: ACCESS_PENDING_MESSAGE };
+    }
 
     setAuthenticatedState({
       session: {

@@ -61,6 +61,7 @@ export const apiErrorCodeSchema = z.enum([
   'EMAIL_NOT_CONFIRMED',
   'USER_NOT_FOUND',
   'INVALID_CREDENTIALS',
+  'ACCESS_PENDING',
   'HTTP_ERROR',
   'INTERNAL_ERROR',
 ]);

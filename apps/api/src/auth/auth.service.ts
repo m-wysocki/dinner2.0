@@ -51,6 +51,12 @@ const INVALID_CREDENTIALS = {
   status: 401,
 };
 
+const ACCESS_PENDING = {
+  code: 'ACCESS_PENDING' as const,
+  message: 'Konto oczekuje na akceptację administratora.',
+  status: 403,
+};
+
 const EMAIL_CONFIRMATION_REQUIRED = {
   code: 'EMAIL_NOT_CONFIRMED' as const,
   message:
@@ -215,6 +221,14 @@ export class AuthService {
 
     if (!user) {
       this.throwInvalidCredentials();
+    }
+
+    if (user.accessStatus !== 'ACTIVE') {
+      throw new ApiException(
+        ACCESS_PENDING.code,
+        ACCESS_PENDING.message,
+        ACCESS_PENDING.status,
+      );
     }
 
     return {
