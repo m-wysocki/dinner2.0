@@ -31,10 +31,7 @@ describe('RecipesService', () => {
       where: { ownerId: 'owner-id' },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 100,
-      include: {
-        ingredients: { orderBy: { position: 'asc' } },
-        preparationSteps: { orderBy: { position: 'asc' } },
-      },
+      include: { preparationSteps: { orderBy: { position: 'asc' } } },
     });
   });
 
@@ -75,7 +72,7 @@ describe('RecipesService', () => {
         servingCount: 4,
         preparationSteps: { create: [] },
       }),
-      include: { ingredients: true, preparationSteps: true },
+      include: { preparationSteps: true },
     });
   });
 
@@ -135,7 +132,7 @@ describe('RecipesService', () => {
           id: '5d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
           catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
           nameSnapshot: 'Pomidor',
-          quantity: { toNumber: () => 2 },
+          quantity: { toString: () => '2' },
           unit: 'PCS',
           note: null,
           position: 0,
@@ -155,14 +152,17 @@ describe('RecipesService', () => {
     } as never);
 
     await expect(
-      service.get('supabase-user-id', 'recipe-id'),
+      service.get('supabase-user-id', 'f47ac10b-58cc-4372-a567-0e02b2c3d479'),
     ).resolves.toMatchObject({
       title: 'Zupa',
-      ingredients: [{ name: 'Pomidor', quantity: 2, unit: 'PCS' }],
+      ingredients: [{ name: 'Pomidor', quantity: '2', unit: 'PCS' }],
       preparationSteps: [{ text: 'Pokrój', position: 0 }],
     });
     expect(findFirst).toHaveBeenCalledWith({
-      where: { id: 'recipe-id', ownerId: 'owner-id' },
+      where: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        ownerId: 'owner-id',
+      },
       include: {
         ingredients: { orderBy: { position: 'asc' } },
         preparationSteps: { orderBy: { position: 'asc' } },
@@ -182,5 +182,21 @@ describe('RecipesService', () => {
       code: 'RECIPE_NOT_FOUND',
       status: 404,
     });
+  });
+
+  it('uses the same not-found response for a malformed recipe id', async () => {
+    const findFirst = vi.fn();
+    const service = new RecipesService({
+      user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
+      recipe: { findFirst },
+    } as never);
+
+    await expect(
+      service.get('supabase-user-id', 'not-a-uuid'),
+    ).rejects.toMatchObject({
+      code: 'RECIPE_NOT_FOUND',
+      status: 404,
+    });
+    expect(findFirst).not.toHaveBeenCalled();
   });
 });

@@ -120,7 +120,7 @@ export const recipeIngredientResponseSchema = z.object({
   id: z.string().uuid(),
   catalogEntryId: z.string().uuid(),
   name: z.string(),
-  quantity: z.number().nullable(),
+  quantity: z.string().nullable(),
   unit: canonicalUnitSchema,
   note: z.string().nullable(),
   position: z.number().int().min(0),
@@ -144,6 +144,18 @@ export const recipeResponseSchema = z.object({
   servingCount: z.number().int(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  ingredients: z.array(recipeIngredientResponseSchema).optional(),
+  preparationSteps: z
+    .array(
+      preparationStepRequestSchema.extend({
+        id: z.string().uuid(),
+      }),
+    )
+    .optional(),
+});
+export type RecipeResponse = z.infer<typeof recipeResponseSchema>;
+
+export const recipeDetailsResponseSchema = recipeResponseSchema.extend({
   ingredients: z.array(recipeIngredientResponseSchema),
   preparationSteps: z.array(
     preparationStepRequestSchema.extend({
@@ -151,7 +163,7 @@ export const recipeResponseSchema = z.object({
     }),
   ),
 });
-export type RecipeResponse = z.infer<typeof recipeResponseSchema>;
+export type RecipeDetailsResponse = z.infer<typeof recipeDetailsResponseSchema>;
 
 export const recipeCollectionResponseSchema = z.array(recipeResponseSchema);
 export type RecipeCollectionResponse = z.infer<

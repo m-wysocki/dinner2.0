@@ -4,9 +4,13 @@ import type {
   RecipeCollectionResponse,
   RecipeResponse,
 } from '@dinner/shared';
-import { recipeResponseSchema } from '@dinner/shared';
+import {
+  recipeDetailsResponseSchema,
+  recipeResponseSchema,
+} from '@dinner/shared';
 import { ApiException } from '../common/api-error';
 import { PrismaService } from '../prisma.service';
+import { z } from 'zod';
 
 const RECIPE_COLLECTION_LIMIT = 100;
 
@@ -21,10 +25,7 @@ export class RecipesService {
       where: { ownerId: owner.id },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: RECIPE_COLLECTION_LIMIT,
-      include: {
-        ingredients: { orderBy: { position: 'asc' } },
-        preparationSteps: { orderBy: { position: 'asc' } },
-      },
+      include: { preparationSteps: { orderBy: { position: 'asc' } } },
     });
 
     return recipes.map((recipe) =>
@@ -33,9 +34,6 @@ export class RecipesService {
         title: recipe.title,
         description: recipe.description,
         servingCount: recipe.servingCount,
-        ingredients: (recipe.ingredients ?? []).map((ingredient) =>
-          this.toIngredientResponse(ingredient),
-        ),
         createdAt: recipe.createdAt.toISOString(),
         updatedAt: recipe.updatedAt.toISOString(),
         preparationSteps: recipe.preparationSteps.map((step) => ({
@@ -49,6 +47,13 @@ export class RecipesService {
 
   async get(supabaseAuthId: string, recipeId: string): Promise<RecipeResponse> {
     const owner = await this.findOwner(supabaseAuthId);
+    if (!z.string().uuid().safeParse(recipeId).success) {
+      throw new ApiException(
+        'RECIPE_NOT_FOUND',
+        'Nie znaleziono przepisu.',
+        404,
+      );
+    }
     const recipe = await this.prisma.recipe.findFirst({
       where: { id: recipeId, ownerId: owner.id },
       include: {
@@ -65,7 +70,7 @@ export class RecipesService {
       );
     }
 
-    return recipeResponseSchema.parse({
+    return recipeDetailsResponseSchema.parse({
       id: recipe.id,
       title: recipe.title,
       description: recipe.description,
@@ -103,7 +108,7 @@ export class RecipesService {
             })),
           },
         },
-        include: { ingredients: true, preparationSteps: true },
+        include: { preparationSteps: true },
       }),
     );
 
@@ -112,9 +117,6 @@ export class RecipesService {
       title: recipe.title,
       description: recipe.description,
       servingCount: recipe.servingCount,
-      ingredients: (recipe.ingredients ?? []).map((ingredient) =>
-        this.toIngredientResponse(ingredient),
-      ),
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
       preparationSteps: (recipe.preparationSteps ?? []).map((step) => ({
@@ -138,7 +140,7 @@ export class RecipesService {
       id: ingredient.id,
       catalogEntryId: ingredient.catalogEntryId,
       name: ingredient.nameSnapshot,
-      quantity: ingredient.quantity?.toNumber() ?? null,
+      quantity: ingredient.quantity?.toString() ?? null,
       unit: ingredient.unit,
       note: ingredient.note,
       position: ingredient.position,
