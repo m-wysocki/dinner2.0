@@ -1,8 +1,9 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import {
   createRecipeRequestSchema,
   type CreateRecipeRequest,
   type RecipeResponse,
+  type RecipeCollectionResponse,
 } from '@dinner/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ActiveAccessGuard } from '../auth/active-access.guard';
@@ -13,6 +14,13 @@ import { RecipesService } from './recipes.service';
 @UseGuards(AuthGuard, ActiveAccessGuard)
 export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
+
+  @Get()
+  list(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RecipeCollectionResponse> {
+    return this.recipesService.list(request.supabaseAuthId!);
+  }
 
   @Post()
   create(
