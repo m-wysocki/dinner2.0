@@ -57,11 +57,19 @@ export default function Index() {
         <View style={styles.authenticatedPanel}>
           <Text style={styles.authenticatedTitle}>Jesteś zalogowany</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
+          <View style={styles.testPanel}>
+            <Text style={styles.testTitle}>Panel testowy</Text>
+            <Text style={styles.details}>
+              Szybki dostęp do bieżących funkcji przepisu.
+            </Text>
+          </View>
           <Link href="/user" style={styles.button}>
             <Text style={styles.buttonText}>Przejdź do konta</Text>
           </Link>
           <Link href="/create-recipe" style={styles.button}>
-            <Text style={styles.buttonText}>Dodaj przepis</Text>
+            <Text style={styles.buttonText}>
+              Testuj składniki i dodaj przepis
+            </Text>
           </Link>
           <Pressable
             style={styles.logoutButton}
@@ -120,6 +128,19 @@ const styles = StyleSheet.create({
   subtitle: { color: '#68736d', fontSize: 16, marginTop: 8 },
   status: { alignItems: 'center', marginTop: 48 },
   authenticatedPanel: { alignItems: 'center', marginTop: 32, width: '100%' },
+  testPanel: {
+    backgroundColor: '#eef1ed',
+    borderRadius: 12,
+    marginTop: 16,
+    padding: 14,
+    width: '100%',
+  },
+  testTitle: {
+    color: '#25352d',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   authenticatedTitle: { color: '#28734a', fontSize: 17, fontWeight: '600' },
   message: { color: '#68736d', marginTop: 12 },
   success: { color: '#28734a', fontSize: 17, fontWeight: '600' },
