@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import Account from '../app/account';
+import User from '../app/user';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/auth/session', () => ({
@@ -15,8 +15,8 @@ beforeEach(() => {
   getStateMock.mockReset();
 });
 
-describe('Account screen', () => {
-  it('shows the signed-in email for an active account', async () => {
+describe('User screen', () => {
+  it('shows the signed-in email after a successful login', async () => {
     getStateMock.mockReturnValue({
       session: {
         accessToken: 'header.payload.signature',
@@ -32,7 +32,7 @@ describe('Account screen', () => {
       },
     });
 
-    await render(<Account />);
+    await render(<User />);
 
     expect(screen.getByText('Zalogowano')).toBeOnTheScreen();
     expect(screen.getByText('user@example.com')).toBeOnTheScreen();
@@ -41,26 +41,12 @@ describe('Account screen', () => {
     ).toBeOnTheScreen();
   });
 
-  it('explains that a pending account awaits activation', async () => {
-    getStateMock.mockReturnValue({
-      session: {
-        accessToken: 'header.payload.signature',
-        refreshToken: 'refresh-token',
-        expiresAt: 1785302400,
-      },
-      user: {
-        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        email: 'user@example.com',
-        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
-        accessStatus: 'PENDING',
-        interfaceLanguage: 'pl',
-      },
-    });
+  it('renders nothing when there is no authenticated session', async () => {
+    getStateMock.mockReturnValue(null);
 
-    await render(<Account />);
+    await render(<User />);
 
-    expect(
-      screen.getByText(/oczekuje na aktywację przez administratora/),
-    ).toBeOnTheScreen();
+    expect(screen.queryByText('Zalogowano')).not.toBeOnTheScreen();
+    expect(screen.queryByText('user@example.com')).not.toBeOnTheScreen();
   });
 });

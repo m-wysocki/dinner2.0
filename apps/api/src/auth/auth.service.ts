@@ -51,6 +51,17 @@ const INVALID_CREDENTIALS = {
   status: 401,
 };
 
+const EMAIL_CONFIRMATION_REQUIRED = {
+  code: 'EMAIL_NOT_CONFIRMED' as const,
+  message:
+    'Potwierdź najpierw adres e-mail. Sprawdź link potwierdzający wysłany w wiadomości od nas.',
+  status: 422,
+};
+
+// Supabase sessions normally carry an explicit expiry; this fallback only
+// applies when the session object omits it.
+const DEFAULT_SESSION_TTL_MS = 3600_000;
+
 // The confirmation email link must return to the mobile app so the
 // confirmation deep link is handled through the Supabase Auth flow.
 const EMAIL_REDIRECT_TO = 'dinner2://confirm';
@@ -185,25 +196,17 @@ export class AuthService {
     if (error) {
       if (error.code === 'email_not_confirmed') {
         throw new ApiException(
-          EMAIL_NOT_CONFIRMED.code,
-          'Potwierdź najpierw adres e-mail. Sprawdź link potwierdzający wysłany w wiadomości od nas.',
-          EMAIL_NOT_CONFIRMED.status,
+          EMAIL_CONFIRMATION_REQUIRED.code,
+          EMAIL_CONFIRMATION_REQUIRED.message,
+          EMAIL_CONFIRMATION_REQUIRED.status,
         );
       }
 
-      throw new ApiException(
-        INVALID_CREDENTIALS.code,
-        INVALID_CREDENTIALS.message,
-        INVALID_CREDENTIALS.status,
-      );
+      this.throwInvalidCredentials();
     }
 
     if (!data.session || !data.user) {
-      throw new ApiException(
-        INVALID_CREDENTIALS.code,
-        INVALID_CREDENTIALS.message,
-        INVALID_CREDENTIALS.status,
-      );
+      this.throwInvalidCredentials();
     }
 
     const user = await this.prisma.user.findUnique({
@@ -211,19 +214,23 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ApiException(
-        INVALID_CREDENTIALS.code,
-        INVALID_CREDENTIALS.message,
-        INVALID_CREDENTIALS.status,
-      );
+      this.throwInvalidCredentials();
     }
 
     return {
       accessToken: data.session.access_token,
       refreshToken: data.session.refresh_token,
-      expiresAt: data.session.expires_at ?? Date.now() + 3600_000,
+      expiresAt: data.session.expires_at ?? Date.now() + DEFAULT_SESSION_TTL_MS,
       user: this.toAuthUserResponse(user),
     };
+  }
+
+  private throwInvalidCredentials(): never {
+    throw new ApiException(
+      INVALID_CREDENTIALS.code,
+      INVALID_CREDENTIALS.message,
+      INVALID_CREDENTIALS.status,
+    );
   }
 
   private toAuthUserResponse(user: User): AuthUserResponse {

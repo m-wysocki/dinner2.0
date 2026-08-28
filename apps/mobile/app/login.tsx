@@ -32,7 +32,7 @@ export default function Login() {
     const result = await submitLogin({ email, password });
 
     if (result.kind === 'success') {
-      router.replace('/account');
+      router.replace('/user');
       return;
     }
 

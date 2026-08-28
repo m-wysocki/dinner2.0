@@ -56,7 +56,7 @@ describe('Login screen', () => {
 
     resolveSubmit({ kind: 'success' });
     await vi.waitFor(() =>
-      expect(router.replace).toHaveBeenCalledWith('/account'),
+      expect(router.replace).toHaveBeenCalledWith('/user'),
     );
   });
 
@@ -68,7 +68,7 @@ describe('Login screen', () => {
 
     await fillAndSubmit(user);
 
-    expect(router.replace).toHaveBeenCalledWith('/account');
+    expect(router.replace).toHaveBeenCalledWith('/user');
   });
 
   it('presents the API error message on failure', async () => {
