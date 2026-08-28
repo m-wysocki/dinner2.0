@@ -52,12 +52,32 @@ export default function Index() {
         </View>
       )}
 
-      {authenticatedState ? (
+      {authenticatedState?.user.accessStatus === 'ACTIVE' &&
+      authenticatedState.user.emailConfirmedAt ? (
         <View style={styles.authenticatedPanel}>
           <Text style={styles.authenticatedTitle}>Jesteś zalogowany</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
           <Link href="/user" style={styles.button}>
             <Text style={styles.buttonText}>Przejdź do konta</Text>
+          </Link>
+          <Pressable
+            style={styles.logoutButton}
+            onPress={() => {
+              clearAuthenticatedState();
+              router.replace('/');
+            }}
+          >
+            <Text style={styles.logoutText}>Wyloguj się</Text>
+          </Pressable>
+        </View>
+      ) : authenticatedState ? (
+        <View style={styles.authenticatedPanel}>
+          <Text style={styles.authenticatedTitle}>
+            Dostęp oczekuje na aktywację
+          </Text>
+          <Text style={styles.details}>{authenticatedState.user.email}</Text>
+          <Link href="/user" style={styles.button}>
+            <Text style={styles.buttonText}>Sprawdź status konta</Text>
           </Link>
           <Pressable
             style={styles.logoutButton}

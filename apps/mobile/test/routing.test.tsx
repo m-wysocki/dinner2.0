@@ -87,4 +87,25 @@ describe('mobile shell routing', () => {
 
     expect(router.replace).toHaveBeenCalledWith('/');
   });
+
+  it('does not enter the protected shell while access is pending', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'pending@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      },
+    });
+    await renderRootScreen();
+
+    expect(screen.getByText('Dostęp oczekuje na aktywację')).toBeTruthy();
+    expect(screen.queryByText('Jesteś zalogowany')).not.toBeTruthy();
+  });
 });

@@ -6,6 +6,7 @@ import {
   type ApiErrorCode,
   type ConfirmEmailResponse,
   type HealthResponse,
+  type AuthUserResponse,
   type LoginRequest,
   type LoginResponse,
   type RegisterRequest,
@@ -132,6 +133,12 @@ export const apiClient = {
     return request('/auth/login', loginResponseSchema, {
       method: 'POST',
       body: input,
+    });
+  },
+
+  currentUser(): Promise<AuthUserResponse> {
+    return request('/auth/me', authUserResponseSchema, {
+      authenticated: true,
     });
   },
 };
