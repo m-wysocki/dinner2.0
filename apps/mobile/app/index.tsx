@@ -60,6 +60,9 @@ export default function Index() {
           <Link href="/user" style={styles.button}>
             <Text style={styles.buttonText}>Przejdź do konta</Text>
           </Link>
+          <Link href="/create-recipe" style={styles.button}>
+            <Text style={styles.buttonText}>Dodaj przepis</Text>
+          </Link>
           <Pressable
             style={styles.logoutButton}
             onPress={() => {
