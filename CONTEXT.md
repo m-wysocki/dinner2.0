@@ -52,6 +52,10 @@ _Avoid_: Full MVP, Phase 1
 The language used for the application's own labels, messages, and navigation; the first supported languages are Polish and English, with Polish as the default.
 _Avoid_: Recipe language, content language
 
+**Platform support**:
+The application must work on iOS, Android, and the web. Web support is a required product surface, not an optional development or fallback mode.
+_Avoid_: Mobile-only implementation
+
 **Imported recipe**:
 A recipe created from external input that retains its source information and may have a normalized representation in the user's interface language.
 _Avoid_: Scraped recipe, translated recipe

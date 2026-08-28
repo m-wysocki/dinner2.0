@@ -5,6 +5,10 @@ import Index from '../app/index';
 import Register from '../app/register';
 import { apiClient } from '../src/api/client';
 import { router } from './expo-router-mock';
+import {
+  clearAuthenticatedState,
+  setAuthenticatedState,
+} from '../src/auth/session';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/api/client', () => ({ apiClient: { health: vi.fn() } }));
@@ -23,6 +27,7 @@ async function renderRootScreen() {
 }
 
 beforeEach(() => {
+  clearAuthenticatedState();
   healthMock.mockReset();
   router.push.mockClear();
   router.back.mockClear();
@@ -55,5 +60,31 @@ describe('mobile shell routing', () => {
     await user.press(screen.getByText('Wróć'));
 
     expect(router.push).toHaveBeenCalledWith('/');
+  });
+
+  it('shows the authenticated state and logout action on the root screen', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+    const user = userEvent.setup();
+    await renderRootScreen();
+
+    expect(screen.getByText('Jesteś zalogowany')).toBeTruthy();
+    expect(screen.getByText('user@example.com')).toBeTruthy();
+
+    await user.press(screen.getByText('Wyloguj się'));
+
+    expect(router.replace).toHaveBeenCalledWith('/');
   });
 });

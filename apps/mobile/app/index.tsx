@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,8 +8,13 @@ import {
   View,
 } from 'react-native';
 import { apiClient } from '../src/api/client';
+import {
+  clearAuthenticatedState,
+  getAuthenticatedState,
+} from '../src/auth/session';
 
 export default function Index() {
+  const authenticatedState = getAuthenticatedState();
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: () => apiClient.health(),
@@ -47,12 +52,35 @@ export default function Index() {
         </View>
       )}
 
-      <Link href="/login" style={styles.button}>
-        <Text style={styles.buttonText}>Zaloguj się</Text>
-      </Link>
-      <Link href="/register" style={styles.link}>
-        <Text style={styles.linkText}>Nie masz konta? Zarejestruj się.</Text>
-      </Link>
+      {authenticatedState ? (
+        <View style={styles.authenticatedPanel}>
+          <Text style={styles.authenticatedTitle}>Jesteś zalogowany</Text>
+          <Text style={styles.details}>{authenticatedState.user.email}</Text>
+          <Link href="/user" style={styles.button}>
+            <Text style={styles.buttonText}>Przejdź do konta</Text>
+          </Link>
+          <Pressable
+            style={styles.logoutButton}
+            onPress={() => {
+              clearAuthenticatedState();
+              router.replace('/');
+            }}
+          >
+            <Text style={styles.logoutText}>Wyloguj się</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <>
+          <Link href="/login" style={styles.button}>
+            <Text style={styles.buttonText}>Zaloguj się</Text>
+          </Link>
+          <Link href="/register" style={styles.link}>
+            <Text style={styles.linkText}>
+              Nie masz konta? Zarejestruj się.
+            </Text>
+          </Link>
+        </>
+      )}
     </View>
   );
 }
@@ -68,6 +96,8 @@ const styles = StyleSheet.create({
   title: { color: '#25352d', fontSize: 36, fontWeight: '700' },
   subtitle: { color: '#68736d', fontSize: 16, marginTop: 8 },
   status: { alignItems: 'center', marginTop: 48 },
+  authenticatedPanel: { alignItems: 'center', marginTop: 32, width: '100%' },
+  authenticatedTitle: { color: '#28734a', fontSize: 17, fontWeight: '600' },
   message: { color: '#68736d', marginTop: 12 },
   success: { color: '#28734a', fontSize: 17, fontWeight: '600' },
   error: {
@@ -85,6 +115,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   buttonText: { color: '#fff', fontWeight: '600' },
+  logoutButton: { marginTop: 16, padding: 8 },
+  logoutText: { color: '#a43b32', fontSize: 15, fontWeight: '600' },
   link: { marginTop: 12 },
   linkText: { color: '#68736d', fontSize: 15 },
 });

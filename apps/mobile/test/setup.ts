@@ -1,6 +1,8 @@
 import Module from 'node:module';
 import path from 'node:path';
 
+(globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = false;
+
 // @testing-library/react-native loads as a CommonJS module that natively
 // requires 'react-native'. Node's resolution bypasses Vite's alias, so redirect
 // the bare 'react-native' specifier to the test mock (the real package is

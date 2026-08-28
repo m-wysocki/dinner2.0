@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, apiClient } from './client';
+import { healthResponseSchema } from '@dinner/shared';
+import { ApiError, apiClient, request } from './client';
+import {
+  clearAuthenticatedState,
+  setAuthenticatedState,
+} from '../auth/session';
 
 describe('apiClient', () => {
   beforeEach(() => {
@@ -270,6 +275,94 @@ describe('apiClient.login', () => {
       status: 401,
       code: 'INVALID_CREDENTIALS',
       message: 'Nieprawidłowy adres e-mail lub hasło.',
+    });
+  });
+});
+
+describe('authenticated requests', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    clearAuthenticatedState();
+  });
+
+  it('adds the bearer token to a protected request', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ status: 'ok', service: 'api' }),
+      }),
+    );
+
+    await request('/health', healthResponseSchema, { authenticated: true });
+
+    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/v1/health', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer access-token' },
+    });
+  });
+
+  it('does not call the network without a valid session', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      request('/health', healthResponseSchema, { authenticated: true }),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('clears the session after an unauthorized protected response', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          error: {
+            code: 'INVALID_CREDENTIALS',
+            message: 'Sesja wygasła.',
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      request('/health', healthResponseSchema, { authenticated: true }),
+    ).rejects.toMatchObject({ status: 401 });
+    await expect(
+      request('/health', healthResponseSchema, { authenticated: true }),
+    ).rejects.toMatchObject({
+      status: 401,
     });
   });
 });
