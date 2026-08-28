@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { apiClient } from '../src/api/client';
 import {
   restoreAuthenticatedState,
@@ -37,7 +38,12 @@ export default function RootLayout() {
   }, []);
 
   if (!sessionRestored) {
-    return null;
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color="#28734a" />
+        <Text style={styles.loadingText}>Ładowanie dinner2...</Text>
+      </View>
+    );
   }
 
   return (
@@ -46,3 +52,14 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    alignItems: 'center',
+    backgroundColor: '#fffaf3',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  loadingText: { color: '#68736d', marginTop: 12 },
+});
