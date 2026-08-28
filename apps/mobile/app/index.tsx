@@ -55,6 +55,21 @@ export default function Index() {
       {authenticatedState?.user.accessStatus === 'ACTIVE' &&
       authenticatedState.user.emailConfirmedAt ? (
         <View style={styles.authenticatedPanel}>
+          <Text style={styles.menuTitle}>Menu</Text>
+          <View style={styles.menu}>
+            <Link href="/" style={styles.menuItem}>
+              <Text>Przepisy</Text>
+            </Link>
+            <Link href="/create-recipe" style={styles.menuItem}>
+              <Text>Dodaj przepis</Text>
+            </Link>
+            <Link href="/ingredient-catalog" style={styles.menuItem}>
+              <Text>Katalog składników</Text>
+            </Link>
+            <Link href="/user" style={styles.menuItem}>
+              <Text>Konto</Text>
+            </Link>
+          </View>
           <Text style={styles.authenticatedTitle}>Jesteś zalogowany</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
           <View style={styles.testPanel}>
@@ -140,6 +155,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  menuTitle: {
+    color: '#25352d',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 16,
+  },
+  menu: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+    marginTop: 10,
+    width: '100%',
+  },
+  menuItem: {
+    backgroundColor: '#dfe9df',
+    borderRadius: 8,
+    color: '#25352d',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   authenticatedTitle: { color: '#28734a', fontSize: 17, fontWeight: '600' },
   message: { color: '#68736d', marginTop: 12 },
