@@ -69,4 +69,21 @@ describe('AuthController', () => {
       password: 'correct horse',
     });
   });
+
+  it('delegates current-user lookup using the verified identity', async () => {
+    const getCurrentUser = vi.fn().mockResolvedValue({
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      email: 'user@example.com',
+      emailConfirmedAt: null,
+      accessStatus: 'PENDING',
+      interfaceLanguage: 'pl',
+    });
+    const controller = new AuthController({ getCurrentUser } as never);
+
+    await expect(
+      controller.me({ headers: {}, supabaseAuthId: 'auth-user-id' }),
+    ).resolves.toEqual(expect.objectContaining({ email: 'user@example.com' }));
+
+    expect(getCurrentUser).toHaveBeenCalledWith('auth-user-id');
+  });
 });

@@ -239,6 +239,18 @@ export class AuthService {
     };
   }
 
+  async getCurrentUser(supabaseAuthId: string): Promise<AuthUserResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { supabaseAuthId },
+    });
+
+    if (!user) {
+      throw new ApiException(USER_NOT_FOUND.code, USER_NOT_FOUND.message, 404);
+    }
+
+    return this.toAuthUserResponse(user);
+  }
+
   private throwInvalidCredentials(): never {
     throw new ApiException(
       INVALID_CREDENTIALS.code,

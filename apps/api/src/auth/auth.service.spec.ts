@@ -449,4 +449,34 @@ describe('AuthService', () => {
       });
     });
   });
+
+  describe('getCurrentUser', () => {
+    it('returns the application user resolved from the verified auth identity', async () => {
+      const { prisma, service } = setup();
+      (prisma.user.findUnique as Mock).mockResolvedValue({
+        ...pendingUser,
+        emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z'),
+      });
+
+      await expect(service.getCurrentUser('auth-user-id')).resolves.toEqual({
+        ...pendingUser,
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+      });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { supabaseAuthId: 'auth-user-id' },
+      });
+    });
+
+    it('rejects a verified identity without an application user', async () => {
+      const { prisma, service } = setup();
+      (prisma.user.findUnique as Mock).mockResolvedValue(null);
+
+      await expect(
+        service.getCurrentUser('missing-auth-user'),
+      ).rejects.toMatchObject({
+        code: 'USER_NOT_FOUND',
+        status: 404,
+      });
+    });
+  });
 });

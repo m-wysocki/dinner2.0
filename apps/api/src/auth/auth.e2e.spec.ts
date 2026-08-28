@@ -431,4 +431,65 @@ describe('POST /api/v1/auth (HTTP)', () => {
       expect(signInWithPassword).not.toHaveBeenCalled();
     });
   });
+
+  describe('/auth/me', () => {
+    it('returns the application user for the verified bearer token', async () => {
+      getUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      });
+      userFindUnique.mockResolvedValue({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
+
+      const response = await fetch(`${baseUrl}/auth/me`, {
+        headers: { Authorization: 'Bearer verified-token' },
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      });
+      expect(getUser).toHaveBeenCalledWith('verified-token');
+      expect(userFindUnique).toHaveBeenCalledWith({
+        where: { supabaseAuthId: 'auth-user-id' },
+      });
+    });
+
+    it('rejects requests without a valid session', async () => {
+      const response = await fetch(`${baseUrl}/auth/me`);
+
+      expect(response.status).toBe(401);
+      await expect(response.json()).resolves.toEqual({
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: 'Sesja jest nieprawidłowa lub wygasła.',
+        },
+      });
+      expect(getUser).not.toHaveBeenCalled();
+      expect(userFindUnique).not.toHaveBeenCalled();
+    });
+
+    it('rejects an invalid bearer token before querying application data', async () => {
+      getUser.mockResolvedValue({
+        data: { user: null },
+        error: { code: 'invalid_jwt' },
+      });
+
+      const response = await fetch(`${baseUrl}/auth/me`, {
+        headers: { Authorization: 'Bearer invalid-token' },
+      });
+
+      expect(response.status).toBe(401);
+      expect(userFindUnique).not.toHaveBeenCalled();
+    });
+  });
 });

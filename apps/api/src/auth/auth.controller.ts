@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   confirmEmailRequestSchema,
   loginRequestSchema,
@@ -9,13 +18,21 @@ import {
   type LoginResponse,
   type RegisterRequest,
   type RegisterResponse,
+  type AuthUserResponse,
 } from '@dinner/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { AuthGuard, type AuthenticatedRequest } from './auth.guard';
 import { AuthService } from './auth.service';
 
 @Controller('api/v1/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  me(@Req() request: AuthenticatedRequest): Promise<AuthUserResponse> {
+    return this.authService.getCurrentUser(request.supabaseAuthId!);
+  }
 
   @Post('register')
   register(
