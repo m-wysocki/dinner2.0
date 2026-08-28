@@ -31,7 +31,10 @@ describe('RecipesService', () => {
       where: { ownerId: 'owner-id' },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 100,
-      include: { preparationSteps: { orderBy: { position: 'asc' } } },
+      include: {
+        ingredients: { orderBy: { position: 'asc' } },
+        preparationSteps: { orderBy: { position: 'asc' } },
+      },
     });
   });
 
@@ -45,6 +48,7 @@ describe('RecipesService', () => {
       createdAt: new Date('2026-08-28T12:00:00.000Z'),
       updatedAt: new Date('2026-08-28T12:00:00.000Z'),
       preparationSteps: [],
+      ingredients: [],
     });
     const transaction = vi.fn((callback) => callback({ recipe: { create } }));
     const service = new RecipesService({
@@ -71,7 +75,7 @@ describe('RecipesService', () => {
         servingCount: 4,
         preparationSteps: { create: [] },
       }),
-      include: { preparationSteps: true },
+      include: { ingredients: true, preparationSteps: true },
     });
   });
 

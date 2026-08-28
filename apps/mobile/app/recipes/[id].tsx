@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { apiClient } from '../../src/api/client';
+import { ApiError, apiClient } from '../../src/api/client';
 
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,9 +23,16 @@ export default function RecipeDetails() {
   }
 
   if (recipeQuery.isError || !recipeQuery.data) {
+    const isNotFound =
+      recipeQuery.error instanceof ApiError &&
+      recipeQuery.error.code === 'RECIPE_NOT_FOUND';
     return (
       <View style={styles.centered}>
-        <Text style={styles.error}>Nie znaleziono przepisu.</Text>
+        <Text style={styles.error}>
+          {isNotFound
+            ? 'Nie znaleziono przepisu.'
+            : 'Nie udało się pobrać przepisu.'}
+        </Text>
         <Pressable style={styles.button} onPress={() => router.back()}>
           <Text style={styles.buttonText}>Wróć</Text>
         </Pressable>

@@ -144,14 +144,12 @@ export const recipeResponseSchema = z.object({
   servingCount: z.number().int(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  ingredients: z.array(recipeIngredientResponseSchema).optional(),
-  preparationSteps: z
-    .array(
-      preparationStepRequestSchema.extend({
-        id: z.string().uuid(),
-      }),
-    )
-    .optional(),
+  ingredients: z.array(recipeIngredientResponseSchema),
+  preparationSteps: z.array(
+    preparationStepRequestSchema.extend({
+      id: z.string().uuid(),
+    }),
+  ),
 });
 export type RecipeResponse = z.infer<typeof recipeResponseSchema>;
 

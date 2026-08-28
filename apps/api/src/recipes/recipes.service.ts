@@ -21,7 +21,10 @@ export class RecipesService {
       where: { ownerId: owner.id },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: RECIPE_COLLECTION_LIMIT,
-      include: { preparationSteps: { orderBy: { position: 'asc' } } },
+      include: {
+        ingredients: { orderBy: { position: 'asc' } },
+        preparationSteps: { orderBy: { position: 'asc' } },
+      },
     });
 
     return recipes.map((recipe) =>
@@ -30,6 +33,9 @@ export class RecipesService {
         title: recipe.title,
         description: recipe.description,
         servingCount: recipe.servingCount,
+        ingredients: (recipe.ingredients ?? []).map((ingredient) =>
+          this.toIngredientResponse(ingredient),
+        ),
         createdAt: recipe.createdAt.toISOString(),
         updatedAt: recipe.updatedAt.toISOString(),
         preparationSteps: recipe.preparationSteps.map((step) => ({
@@ -97,7 +103,7 @@ export class RecipesService {
             })),
           },
         },
-        include: { preparationSteps: true },
+        include: { ingredients: true, preparationSteps: true },
       }),
     );
 
@@ -106,6 +112,9 @@ export class RecipesService {
       title: recipe.title,
       description: recipe.description,
       servingCount: recipe.servingCount,
+      ingredients: (recipe.ingredients ?? []).map((ingredient) =>
+        this.toIngredientResponse(ingredient),
+      ),
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
       preparationSteps: (recipe.preparationSteps ?? []).map((step) => ({
