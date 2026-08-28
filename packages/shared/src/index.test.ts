@@ -5,6 +5,7 @@ import {
   authUserResponseSchema,
   canonicalUnitSchema,
   confirmEmailRequestSchema,
+  createRecipeRequestSchema,
   interfaceLanguageSchema,
   loginRequestSchema,
   loginResponseSchema,
@@ -273,5 +274,26 @@ describe('api error contract', () => {
 
   it('rejects a body without the error wrapper', () => {
     expect(apiErrorSchema.safeParse({ code: 'X' }).success).toBe(false);
+  });
+});
+
+describe('recipe contracts', () => {
+  it('accepts and trims basic recipe data', () => {
+    expect(
+      createRecipeRequestSchema.parse({
+        title: '  Zupa  ',
+        description: '  Domowa  ',
+        servingCount: 4,
+      }),
+    ).toEqual({ title: 'Zupa', description: 'Domowa', servingCount: 4 });
+  });
+
+  it('requires a non-empty title and positive serving count', () => {
+    expect(
+      createRecipeRequestSchema.safeParse({
+        title: ' ',
+        servingCount: 0,
+      }).success,
+    ).toBe(false);
   });
 });

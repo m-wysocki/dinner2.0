@@ -7,6 +7,7 @@ import { ApiErrorFilter } from './common/api-error.filter';
 import { validateEnvironment } from './config';
 import { DatabaseModule } from './database.module';
 import { SupabaseModule } from './supabase.module';
+import { RecipesModule } from './recipes/recipes.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SupabaseModule } from './supabase.module';
       envFilePath: ['.env', '../../.env'],
     }),
     AuthModule,
+    RecipesModule,
   ],
   controllers: [AppController],
   providers: [

@@ -93,3 +93,20 @@ export const apiErrorSchema = z.object({
   }),
 });
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>;
+
+export const createRecipeRequestSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(5000).optional(),
+  servingCount: z.number().int().min(1).max(1000),
+});
+export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
+
+export const recipeResponseSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  description: z.string().nullable(),
+  servingCount: z.number().int(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type RecipeResponse = z.infer<typeof recipeResponseSchema>;

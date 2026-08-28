@@ -4,9 +4,14 @@
 
 **Blocked by:** 11: Recipe domain and ingredient catalog
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] User can enter title, optional description, and serving count.
-- [ ] Required fields are validated at the client and API boundaries.
-- [ ] A recipe is associated with the authenticated user.
-- [ ] Successful creation is visible through the API and mobile flow.
+- [x] User can enter title, optional description, and serving count.
+- [x] Required fields are validated at the client and API boundaries.
+- [x] A recipe is associated with the authenticated user.
+- [x] Successful creation is visible through the API and mobile flow.
+
+## Comments
+
+Implemented `POST /api/v1/recipes`, shared recipe contracts, active-user access
+checks, the mobile creation form, and focused API/mobile/shared tests.
