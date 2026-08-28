@@ -14,10 +14,10 @@ export default function User() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.email}>{state.user.email}</Text>
       {state.user.accessStatus === 'PENDING' ? (
         <>
           <Text style={styles.title}>Oczekiwanie na aktywację</Text>
-          <Text style={styles.email}>{state.user.email}</Text>
           <Text style={styles.message}>
             Twoje konto zostało potwierdzone, ale administrator nie aktywował
             jeszcze dostępu. Otrzymasz dostęp do prywatnych przepisów po
@@ -27,7 +27,6 @@ export default function User() {
       ) : (
         <>
           <Text style={styles.title}>Zalogowano</Text>
-          <Text style={styles.email}>{state.user.email}</Text>
           <Text style={styles.message}>
             Jesteś zalogowany i możesz zarządzać swoimi przepisami.
           </Text>

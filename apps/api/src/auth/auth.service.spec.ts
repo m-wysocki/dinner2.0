@@ -384,7 +384,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('returns a session for a pending account', async () => {
+    it('returns a session for a pending user', async () => {
       const { supabase, prisma, service } = setup();
 
       (supabase.auth.signInWithPassword as Mock).mockResolvedValue({

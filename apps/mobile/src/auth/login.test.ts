@@ -80,7 +80,7 @@ describe('submitLogin', () => {
     });
   });
 
-  it('establishes a session for a pending account', async () => {
+  it('establishes a session for a pending user', async () => {
     loginMock.mockResolvedValue({
       ...loginResponse,
       user: { ...loginResponse.user, accessStatus: 'PENDING' },

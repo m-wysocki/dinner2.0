@@ -29,10 +29,14 @@ export class ActiveAccessGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({
       where: { supabaseAuthId: request.supabaseAuthId },
-      select: { accessStatus: true },
+      select: { accessStatus: true, emailConfirmedAt: true },
     });
 
-    if (!user || user.accessStatus !== 'ACTIVE') {
+    if (
+      !user ||
+      user.accessStatus !== 'ACTIVE' ||
+      user.emailConfirmedAt === null
+    ) {
       throw new ApiException(
         ACCESS_PENDING.code,
         ACCESS_PENDING.message,

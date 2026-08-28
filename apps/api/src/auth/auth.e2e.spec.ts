@@ -349,7 +349,7 @@ describe('POST /api/v1/auth (HTTP)', () => {
       expect(userFindUnique).not.toHaveBeenCalled();
     });
 
-    it('returns an authenticated session for a pending account', async () => {
+    it('returns an authenticated session for a pending user', async () => {
       signInWithPassword.mockResolvedValue({
         data: {
           user: { id: 'auth-user-id' },
