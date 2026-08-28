@@ -312,5 +312,15 @@ describe('recipe contracts', () => {
         preparationSteps: [{ text: 'Gotuj', position: 0 }],
       }).preparationSteps,
     ).toEqual([{ text: 'Gotuj', position: 0 }]);
+    expect(
+      createRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        servingCount: 4,
+        preparationSteps: [
+          { text: 'Gotuj', position: 0 },
+          { text: 'Podaj', position: 0 },
+        ],
+      }).success,
+    ).toBe(false);
   });
 });

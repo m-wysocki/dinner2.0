@@ -73,6 +73,19 @@ export type PreparationStepRequest = z.infer<
   typeof preparationStepRequestSchema
 >;
 
+const preparationStepsSchema = z
+  .array(preparationStepRequestSchema)
+  .superRefine((steps, context) => {
+    const positions = steps.map((step) => step.position);
+    const expected = steps.map((_, index) => index);
+    if (positions.some((position, index) => position !== expected[index])) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Preparation steps must have consecutive positions',
+      });
+    }
+  });
+
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',
   'EMAIL_ALREADY_REGISTERED',
@@ -106,7 +119,7 @@ export const createRecipeRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(5000).optional(),
   servingCount: z.number().int().min(1).max(1000),
-  preparationSteps: z.array(preparationStepRequestSchema).optional(),
+  preparationSteps: preparationStepsSchema.optional(),
 });
 export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
 
