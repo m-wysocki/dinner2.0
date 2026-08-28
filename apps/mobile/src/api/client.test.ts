@@ -317,6 +317,45 @@ describe('authenticated requests', () => {
     });
   });
 
+  it('refreshes the current user through the authenticated API', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          email: 'user@example.com',
+          emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+          accessStatus: 'ACTIVE',
+          interfaceLanguage: 'pl',
+        }),
+      }),
+    );
+
+    await expect(apiClient.currentUser()).resolves.toMatchObject({
+      accessStatus: 'ACTIVE',
+    });
+    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/v1/auth/me', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer access-token' },
+    });
+  });
+
   it('does not call the network without a valid session', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

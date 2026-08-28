@@ -1,7 +1,11 @@
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { restoreAuthenticatedState } from '../src/auth/session';
+import { apiClient } from '../src/api/client';
+import {
+  restoreAuthenticatedState,
+  setAuthenticatedState,
+} from '../src/auth/session';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +20,20 @@ export default function RootLayout() {
   const [sessionRestored, setSessionRestored] = useState(false);
 
   useEffect(() => {
-    void restoreAuthenticatedState().finally(() => setSessionRestored(true));
+    void (async () => {
+      const state = await restoreAuthenticatedState();
+
+      if (state) {
+        try {
+          const user = await apiClient.currentUser();
+          await setAuthenticatedState({ ...state, user });
+        } catch {
+          // Keep a valid local session when the API is temporarily unavailable.
+        }
+      }
+
+      setSessionRestored(true);
+    })();
   }, []);
 
   if (!sessionRestored) {
