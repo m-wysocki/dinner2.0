@@ -72,20 +72,6 @@ export default function Index() {
           </View>
           <Text style={styles.authenticatedTitle}>Jesteś zalogowany</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
-          <View style={styles.testPanel}>
-            <Text style={styles.testTitle}>Panel testowy</Text>
-            <Text style={styles.details}>
-              Szybki dostęp do bieżących funkcji przepisu.
-            </Text>
-          </View>
-          <Link href="/user" style={styles.button}>
-            <Text style={styles.buttonText}>Przejdź do konta</Text>
-          </Link>
-          <Link href="/create-recipe" style={styles.button}>
-            <Text style={styles.buttonText}>
-              Testuj składniki i dodaj przepis
-            </Text>
-          </Link>
           <Pressable
             style={styles.logoutButton}
             onPress={() => {
@@ -143,19 +129,6 @@ const styles = StyleSheet.create({
   subtitle: { color: '#68736d', fontSize: 16, marginTop: 8 },
   status: { alignItems: 'center', marginTop: 48 },
   authenticatedPanel: { alignItems: 'center', marginTop: 32, width: '100%' },
-  testPanel: {
-    backgroundColor: '#eef1ed',
-    borderRadius: 12,
-    marginTop: 16,
-    padding: 14,
-    width: '100%',
-  },
-  testTitle: {
-    color: '#25352d',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
   menuTitle: {
     color: '#25352d',
     fontSize: 18,
