@@ -1,4 +1,4 @@
-import { createRecipeRequestSchema } from '@dinner/shared';
+import { createRecipeRequestSchema, type RecipeResponse } from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -19,6 +19,7 @@ export default function CreateRecipe() {
   const [servingCount, setServingCount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedRecipe, setSavedRecipe] = useState<RecipeResponse | null>(null);
 
   if (!state) {
     return <Redirect href="/login" />;
@@ -43,8 +44,7 @@ export default function CreateRecipe() {
     setError(null);
     setIsSaving(true);
     try {
-      await apiClient.createRecipe(parsed.data);
-      router.replace('/');
+      setSavedRecipe(await apiClient.createRecipe(parsed.data));
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -54,6 +54,22 @@ export default function CreateRecipe() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  if (savedRecipe) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Przepis zapisany</Text>
+        <Text style={styles.savedTitle}>{savedRecipe.title}</Text>
+        <Text style={styles.savedMessage}>
+          Przepis na {savedRecipe.servingCount} porcji został dodany do Twojej
+          kolekcji.
+        </Text>
+        <Pressable onPress={() => router.replace('/')} style={styles.button}>
+          <Text style={styles.buttonText}>Wróć do strony głównej</Text>
+        </Pressable>
+      </View>
+    );
   }
 
   return (
@@ -135,6 +151,18 @@ const styles = StyleSheet.create({
   },
   description: { minHeight: 96, textAlignVertical: 'top' },
   error: { color: '#a43b32', marginTop: 16 },
+  savedTitle: {
+    color: '#25352d',
+    fontSize: 22,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  savedMessage: {
+    color: '#68736d',
+    fontSize: 16,
+    lineHeight: 24,
+    marginTop: 20,
+  },
   button: {
     alignItems: 'center',
     backgroundColor: '#25352d',

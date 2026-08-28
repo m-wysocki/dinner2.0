@@ -58,5 +58,7 @@ describe('CreateRecipe screen', () => {
         servingCount: 4,
       }),
     );
+    expect(await screen.findByText('Przepis zapisany')).toBeOnTheScreen();
+    expect(screen.getByText('Zupa')).toBeOnTheScreen();
   });
 });
