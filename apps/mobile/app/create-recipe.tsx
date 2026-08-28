@@ -68,7 +68,19 @@ export default function CreateRecipe() {
     });
 
     if (!parsed.success) {
-      setError('Podaj tytuł, prawidłową liczbę porcji i potwierdź składniki.');
+      const hasMissingIdentity = parsed.error.issues.some(
+        (issue) => issue.path.at(-1) === 'catalogEntryId',
+      );
+      const hasInvalidQuantity = parsed.error.issues.some(
+        (issue) => issue.path.at(-1) === 'quantity',
+      );
+      setError(
+        hasMissingIdentity
+          ? 'Wybierz kanoniczny składnik z katalogu dla każdej pozycji.'
+          : hasInvalidQuantity
+            ? 'Podaj ilość jako liczbę, maksymalnie z sześcioma miejscami po przecinku, albo zostaw ją pustą.'
+            : 'Podaj tytuł i prawidłową liczbę porcji.',
+      );
       return;
     }
 
