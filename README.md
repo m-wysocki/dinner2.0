@@ -18,6 +18,7 @@ The app will let users create a private recipe collection, add structured ingred
 ## Technology Stack
 
 - **Mobile:** React Native, Expo, Expo Router, TypeScript, TanStack Query
+- **Web:** Expo web is a supported runtime and must remain functional alongside iOS and Android
 - **Backend:** Node.js, NestJS, TypeScript, REST API
 - **Data:** PostgreSQL, Prisma, Supabase
 - **Validation:** Zod and NestJS DTO validation

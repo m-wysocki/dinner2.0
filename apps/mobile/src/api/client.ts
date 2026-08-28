@@ -12,6 +12,11 @@ import {
   type RegisterResponse,
 } from '@dinner/shared';
 import { apiUrl } from '../config';
+import {
+  clearAuthenticatedState,
+  getAuthenticatedState,
+  hasValidAuthenticatedState,
+} from '../auth/session';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -25,25 +30,47 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   method?: 'GET' | 'POST';
   body?: unknown;
+  authenticated?: boolean;
 }
 
-async function request<T>(
+export async function request<T>(
   path: string,
   schema: { parse: (value: unknown) => T },
   options: RequestOptions = {},
 ) {
+  const authenticated = options.authenticated ?? false;
+  const state = authenticated ? getAuthenticatedState() : null;
+
+  if (authenticated && (!state || !hasValidAuthenticatedState())) {
+    clearAuthenticatedState();
+    throw new ApiError(
+      'Sesja wygasła. Zaloguj się ponownie.',
+      401,
+      'INVALID_CREDENTIALS',
+    );
+  }
+
   let response: Response;
 
   try {
     response = await fetch(`${apiUrl}${path}`, {
       method: options.method ?? 'GET',
-      ...(options.body !== undefined
+      ...(authenticated || options.body !== undefined
         ? {
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(options.body),
+            headers: {
+              ...(options.body !== undefined
+                ? { 'Content-Type': 'application/json' }
+                : {}),
+              ...(state
+                ? { Authorization: `Bearer ${state.session.accessToken}` }
+                : {}),
+            },
+            ...(options.body !== undefined
+              ? { body: JSON.stringify(options.body) }
+              : {}),
           }
         : {}),
     });
@@ -52,6 +79,9 @@ async function request<T>(
   }
 
   if (!response.ok) {
+    if (authenticated && response.status === 401) {
+      clearAuthenticatedState();
+    }
     const body = await response.json().catch(() => undefined);
     const parsed = apiErrorSchema.safeParse(body);
 

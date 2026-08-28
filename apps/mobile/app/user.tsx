@@ -1,6 +1,9 @@
-import { Link, Redirect } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
-import { getAuthenticatedState } from '../src/auth/session';
+import { Link, Redirect, router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  clearAuthenticatedState,
+  getAuthenticatedState,
+} from '../src/auth/session';
 
 export default function User() {
   const state = getAuthenticatedState();
@@ -19,6 +22,15 @@ export default function User() {
       <Link href="/" style={styles.button}>
         <Text style={styles.buttonText}>Wróć do ekranu głównego</Text>
       </Link>
+      <Pressable
+        style={styles.logoutButton}
+        onPress={() => {
+          clearAuthenticatedState();
+          router.replace('/login');
+        }}
+      >
+        <Text style={styles.logoutText}>Wyloguj się</Text>
+      </Pressable>
     </View>
   );
 }
@@ -46,4 +58,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  logoutButton: { alignItems: 'center', marginTop: 20, paddingVertical: 14 },
+  logoutText: { color: '#a43b32', fontSize: 16, fontWeight: '600' },
 });

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
+    "dev:web": "nest start --watch",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "lint": "tsc -p tsconfig.json --noEmit",

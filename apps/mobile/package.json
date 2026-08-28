@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit",
     "dev": "expo start",
+    "dev:web": "expo start --web",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -16,6 +17,7 @@
     "expo": "^54.0.5",
     "expo-linking": "~8.0.12",
     "expo-router": "^6.0.4",
+    "expo-secure-store": "^57.0.2",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.2",

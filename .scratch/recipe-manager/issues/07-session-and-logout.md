@@ -4,9 +4,16 @@
 
 **Blocked by:** 06: User login
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A valid session is restored after restarting the app.
-- [ ] Logging out clears locally retained authentication state.
-- [ ] Expired or invalid sessions return the user to the unauthenticated flow.
-- [ ] Protected requests do not proceed without a valid session.
+- [x] A valid session is restored after restarting the app.
+- [x] Logging out clears locally retained authentication state.
+- [x] Expired or invalid sessions return the user to the unauthenticated flow.
+- [x] Protected requests do not proceed without a valid session.
+
+## Comments
+
+- Added SecureStore-backed session persistence and restoration during app startup.
+- Protected API requests now require a valid session, attach its bearer token,
+  and clear local state after an unauthorized response.
+- The authenticated screen now provides a logout action.

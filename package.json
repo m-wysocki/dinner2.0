@@ -9,7 +9,8 @@
     "format:check": "prettier --check .",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "dev:web": "pnpm --parallel --filter @dinner/api --filter @dinner/mobile dev:web"
   },
   "devDependencies": {
     "prettier": "^3.6.2"

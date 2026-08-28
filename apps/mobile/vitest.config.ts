@@ -13,6 +13,10 @@ export default defineConfig({
       // so screen-level tests render through the RNTL test renderer.
       'react-native': new URL('./test/mocks/react-native.js', import.meta.url)
         .pathname,
+      'expo-secure-store': new URL(
+        './test/mocks/expo-secure-store.js',
+        import.meta.url,
+      ).pathname,
     },
   },
   test: {

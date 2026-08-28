@@ -29,7 +29,7 @@ export async function submitLogin(form: LoginForm): Promise<LoginFormResult> {
       return { kind: 'error', message: ACCESS_PENDING_MESSAGE };
     }
 
-    setAuthenticatedState({
+    await setAuthenticatedState({
       session: {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
