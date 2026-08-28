@@ -25,6 +25,7 @@ export default function CreateRecipe() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipe, setSavedRecipe] = useState<RecipeResponse | null>(null);
   const [catalog, setCatalog] = useState<IngredientCatalogEntry[]>([]);
+  const [customName, setCustomName] = useState('');
   const [ingredients, setIngredients] = useState<
     Array<{
       catalogEntryId?: string;
@@ -91,6 +92,28 @@ export default function CreateRecipe() {
       );
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function addCustomIngredient() {
+    if (
+      !customName.trim() ||
+      typeof apiClient.createCustomIngredient !== 'function'
+    ) {
+      return;
+    }
+    try {
+      const entry = await apiClient.createCustomIngredient({
+        name: customName,
+      });
+      setCatalog((current) => [...current, entry]);
+      setCustomName('');
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Nie udało się dodać składnika.',
+      );
     }
   }
 
@@ -183,27 +206,27 @@ export default function CreateRecipe() {
             value={ingredient.note}
           />
           <View style={styles.catalog}>
-            {(['G', 'ML', 'PCS', 'TSP', 'TBSP', 'OTHER'] as const).map(
-              (unit) => (
-                <Pressable
-                  key={unit}
-                  onPress={() =>
-                    setIngredients((current) =>
-                      current.map((item, itemIndex) =>
-                        itemIndex === index ? { ...item, unit } : item,
-                      ),
-                    )
-                  }
-                  style={
-                    ingredient.unit === unit
-                      ? styles.selected
-                      : styles.catalogEntry
-                  }
-                >
-                  <Text>{unit}</Text>
-                </Pressable>
-              ),
-            )}
+            {(
+              ['G', 'KG', 'ML', 'L', 'PCS', 'TSP', 'TBSP', 'OTHER'] as const
+            ).map((unit) => (
+              <Pressable
+                key={unit}
+                onPress={() =>
+                  setIngredients((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, unit } : item,
+                    ),
+                  )
+                }
+                style={
+                  ingredient.unit === unit
+                    ? styles.selected
+                    : styles.catalogEntry
+                }
+              >
+                <Text>{unit}</Text>
+              </Pressable>
+            ))}
           </View>
           <View style={styles.catalog}>
             {catalog.map((entry) => (
@@ -224,9 +247,57 @@ export default function CreateRecipe() {
                     : styles.catalogEntry
                 }
               >
-                <Text>{entry.namePl}</Text>
+                <Text>
+                  {state.user.interfaceLanguage === 'en'
+                    ? entry.nameEn
+                    : entry.namePl}
+                </Text>
               </Pressable>
             ))}
+          </View>
+          <Pressable
+            onPress={() =>
+              setIngredients((current) =>
+                current.filter((_, itemIndex) => itemIndex !== index),
+              )
+            }
+            style={styles.remove}
+          >
+            <Text>Usuń składnik</Text>
+          </Pressable>
+          <View style={styles.catalog}>
+            <Pressable
+              disabled={index === 0}
+              onPress={() =>
+                setIngredients((current) => {
+                  const next = [...current];
+                  [next[index - 1], next[index]] = [
+                    next[index],
+                    next[index - 1],
+                  ];
+                  return next;
+                })
+              }
+              style={styles.catalogEntry}
+            >
+              <Text>W górę</Text>
+            </Pressable>
+            <Pressable
+              disabled={index === ingredients.length - 1}
+              onPress={() =>
+                setIngredients((current) => {
+                  const next = [...current];
+                  [next[index], next[index + 1]] = [
+                    next[index + 1],
+                    next[index],
+                  ];
+                  return next;
+                })
+              }
+              style={styles.catalogEntry}
+            >
+              <Text>W dół</Text>
+            </Pressable>
           </View>
         </View>
       ))}
@@ -240,6 +311,19 @@ export default function CreateRecipe() {
         style={styles.secondaryButton}
       >
         <Text>Dodaj składnik</Text>
+      </Pressable>
+      <TextInput
+        accessibilityLabel="Nazwa własnego składnika"
+        onChangeText={setCustomName}
+        placeholder="Nowy własny składnik"
+        style={[styles.input, styles.customInput]}
+        value={customName}
+      />
+      <Pressable
+        onPress={() => void addCustomIngredient()}
+        style={styles.secondaryButton}
+      >
+        <Text>Utwórz własny składnik</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
       <Pressable
@@ -297,6 +381,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
   },
+  customInput: { marginTop: 12 },
+  remove: { alignSelf: 'flex-start', marginTop: 6, padding: 6 },
   input: {
     backgroundColor: '#fff',
     borderColor: '#d9ded8',
