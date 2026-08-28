@@ -23,7 +23,7 @@ export default function Index() {
     queryFn: () => apiClient.health(),
   });
   const recipesQuery = useQuery({
-    queryKey: ['recipes'],
+    queryKey: ['recipes', authenticatedState?.user.id],
     queryFn: () => apiClient.listRecipes(),
     enabled: isActiveUser,
   });

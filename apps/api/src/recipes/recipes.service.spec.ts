@@ -30,6 +30,7 @@ describe('RecipesService', () => {
     expect(findMany).toHaveBeenCalledWith({
       where: { ownerId: 'owner-id' },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: 100,
       include: { preparationSteps: { orderBy: { position: 'asc' } } },
     });
   });
