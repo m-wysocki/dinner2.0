@@ -25,14 +25,23 @@ export class RecipesService {
       );
     }
 
-    const recipe = await this.prisma.recipe.create({
-      data: {
-        ownerId: owner.id,
-        title: input.title,
-        description: input.description || null,
-        servingCount: input.servingCount,
-      },
-    });
+    const recipe = await this.prisma.$transaction((transaction) =>
+      transaction.recipe.create({
+        data: {
+          ownerId: owner.id,
+          title: input.title,
+          description: input.description || null,
+          servingCount: input.servingCount,
+          preparationSteps: {
+            create: (input.preparationSteps ?? []).map((step) => ({
+              text: step.text,
+              position: step.position,
+            })),
+          },
+        },
+        include: { preparationSteps: true },
+      }),
+    );
 
     return recipeResponseSchema.parse({
       id: recipe.id,
@@ -41,6 +50,11 @@ export class RecipesService {
       servingCount: recipe.servingCount,
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
+      preparationSteps: (recipe.preparationSteps ?? []).map((step) => ({
+        id: step.id,
+        text: step.text,
+        position: step.position,
+      })),
     });
   }
 }

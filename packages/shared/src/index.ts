@@ -65,6 +65,14 @@ export const loginResponseSchema = authSessionSchema.extend({
 });
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
+export const preparationStepRequestSchema = z.object({
+  text: z.string().trim().min(1).max(5000),
+  position: z.number().int().min(0),
+});
+export type PreparationStepRequest = z.infer<
+  typeof preparationStepRequestSchema
+>;
+
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',
   'EMAIL_ALREADY_REGISTERED',
@@ -98,6 +106,7 @@ export const createRecipeRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(5000).optional(),
   servingCount: z.number().int().min(1).max(1000),
+  preparationSteps: z.array(preparationStepRequestSchema).optional(),
 });
 export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
 
@@ -108,5 +117,12 @@ export const recipeResponseSchema = z.object({
   servingCount: z.number().int(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  preparationSteps: z
+    .array(
+      preparationStepRequestSchema.extend({
+        id: z.string().uuid(),
+      }),
+    )
+    .optional(),
 });
 export type RecipeResponse = z.infer<typeof recipeResponseSchema>;

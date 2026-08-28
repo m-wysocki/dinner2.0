@@ -296,4 +296,21 @@ describe('recipe contracts', () => {
       }).success,
     ).toBe(false);
   });
+
+  it('rejects empty preparation steps and accepts ordered text', () => {
+    expect(
+      createRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        servingCount: 4,
+        preparationSteps: [{ text: ' ', position: 0 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      createRecipeRequestSchema.parse({
+        title: 'Zupa',
+        servingCount: 4,
+        preparationSteps: [{ text: 'Gotuj', position: 0 }],
+      }).preparationSteps,
+    ).toEqual([{ text: 'Gotuj', position: 0 }]);
+  });
 });
