@@ -349,7 +349,7 @@ describe('POST /api/v1/auth (HTTP)', () => {
       expect(userFindUnique).not.toHaveBeenCalled();
     });
 
-    it('rejects a pending account until an administrator activates it', async () => {
+    it('returns an authenticated session for a pending account', async () => {
       signInWithPassword.mockResolvedValue({
         data: {
           user: { id: 'auth-user-id' },
@@ -374,11 +374,17 @@ describe('POST /api/v1/auth (HTTP)', () => {
         }),
       });
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
-        error: {
-          code: 'ACCESS_PENDING',
-          message: 'Konto oczekuje na akceptację administratora.',
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        expiresAt: session.expires_at,
+        user: {
+          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          email: 'user@example.com',
+          emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+          accessStatus: 'PENDING',
+          interfaceLanguage: 'pl',
         },
       });
     });

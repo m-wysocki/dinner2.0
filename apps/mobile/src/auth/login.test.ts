@@ -80,7 +80,7 @@ describe('submitLogin', () => {
     });
   });
 
-  it('does not establish a session for a pending account', async () => {
+  it('establishes a session for a pending account', async () => {
     loginMock.mockResolvedValue({
       ...loginResponse,
       user: { ...loginResponse.user, accessStatus: 'PENDING' },
@@ -91,12 +91,9 @@ describe('submitLogin', () => {
         email: 'user@example.com',
         password: 'correct horse',
       }),
-    ).resolves.toEqual({
-      kind: 'error',
-      message: 'Konto oczekuje na akceptację administratora.',
-    });
+    ).resolves.toEqual({ kind: 'success' });
 
-    expect(getAuthenticatedState()).toBeNull();
+    expect(getAuthenticatedState()?.user.accessStatus).toBe('PENDING');
   });
 
   it('falls back to a generic message for unexpected failures', async () => {
