@@ -3,6 +3,7 @@ import { Link, router } from 'expo-router';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -29,7 +30,7 @@ export default function Index() {
   });
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>dinner2</Text>
       <Text style={styles.subtitle}>Menedżer przepisów</Text>
 
@@ -149,7 +150,7 @@ export default function Index() {
           </Link>
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
