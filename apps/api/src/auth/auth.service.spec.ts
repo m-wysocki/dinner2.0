@@ -320,8 +320,9 @@ describe('AuthService', () => {
       expires_at: 1785302400,
     };
 
-    const confirmedUser = {
+    const activeUser = {
       ...pendingUser,
+      accessStatus: 'ACTIVE',
       emailConfirmedAt: new Date('2026-08-27T12:00:00.000Z'),
     };
 
@@ -335,17 +336,17 @@ describe('AuthService', () => {
         },
         error: null,
       });
-      (prisma.user.findUnique as Mock).mockResolvedValue(confirmedUser);
+      (prisma.user.findUnique as Mock).mockResolvedValue(activeUser);
 
       await expect(service.login(validInput)).resolves.toEqual({
         accessToken: session.access_token,
         refreshToken: session.refresh_token,
         expiresAt: session.expires_at,
         user: {
-          id: confirmedUser.id,
-          email: confirmedUser.email,
-          emailConfirmedAt: confirmedUser.emailConfirmedAt.toISOString(),
-          accessStatus: 'PENDING',
+          id: activeUser.id,
+          email: activeUser.email,
+          emailConfirmedAt: activeUser.emailConfirmedAt.toISOString(),
+          accessStatus: 'ACTIVE',
           interfaceLanguage: 'pl',
         },
       });
@@ -372,7 +373,7 @@ describe('AuthService', () => {
         },
         error: null,
       });
-      (prisma.user.findUnique as Mock).mockResolvedValue(confirmedUser);
+      (prisma.user.findUnique as Mock).mockResolvedValue(activeUser);
 
       const result = await service.login(validInput);
 
@@ -381,6 +382,21 @@ describe('AuthService', () => {
       expect(result.expiresAt).toBe(
         new Date('2026-08-28T13:00:00.000Z').getTime(),
       );
+    });
+
+    it('rejects a pending account until an administrator activates it', async () => {
+      const { supabase, prisma, service } = setup();
+
+      (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
+        data: { user: { id: 'auth-user-id' }, session },
+        error: null,
+      });
+      (prisma.user.findUnique as Mock).mockResolvedValue(pendingUser);
+
+      await expect(service.login(validInput)).rejects.toMatchObject({
+        code: 'ACCESS_PENDING',
+        status: 403,
+      });
     });
 
     it('rejects an unconfirmed account with an actionable message', async () => {
