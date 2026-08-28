@@ -76,6 +76,9 @@ export const apiErrorCodeSchema = z.enum([
   'ACCESS_PENDING',
   'HTTP_ERROR',
   'INTERNAL_ERROR',
+  'INGREDIENT_NOT_FOUND',
+  'INGREDIENT_NOT_ACCESSIBLE',
+  'INGREDIENT_NAME_TAKEN',
 ]);
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 
@@ -94,10 +97,46 @@ export const apiErrorSchema = z.object({
 });
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>;
 
+const decimalSchema = z
+  .string()
+  .trim()
+  .regex(/^\d+(\.\d{1,6})?$/, 'Quantity must be a positive decimal');
+
+export const recipeIngredientRequestSchema = z.object({
+  catalogEntryId: z.string().uuid(),
+  name: z.string().trim().min(1).max(200),
+  quantity: decimalSchema.nullable().optional(),
+  unit: canonicalUnitSchema,
+  note: z.string().trim().max(500).optional(),
+  position: z.number().int().min(0),
+});
+export type RecipeIngredientRequest = z.infer<
+  typeof recipeIngredientRequestSchema
+>;
+
+export const createCustomIngredientRequestSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+});
+export type CreateCustomIngredientRequest = z.infer<
+  typeof createCustomIngredientRequestSchema
+>;
+
+export const ingredientCatalogEntrySchema = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  namePl: z.string(),
+  nameEn: z.string(),
+  isSystem: z.boolean(),
+});
+export type IngredientCatalogEntry = z.infer<
+  typeof ingredientCatalogEntrySchema
+>;
+
 export const createRecipeRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(5000).optional(),
   servingCount: z.number().int().min(1).max(1000),
+  ingredients: z.array(recipeIngredientRequestSchema).optional(),
 });
 export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
 
@@ -108,5 +147,15 @@ export const recipeResponseSchema = z.object({
   servingCount: z.number().int(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  ingredients: z
+    .array(
+      recipeIngredientRequestSchema.extend({
+        id: z.string().uuid(),
+        quantity: decimalSchema.nullable(),
+        note: z.string().nullable(),
+        identityConfirmed: z.literal(true),
+      }),
+    )
+    .optional(),
 });
 export type RecipeResponse = z.infer<typeof recipeResponseSchema>;

@@ -1,6 +1,10 @@
-import { createRecipeRequestSchema, type RecipeResponse } from '@dinner/shared';
+import {
+  createRecipeRequestSchema,
+  type IngredientCatalogEntry,
+  type RecipeResponse,
+} from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -20,6 +24,25 @@ export default function CreateRecipe() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipe, setSavedRecipe] = useState<RecipeResponse | null>(null);
+  const [catalog, setCatalog] = useState<IngredientCatalogEntry[]>([]);
+  const [ingredients, setIngredients] = useState<
+    Array<{
+      catalogEntryId?: string;
+      name: string;
+      quantity: string;
+      unit: 'G' | 'KG' | 'ML' | 'L' | 'PCS' | 'TSP' | 'TBSP' | 'OTHER';
+      note: string;
+    }>
+  >([]);
+
+  useEffect(() => {
+    if (typeof apiClient.ingredientCatalog === 'function') {
+      void apiClient
+        .ingredientCatalog()
+        .then(setCatalog)
+        .catch(() => undefined);
+    }
+  }, []);
 
   if (!state) {
     return <Redirect href="/login" />;
@@ -34,17 +57,32 @@ export default function CreateRecipe() {
       title,
       description: description.trim() || undefined,
       servingCount: Number(servingCount),
+      ingredients: ingredients.map((ingredient, position) => ({
+        ...ingredient,
+        catalogEntryId: ingredient.catalogEntryId ?? '',
+        quantity: ingredient.quantity.trim() || null,
+        note: ingredient.note.trim() || undefined,
+        position,
+      })),
     });
 
     if (!parsed.success) {
-      setError('Podaj tytuł i prawidłową liczbę porcji.');
+      setError('Podaj tytuł, prawidłową liczbę porcji i potwierdź składniki.');
       return;
     }
 
     setError(null);
     setIsSaving(true);
     try {
-      setSavedRecipe(await apiClient.createRecipe(parsed.data));
+      const input =
+        (parsed.data.ingredients?.length ?? 0) === 0
+          ? {
+              title: parsed.data.title,
+              description: parsed.data.description,
+              servingCount: parsed.data.servingCount,
+            }
+          : parsed.data;
+      setSavedRecipe(await apiClient.createRecipe(input));
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -102,6 +140,107 @@ export default function CreateRecipe() {
         style={styles.input}
         value={servingCount}
       />
+      <Text style={styles.sectionTitle}>Składniki</Text>
+      {ingredients.map((ingredient, index) => (
+        <View key={index} style={styles.ingredient}>
+          <TextInput
+            accessibilityLabel={`Nazwa składnika ${index + 1}`}
+            onChangeText={(name) =>
+              setIngredients((current) =>
+                current.map((item, itemIndex) =>
+                  itemIndex === index ? { ...item, name } : item,
+                ),
+              )
+            }
+            placeholder="Nazwa składnika"
+            style={styles.input}
+            value={ingredient.name}
+          />
+          <TextInput
+            accessibilityLabel={`Ilość składnika ${index + 1}`}
+            onChangeText={(quantity) =>
+              setIngredients((current) =>
+                current.map((item, itemIndex) =>
+                  itemIndex === index ? { ...item, quantity } : item,
+                ),
+              )
+            }
+            placeholder="Ilość, np. 2 (opcjonalnie)"
+            style={styles.input}
+            value={ingredient.quantity}
+          />
+          <TextInput
+            accessibilityLabel={`Notatka składnika ${index + 1}`}
+            onChangeText={(note) =>
+              setIngredients((current) =>
+                current.map((item, itemIndex) =>
+                  itemIndex === index ? { ...item, note } : item,
+                ),
+              )
+            }
+            placeholder="Notatka (opcjonalnie)"
+            style={styles.input}
+            value={ingredient.note}
+          />
+          <View style={styles.catalog}>
+            {(['G', 'ML', 'PCS', 'TSP', 'TBSP', 'OTHER'] as const).map(
+              (unit) => (
+                <Pressable
+                  key={unit}
+                  onPress={() =>
+                    setIngredients((current) =>
+                      current.map((item, itemIndex) =>
+                        itemIndex === index ? { ...item, unit } : item,
+                      ),
+                    )
+                  }
+                  style={
+                    ingredient.unit === unit
+                      ? styles.selected
+                      : styles.catalogEntry
+                  }
+                >
+                  <Text>{unit}</Text>
+                </Pressable>
+              ),
+            )}
+          </View>
+          <View style={styles.catalog}>
+            {catalog.map((entry) => (
+              <Pressable
+                key={entry.id}
+                onPress={() =>
+                  setIngredients((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index
+                        ? { ...item, catalogEntryId: entry.id }
+                        : item,
+                    ),
+                  )
+                }
+                style={
+                  ingredient.catalogEntryId === entry.id
+                    ? styles.selected
+                    : styles.catalogEntry
+                }
+              >
+                <Text>{entry.namePl}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ))}
+      <Pressable
+        onPress={() =>
+          setIngredients((current) => [
+            ...current,
+            { name: '', quantity: '', unit: 'PCS', note: '' },
+          ])
+        }
+        style={styles.secondaryButton}
+      >
+        <Text>Dodaj składnik</Text>
+      </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
       <Pressable
         disabled={isSaving}
@@ -139,6 +278,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
     marginTop: 16,
+  },
+  sectionTitle: {
+    color: '#25352d',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 24,
+  },
+  ingredient: { marginTop: 8 },
+  catalog: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
+  catalogEntry: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 6 },
+  selected: { backgroundColor: '#b7d7bf', borderRadius: 6, padding: 6 },
+  secondaryButton: {
+    alignItems: 'center',
+    borderColor: '#25352d',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+    padding: 12,
   },
   input: {
     backgroundColor: '#fff',

@@ -2,6 +2,7 @@ import {
   apiErrorSchema,
   authUserResponseSchema,
   recipeResponseSchema,
+  ingredientCatalogEntrySchema,
   healthResponseSchema,
   loginResponseSchema,
   type ApiErrorCode,
@@ -14,6 +15,8 @@ import {
   type RegisterResponse,
   type CreateRecipeRequest,
   type RecipeResponse,
+  type IngredientCatalogEntry,
+  type CreateCustomIngredientRequest,
 } from '@dinner/shared';
 import { apiUrl } from '../config';
 import {
@@ -147,6 +150,27 @@ export const apiClient = {
 
   createRecipe(input: CreateRecipeRequest): Promise<RecipeResponse> {
     return request('/recipes', recipeResponseSchema, {
+      method: 'POST',
+      body: input,
+      authenticated: true,
+    });
+  },
+
+  ingredientCatalog(): Promise<IngredientCatalogEntry[]> {
+    return request(
+      '/ingredient-catalog',
+      {
+        parse: (value: unknown) =>
+          ingredientCatalogEntrySchema.array().parse(value),
+      },
+      { authenticated: true },
+    );
+  },
+
+  createCustomIngredient(
+    input: CreateCustomIngredientRequest,
+  ): Promise<IngredientCatalogEntry> {
+    return request('/ingredient-catalog/custom', ingredientCatalogEntrySchema, {
       method: 'POST',
       body: input,
       authenticated: true,
