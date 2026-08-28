@@ -42,6 +42,7 @@ CREATE TABLE "public"."RecipeIngredient" (
     "unit" "public"."CanonicalUnit" NOT NULL,
     "note" TEXT,
     "position" INTEGER NOT NULL,
+    "identityConfirmed" BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT "RecipeIngredient_pkey" PRIMARY KEY ("id")
 );
 
@@ -83,4 +84,13 @@ ALTER TABLE "public"."Recipe" ADD CONSTRAINT "Recipe_ownerId_fkey" FOREIGN KEY (
 ALTER TABLE "public"."RecipeIngredient" ADD CONSTRAINT "RecipeIngredient_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "public"."Recipe"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "public"."RecipeIngredient" ADD CONSTRAINT "RecipeIngredient_catalogEntryId_fkey" FOREIGN KEY ("catalogEntryId") REFERENCES "public"."IngredientCatalogEntry"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "public"."PreparationStep" ADD CONSTRAINT "PreparationStep_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "public"."Recipe"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "public"."IngredientCatalogEntry" ADD CONSTRAINT "IngredientCatalogEntry_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."IngredientCatalogEntry" ADD CONSTRAINT "IngredientCatalogEntry_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Keep the system/custom distinction consistent with ownership.
+ALTER TABLE "public"."IngredientCatalogEntry"
+ADD CONSTRAINT "IngredientCatalogEntry_system_owner_check"
+CHECK (("isSystem" = true AND "ownerId" IS NULL) OR ("isSystem" = false AND "ownerId" IS NOT NULL));
+
+ALTER TABLE "public"."RecipeIngredient"
+ADD CONSTRAINT "RecipeIngredient_identity_confirmed_check"
+CHECK ("identityConfirmed" = true);

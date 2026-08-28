@@ -54,14 +54,15 @@ model Recipe {
 }
 
 model RecipeIngredient {
-  id             String        @id @default(uuid())
-  recipeId       String
-  catalogEntryId String
-  nameSnapshot   String
-  quantity       Decimal?      @db.Decimal(20, 6)
-  unit           CanonicalUnit
-  note           String?
-  position       Int
+  id                String        @id @default(uuid())
+  recipeId          String
+  catalogEntryId    String
+  nameSnapshot      String
+  quantity          Decimal?      @db.Decimal(20, 6)
+  unit              CanonicalUnit
+  note              String?
+  position          Int
+  identityConfirmed Boolean       @default(false)
 
   recipe       Recipe                 @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   catalogEntry IngredientCatalogEntry @relation(fields: [catalogEntryId], references: [id], onDelete: Restrict)
@@ -92,7 +93,7 @@ model IngredientCatalogEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner             User?              @relation("CustomIngredientOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner             User?              @relation("CustomIngredientOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   recipeIngredients RecipeIngredient[]
 
   @@index([ownerId, isActive])
