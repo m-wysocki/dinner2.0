@@ -27,11 +27,20 @@ const systemIngredients = [
 
 async function main() {
   for (const { slug, namePl, nameEn } of systemIngredients) {
-    await prisma.ingredientCatalogEntry.upsert({
+    const existing = await prisma.ingredientCatalogEntry.findUnique({
       where: { slug },
-      update: { namePl, nameEn, isActive: true, isSystem: true, ownerId: null },
-      create: { slug, namePl, nameEn },
     });
+
+    if (!existing) {
+      await prisma.ingredientCatalogEntry.create({
+        data: { slug, namePl, nameEn },
+      });
+    } else if (existing.isSystem) {
+      await prisma.ingredientCatalogEntry.update({
+        where: { id: existing.id },
+        data: { namePl, nameEn, isActive: true },
+      });
+    }
   }
 }
 
