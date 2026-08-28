@@ -27,4 +27,17 @@ describe('RecipesController', () => {
       servingCount: 4,
     });
   });
+
+  it('delegates recipe retrieval using the verified identity and route id', async () => {
+    const get = vi.fn().mockResolvedValue({ id: 'recipe-id' });
+    const controller = new RecipesController({ get } as never);
+
+    await expect(
+      controller.get(
+        { headers: {}, supabaseAuthId: 'supabase-user-id' },
+        'recipe-id',
+      ),
+    ).resolves.toEqual({ id: 'recipe-id' });
+    expect(get).toHaveBeenCalledWith('supabase-user-id', 'recipe-id');
+  });
 });

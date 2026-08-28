@@ -95,6 +95,7 @@ export const apiErrorCodeSchema = z.enum([
   'USER_NOT_FOUND',
   'INVALID_CREDENTIALS',
   'ACCESS_PENDING',
+  'RECIPE_NOT_FOUND',
   'HTTP_ERROR',
   'INTERNAL_ERROR',
 ]);
@@ -115,6 +116,19 @@ export const apiErrorSchema = z.object({
 });
 export type ApiErrorBody = z.infer<typeof apiErrorSchema>;
 
+export const recipeIngredientResponseSchema = z.object({
+  id: z.string().uuid(),
+  catalogEntryId: z.string().uuid(),
+  name: z.string(),
+  quantity: z.number().nullable(),
+  unit: canonicalUnitSchema,
+  note: z.string().nullable(),
+  position: z.number().int().min(0),
+});
+export type RecipeIngredientResponse = z.infer<
+  typeof recipeIngredientResponseSchema
+>;
+
 export const createRecipeRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(5000).optional(),
@@ -130,6 +144,7 @@ export const recipeResponseSchema = z.object({
   servingCount: z.number().int(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  ingredients: z.array(recipeIngredientResponseSchema).optional(),
   preparationSteps: z
     .array(
       preparationStepRequestSchema.extend({

@@ -160,4 +160,10 @@ export const apiClient = {
       authenticated: true,
     });
   },
+
+  getRecipe(id: string): Promise<RecipeResponse> {
+    return request(`/recipes/${encodeURIComponent(id)}`, recipeResponseSchema, {
+      authenticated: true,
+    });
+  },
 };
