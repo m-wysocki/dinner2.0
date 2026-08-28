@@ -28,7 +28,7 @@ export default function RootLayout() {
           const user = await apiClient.currentUser();
           await setAuthenticatedState({ ...state, user });
         } catch {
-          // Keep a valid local session when the API is temporarily unavailable.
+          // Keep the cached session when refreshing the user is unavailable.
         }
       }
 
