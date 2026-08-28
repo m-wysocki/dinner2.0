@@ -139,3 +139,8 @@ export const recipeResponseSchema = z.object({
     .optional(),
 });
 export type RecipeResponse = z.infer<typeof recipeResponseSchema>;
+
+export const recipeCollectionResponseSchema = z.array(recipeResponseSchema);
+export type RecipeCollectionResponse = z.infer<
+  typeof recipeCollectionResponseSchema
+>;

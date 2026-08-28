@@ -4,9 +4,15 @@
 
 **Blocked by:** 14: Preparation steps
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Collection contains only recipes owned by the authenticated user.
-- [ ] Recipes are ordered newest first.
-- [ ] Empty collection shows a create action.
-- [ ] API and mobile loading and error states are handled.
+- [x] Collection contains only recipes owned by the authenticated user.
+- [x] Recipes are ordered newest first.
+- [x] Empty collection shows a create action.
+- [x] API and mobile loading and error states are handled.
+
+## Resolution
+
+The API exposes `GET /api/v1/recipes` and scopes results through the authenticated
+application user. The mobile home screen displays the collection and its loading,
+error, and empty states.

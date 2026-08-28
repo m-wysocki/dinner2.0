@@ -2,6 +2,7 @@ import {
   apiErrorSchema,
   authUserResponseSchema,
   recipeResponseSchema,
+  recipeCollectionResponseSchema,
   healthResponseSchema,
   loginResponseSchema,
   type ApiErrorCode,
@@ -14,6 +15,7 @@ import {
   type RegisterResponse,
   type CreateRecipeRequest,
   type RecipeResponse,
+  type RecipeCollectionResponse,
 } from '@dinner/shared';
 import { apiUrl } from '../config';
 import {
@@ -149,6 +151,12 @@ export const apiClient = {
     return request('/recipes', recipeResponseSchema, {
       method: 'POST',
       body: input,
+      authenticated: true,
+    });
+  },
+
+  listRecipes(): Promise<RecipeCollectionResponse> {
+    return request('/recipes', recipeCollectionResponseSchema, {
       authenticated: true,
     });
   },

@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { CreateRecipeRequest, RecipeResponse } from '@dinner/shared';
+import type {
+  CreateRecipeRequest,
+  RecipeCollectionResponse,
+  RecipeResponse,
+} from '@dinner/shared';
 import { recipeResponseSchema } from '@dinner/shared';
 import { ApiException } from '../common/api-error';
 import { PrismaService } from '../prisma.service';
@@ -7,6 +11,43 @@ import { PrismaService } from '../prisma.service';
 @Injectable()
 export class RecipesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async list(supabaseAuthId: string): Promise<RecipeCollectionResponse> {
+    const owner = await this.prisma.user.findUnique({
+      where: { supabaseAuthId },
+      select: { id: true },
+    });
+
+    if (!owner) {
+      throw new ApiException(
+        'USER_NOT_FOUND',
+        'Nie znaleziono użytkownika.',
+        404,
+      );
+    }
+
+    const recipes = await this.prisma.recipe.findMany({
+      where: { ownerId: owner.id },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      include: { preparationSteps: { orderBy: { position: 'asc' } } },
+    });
+
+    return recipes.map((recipe) =>
+      recipeResponseSchema.parse({
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description,
+        servingCount: recipe.servingCount,
+        createdAt: recipe.createdAt.toISOString(),
+        updatedAt: recipe.updatedAt.toISOString(),
+        preparationSteps: recipe.preparationSteps.map((step) => ({
+          id: step.id,
+          text: step.text,
+          position: step.position,
+        })),
+      }),
+    );
+  }
 
   async create(
     supabaseAuthId: string,

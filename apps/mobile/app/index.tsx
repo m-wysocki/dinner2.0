@@ -15,9 +15,17 @@ import {
 
 export default function Index() {
   const authenticatedState = getAuthenticatedState();
+  const isActiveUser =
+    authenticatedState?.user.accessStatus === 'ACTIVE' &&
+    Boolean(authenticatedState.user.emailConfirmedAt);
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: () => apiClient.health(),
+  });
+  const recipesQuery = useQuery({
+    queryKey: ['recipes'],
+    queryFn: () => apiClient.listRecipes(),
+    enabled: isActiveUser,
   });
 
   return (
@@ -52,17 +60,54 @@ export default function Index() {
         </View>
       )}
 
-      {authenticatedState?.user.accessStatus === 'ACTIVE' &&
-      authenticatedState.user.emailConfirmedAt ? (
+      {isActiveUser ? (
         <View style={styles.authenticatedPanel}>
-          <Text style={styles.authenticatedTitle}>Jesteś zalogowany</Text>
+          <Text style={styles.collectionTitle}>Twoja kolekcja</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
-          <Link href="/user" style={styles.button}>
-            <Text style={styles.buttonText}>Przejdź do konta</Text>
-          </Link>
-          <Link href="/create-recipe" style={styles.button}>
-            <Text style={styles.buttonText}>Dodaj przepis</Text>
-          </Link>
+          {recipesQuery.isPending && (
+            <View style={styles.collectionStatus}>
+              <ActivityIndicator />
+              <Text style={styles.message}>Ładowanie przepisów...</Text>
+            </View>
+          )}
+          {recipesQuery.isError && (
+            <View style={styles.collectionStatus}>
+              <Text style={styles.error}>Nie udało się pobrać przepisów.</Text>
+              <Text style={styles.details}>{recipesQuery.error.message}</Text>
+              <Pressable
+                style={styles.button}
+                onPress={() => void recipesQuery.refetch()}
+              >
+                <Text style={styles.buttonText}>Spróbuj ponownie</Text>
+              </Pressable>
+            </View>
+          )}
+          {recipesQuery.isSuccess && recipesQuery.data.length === 0 && (
+            <View style={styles.collectionStatus}>
+              <Text style={styles.emptyTitle}>Nie masz jeszcze przepisów</Text>
+              <Text style={styles.details}>
+                Dodaj pierwszy przepis do swojej kolekcji.
+              </Text>
+              <Link href="/create-recipe" style={styles.button}>
+                <Text style={styles.buttonText}>Dodaj przepis</Text>
+              </Link>
+            </View>
+          )}
+          {recipesQuery.isSuccess && recipesQuery.data.length > 0 && (
+            <View style={styles.recipeList}>
+              {recipesQuery.data.map((recipe) => (
+                <View key={recipe.id} style={styles.recipeCard}>
+                  <Text style={styles.recipeTitle}>{recipe.title}</Text>
+                  <Text style={styles.details}>
+                    {recipe.servingCount} porcji
+                  </Text>
+                </View>
+              ))}
+              <Link href="/create-recipe" style={styles.button}>
+                <Text style={styles.buttonText}>Dodaj przepis</Text>
+              </Link>
+            </View>
+          )}
           <Pressable
             style={styles.logoutButton}
             onPress={() => {
@@ -75,7 +120,7 @@ export default function Index() {
         </View>
       ) : authenticatedState ? (
         <View style={styles.authenticatedPanel}>
-          <Text style={styles.authenticatedTitle}>
+          <Text style={styles.collectionTitle}>
             Dostęp oczekuje na aktywację
           </Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
@@ -120,7 +165,19 @@ const styles = StyleSheet.create({
   subtitle: { color: '#68736d', fontSize: 16, marginTop: 8 },
   status: { alignItems: 'center', marginTop: 48 },
   authenticatedPanel: { alignItems: 'center', marginTop: 32, width: '100%' },
-  authenticatedTitle: { color: '#28734a', fontSize: 17, fontWeight: '600' },
+  collectionTitle: { color: '#25352d', fontSize: 24, fontWeight: '700' },
+  emptyTitle: { color: '#25352d', fontSize: 18, fontWeight: '600' },
+  recipeList: { width: '100%' },
+  recipeCard: {
+    backgroundColor: '#fff',
+    borderColor: '#d9ded8',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+    padding: 14,
+  },
+  recipeTitle: { color: '#25352d', fontSize: 18, fontWeight: '600' },
+  collectionStatus: { alignItems: 'center', marginTop: 24 },
   message: { color: '#68736d', marginTop: 12 },
   success: { color: '#28734a', fontSize: 17, fontWeight: '600' },
   error: {

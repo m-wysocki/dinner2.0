@@ -11,9 +11,12 @@ import {
 } from '../src/auth/session';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
-vi.mock('../src/api/client', () => ({ apiClient: { health: vi.fn() } }));
+vi.mock('../src/api/client', () => ({
+  apiClient: { health: vi.fn(), listRecipes: vi.fn() },
+}));
 
 const healthMock = vi.mocked(apiClient.health);
+const listRecipesMock = vi.mocked(apiClient.listRecipes);
 
 async function renderRootScreen() {
   const queryClient = new QueryClient({
@@ -32,6 +35,7 @@ beforeEach(() => {
   router.push.mockClear();
   router.back.mockClear();
   healthMock.mockResolvedValue({ status: 'ok', service: 'api' });
+  listRecipesMock.mockResolvedValue([]);
 });
 
 describe('mobile shell routing', () => {
@@ -80,12 +84,34 @@ describe('mobile shell routing', () => {
     const user = userEvent.setup();
     await renderRootScreen();
 
-    expect(screen.getByText('Jesteś zalogowany')).toBeTruthy();
+    expect(screen.getByText('Twoja kolekcja')).toBeTruthy();
     expect(screen.getByText('user@example.com')).toBeTruthy();
 
     await user.press(screen.getByText('Wyloguj się'));
 
     expect(router.replace).toHaveBeenCalledWith('/');
+  });
+
+  it('shows an empty collection with an action to create a recipe', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+    await renderRootScreen();
+
+    expect(await screen.findByText('Nie masz jeszcze przepisów')).toBeTruthy();
+    expect(screen.getByText('Dodaj przepis')).toBeTruthy();
+    expect(listRecipesMock).toHaveBeenCalled();
   });
 
   it('does not enter the protected shell while access is pending', async () => {

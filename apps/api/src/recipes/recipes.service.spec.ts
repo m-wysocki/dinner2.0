@@ -2,6 +2,38 @@ import { describe, expect, it, vi } from 'vitest';
 import { RecipesService } from './recipes.service';
 
 describe('RecipesService', () => {
+  it('lists only the owner recipes in newest-first order', async () => {
+    const findUnique = vi.fn().mockResolvedValue({ id: 'owner-id' });
+    const findMany = vi.fn().mockResolvedValue([
+      {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        title: 'Nowsza zupa',
+        description: null,
+        servingCount: 4,
+        createdAt: new Date('2026-08-29T12:00:00.000Z'),
+        updatedAt: new Date('2026-08-29T12:00:00.000Z'),
+        preparationSteps: [],
+      },
+    ]);
+    const service = new RecipesService({
+      user: { findUnique },
+      recipe: { findMany },
+    } as never);
+
+    await expect(service.list('supabase-user-id')).resolves.toMatchObject([
+      { title: 'Nowsza zupa' },
+    ]);
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { supabaseAuthId: 'supabase-user-id' },
+      select: { id: true },
+    });
+    expect(findMany).toHaveBeenCalledWith({
+      where: { ownerId: 'owner-id' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      include: { preparationSteps: { orderBy: { position: 'asc' } } },
+    });
+  });
+
   it('creates a recipe for the authenticated application user', async () => {
     const findUnique = vi.fn().mockResolvedValue({ id: 'owner-id' });
     const create = vi.fn().mockResolvedValue({
