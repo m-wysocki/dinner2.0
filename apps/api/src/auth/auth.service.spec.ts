@@ -384,7 +384,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('rejects a pending account until an administrator activates it', async () => {
+    it('returns a session for a pending user', async () => {
       const { supabase, prisma, service } = setup();
 
       (supabase.auth.signInWithPassword as Mock).mockResolvedValue({
@@ -393,9 +393,8 @@ describe('AuthService', () => {
       });
       (prisma.user.findUnique as Mock).mockResolvedValue(pendingUser);
 
-      await expect(service.login(validInput)).rejects.toMatchObject({
-        code: 'ACCESS_PENDING',
-        status: 403,
+      await expect(service.login(validInput)).resolves.toMatchObject({
+        user: pendingUser,
       });
     });
 

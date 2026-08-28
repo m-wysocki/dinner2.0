@@ -4,9 +4,13 @@
 
 **Blocked by:** 05: Email confirmation; 08: Current-user endpoint
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] New application users have `PENDING` access.
-- [ ] Pending users can see their access status.
-- [ ] Pending users cannot access recipe data.
-- [ ] The mobile UI presents a clear waiting state.
+- [x] New application users have `PENDING` access.
+- [x] Pending users can see their access status.
+- [x] Pending users cannot access recipe data.
+- [x] The mobile UI presents a clear waiting state.
+
+## Resolution
+
+Pending users now receive a valid session after login and can inspect their status through `/auth/me`. Private-data controllers can compose `AuthGuard` with `ActiveAccessGuard`, which rejects pending access with `ACCESS_PENDING`. The mobile account screen presents an activation-waiting state for pending users.

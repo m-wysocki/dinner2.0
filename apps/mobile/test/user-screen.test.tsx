@@ -49,4 +49,29 @@ describe('User screen', () => {
     expect(screen.queryByText('Zalogowano')).not.toBeOnTheScreen();
     expect(screen.queryByText('user@example.com')).not.toBeOnTheScreen();
   });
+
+  it('shows the activation waiting state for a pending user', async () => {
+    getStateMock.mockReturnValue({
+      session: {
+        accessToken: 'header.payload.signature',
+        refreshToken: 'refresh-token',
+        expiresAt: 1785302400,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'pending@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      },
+    });
+
+    await render(<User />);
+
+    expect(screen.getByText('Oczekiwanie na aktywację')).toBeOnTheScreen();
+    expect(
+      screen.getByText(/administrator nie aktywował jeszcze dostępu/),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Zalogowano')).not.toBeOnTheScreen();
+  });
 });
