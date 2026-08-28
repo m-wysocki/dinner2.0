@@ -7,6 +7,7 @@
     "dev": "nest start --watch",
     "dev:web": "nest start --watch",
     "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
     "db:validate": "prisma validate",
     "lint": "tsc -p tsconfig.json --noEmit",
     "prebuild": "prisma generate",
@@ -37,5 +38,8 @@
     "typescript": "^5.9.2",
     "unplugin-swc": "^1.5.1",
     "vitest": "^3.2.4"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

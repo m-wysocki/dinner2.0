@@ -6,6 +6,18 @@ export type InterfaceLanguage = z.infer<typeof interfaceLanguageSchema>;
 export const accessStatusSchema = z.enum(['PENDING', 'ACTIVE']);
 export type AccessStatus = z.infer<typeof accessStatusSchema>;
 
+export const canonicalUnitSchema = z.enum([
+  'G',
+  'KG',
+  'ML',
+  'L',
+  'PCS',
+  'TSP',
+  'TBSP',
+  'OTHER',
+]);
+export type CanonicalUnit = z.infer<typeof canonicalUnitSchema>;
+
 export const healthResponseSchema = z.object({
   status: z.literal('ok'),
   service: z.literal('api'),
