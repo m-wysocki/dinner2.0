@@ -97,12 +97,16 @@ export default function Index() {
           {recipesQuery.isSuccess && recipesQuery.data.length > 0 && (
             <View style={styles.recipeList}>
               {recipesQuery.data.map((recipe) => (
-                <View key={recipe.id} style={styles.recipeCard}>
+                <Pressable
+                  key={recipe.id}
+                  style={styles.recipeCard}
+                  onPress={() => router.push(`/recipes/${recipe.id}`)}
+                >
                   <Text style={styles.recipeTitle}>{recipe.title}</Text>
                   <Text style={styles.details}>
                     {recipe.servingCount} porcji
                   </Text>
-                </View>
+                </Pressable>
               ))}
               <Link href="/create-recipe" style={styles.button}>
                 <Text style={styles.buttonText}>Dodaj przepis</Text>

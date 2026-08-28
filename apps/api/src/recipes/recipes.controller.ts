@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   createRecipeRequestSchema,
   type CreateRecipeRequest,
@@ -29,5 +37,13 @@ export class RecipesController {
     input: CreateRecipeRequest,
   ): Promise<RecipeResponse> {
     return this.recipesService.create(request.supabaseAuthId!, input);
+  }
+
+  @Get(':id')
+  get(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<RecipeResponse> {
+    return this.recipesService.get(request.supabaseAuthId!, id);
   }
 }

@@ -2,6 +2,7 @@ import {
   apiErrorSchema,
   authUserResponseSchema,
   recipeResponseSchema,
+  recipeDetailsResponseSchema,
   recipeCollectionResponseSchema,
   healthResponseSchema,
   loginResponseSchema,
@@ -159,5 +160,15 @@ export const apiClient = {
     return request('/recipes', recipeCollectionResponseSchema, {
       authenticated: true,
     });
+  },
+
+  getRecipe(id: string): Promise<RecipeResponse> {
+    return request(
+      `/recipes/${encodeURIComponent(id)}`,
+      recipeDetailsResponseSchema,
+      {
+        authenticated: true,
+      },
+    );
   },
 };
