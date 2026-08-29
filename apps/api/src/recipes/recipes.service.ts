@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  CreateCustomIngredientRequest,
   CreateRecipeRequest,
+  IngredientCatalogEntry,
   RecipeCollectionResponse,
   RecipeResponse,
 } from '@dinner/shared';
 import {
+  ingredientCatalogEntrySchema,
   recipeDetailsResponseSchema,
   recipeResponseSchema,
 } from '@dinner/shared';
@@ -94,13 +97,25 @@ export class RecipesService {
   ): Promise<RecipeResponse> {
     const owner = await this.findOwner(supabaseAuthId);
 
-    const recipe = await this.prisma.$transaction((transaction) =>
-      transaction.recipe.create({
+    const recipe = await this.prisma.$transaction(async (transaction) => {
+      await this.assertAccessibleIngredients(transaction, owner.id, input);
+      return transaction.recipe.create({
         data: {
           ownerId: owner.id,
           title: input.title,
           description: input.description || null,
           servingCount: input.servingCount,
+          ingredients: {
+            create: (input.ingredients ?? []).map((ingredient) => ({
+              catalogEntryId: ingredient.catalogEntryId,
+              nameSnapshot: ingredient.name,
+              quantity: ingredient.quantity ?? null,
+              unit: ingredient.unit,
+              note: ingredient.note || null,
+              position: ingredient.position,
+              identityConfirmed: true,
+            })),
+          },
           preparationSteps: {
             create: (input.preparationSteps ?? []).map((step) => ({
               text: step.text,
@@ -108,9 +123,12 @@ export class RecipesService {
             })),
           },
         },
-        include: { preparationSteps: true },
-      }),
-    );
+        include: {
+          ingredients: true,
+          preparationSteps: true,
+        },
+      });
+    });
 
     return recipeResponseSchema.parse({
       id: recipe.id,
@@ -119,12 +137,61 @@ export class RecipesService {
       servingCount: recipe.servingCount,
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
+      ingredients: recipe.ingredients.map((ingredient) =>
+        this.toIngredientResponse(ingredient),
+      ),
       preparationSteps: (recipe.preparationSteps ?? []).map((step) => ({
         id: step.id,
         text: step.text,
         position: step.position,
       })),
     });
+  }
+
+  async listCatalog(supabaseAuthId: string): Promise<IngredientCatalogEntry[]> {
+    const owner = await this.findOwner(supabaseAuthId);
+    const entries = await this.prisma.ingredientCatalogEntry.findMany({
+      where: {
+        isActive: true,
+        OR: [{ isSystem: true }, { ownerId: owner.id }],
+      },
+      orderBy: [{ namePl: 'asc' }],
+    });
+    return entries.map((entry) => ingredientCatalogEntrySchema.parse(entry));
+  }
+
+  async createCustomIngredient(
+    supabaseAuthId: string,
+    input: CreateCustomIngredientRequest,
+  ): Promise<IngredientCatalogEntry> {
+    const owner = await this.findOwner(supabaseAuthId);
+    const slug = `${input.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')}-${owner.id.slice(0, 8)}`;
+    const existing = await this.prisma.ingredientCatalogEntry.findFirst({
+      where: {
+        ownerId: owner.id,
+        namePl: { equals: input.name, mode: 'insensitive' },
+      },
+    });
+    if (existing) {
+      throw new ApiException(
+        'INGREDIENT_NAME_TAKEN',
+        'Taki własny składnik już istnieje.',
+        409,
+      );
+    }
+    const entry = await this.prisma.ingredientCatalogEntry.create({
+      data: {
+        slug,
+        namePl: input.name,
+        nameEn: input.name,
+        isSystem: false,
+        ownerId: owner.id,
+      },
+    });
+    return ingredientCatalogEntrySchema.parse(entry);
   }
 
   private toIngredientResponse(ingredient: {
@@ -162,5 +229,32 @@ export class RecipesService {
     }
 
     return owner;
+  }
+
+  private async assertAccessibleIngredients(
+    transaction: {
+      ingredientCatalogEntry: {
+        findFirst(args: unknown): Promise<unknown>;
+      };
+    },
+    ownerId: string,
+    input: { ingredients?: Array<{ catalogEntryId: string }> },
+  ) {
+    for (const ingredient of input.ingredients ?? []) {
+      const catalogEntry = await transaction.ingredientCatalogEntry.findFirst({
+        where: {
+          id: ingredient.catalogEntryId,
+          isActive: true,
+          OR: [{ isSystem: true }, { ownerId }],
+        },
+      });
+      if (!catalogEntry) {
+        throw new ApiException(
+          'INGREDIENT_NOT_ACCESSIBLE',
+          'Wybrany składnik nie jest dostępny.',
+          422,
+        );
+      }
+    }
   }
 }

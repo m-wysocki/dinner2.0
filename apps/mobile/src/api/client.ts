@@ -4,6 +4,7 @@ import {
   recipeResponseSchema,
   recipeDetailsResponseSchema,
   recipeCollectionResponseSchema,
+  ingredientCatalogEntrySchema,
   healthResponseSchema,
   loginResponseSchema,
   type ApiErrorCode,
@@ -17,6 +18,8 @@ import {
   type CreateRecipeRequest,
   type RecipeResponse,
   type RecipeCollectionResponse,
+  type IngredientCatalogEntry,
+  type CreateCustomIngredientRequest,
 } from '@dinner/shared';
 import { apiUrl } from '../config';
 import {
@@ -156,7 +159,7 @@ export const apiClient = {
     });
   },
 
-  listRecipes(): Promise<RecipeCollectionResponse> {
+listRecipes(): Promise<RecipeCollectionResponse> {
     return request('/recipes', recipeCollectionResponseSchema, {
       authenticated: true,
     });
@@ -170,5 +173,26 @@ export const apiClient = {
         authenticated: true,
       },
     );
+  },
+
+  ingredientCatalog(): Promise<IngredientCatalogEntry[]> {
+    return request(
+      '/ingredient-catalog',
+      {
+        parse: (value: unknown) =>
+          ingredientCatalogEntrySchema.array().parse(value),
+      },
+      { authenticated: true },
+    );
+  },
+
+  createCustomIngredient(
+    input: CreateCustomIngredientRequest,
+  ): Promise<IngredientCatalogEntry> {
+    return request('/ingredient-catalog/custom', ingredientCatalogEntrySchema, {
+      method: 'POST',
+      body: input,
+      authenticated: true,
+    });
   },
 };

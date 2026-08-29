@@ -70,9 +70,10 @@ describe('RecipesService', () => {
         title: 'Zupa',
         description: null,
         servingCount: 4,
+        ingredients: { create: [] },
         preparationSteps: { create: [] },
       }),
-      include: { preparationSteps: true },
+      include: { ingredients: true, preparationSteps: true },
     });
   });
 
@@ -91,8 +92,16 @@ describe('RecipesService', () => {
           position: 0,
         },
       ],
+      ingredients: [],
     });
-    const transaction = vi.fn((callback) => callback({ recipe: { create } }));
+    const transaction = vi.fn((callback) =>
+      callback({
+        recipe: { create },
+        ingredientCatalogEntry: {
+          findFirst: vi.fn().mockResolvedValue({ id: 'catalog-entry' }),
+        },
+      }),
+    );
     const service = new RecipesService({
       user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
       $transaction: transaction,
@@ -110,6 +119,7 @@ describe('RecipesService', () => {
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
+          ingredients: { create: [] },
           preparationSteps: {
             create: [{ text: 'Pokrój warzywa', position: 0 }],
           },
