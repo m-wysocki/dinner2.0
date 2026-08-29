@@ -6,7 +6,6 @@ import {
 } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RecipeDetailsResponse } from '@dinner/shared';
-import { Alert } from 'react-native';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import RecipeDetails from '../app/recipes/[id]';
 import { ApiError, apiClient } from '../src/api/client';
@@ -60,22 +59,6 @@ function recipeDetails(): RecipeDetailsResponse {
   };
 }
 
-type AlertButton = {
-  text: string;
-  style?: string;
-  onPress?: () => void;
-};
-
-function confirmDeleteButton(alertSpy: ReturnType<typeof vi.spyOn>) {
-  const buttons = alertSpy.mock.calls[0][2] as AlertButton[];
-  return buttons.find((button) => button.text === 'Usuń');
-}
-
-function cancelDeleteButton(alertSpy: ReturnType<typeof vi.spyOn>) {
-  const buttons = alertSpy.mock.calls[0][2] as AlertButton[];
-  return buttons.find((button) => button.text === 'Anuluj');
-}
-
 async function renderDetailsScreen() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -108,22 +91,19 @@ describe('RecipeDetails screen', () => {
   });
 
   it('asks for confirmation and deletes the recipe on success', async () => {
-    const alertSpy = vi.spyOn(Alert, 'alert');
     const user = userEvent.setup();
     await renderDetailsScreen();
 
     await user.press(await screen.findByText('Usuń przepis'));
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      'Usunąć przepis?',
-      expect.any(String),
-      expect.arrayContaining([
-        expect.objectContaining({ text: 'Anuluj', style: 'cancel' }),
-        expect.objectContaining({ text: 'Usuń', style: 'destructive' }),
-      ]),
-    );
+    expect(screen.getByText('Usunąć przepis?')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'Przepis zostanie trwale usunięty wraz ze składnikami i krokami.',
+      ),
+    ).toBeOnTheScreen();
 
-    confirmDeleteButton(alertSpy)?.onPress?.();
+    await user.press(screen.getByText('Usuń'));
 
     await waitFor(() =>
       expect(apiClient.deleteRecipe).toHaveBeenCalledWith(recipeId),
@@ -132,20 +112,21 @@ describe('RecipeDetails screen', () => {
   });
 
   it('does not delete when the user cancels the confirmation', async () => {
-    const alertSpy = vi.spyOn(Alert, 'alert');
     const user = userEvent.setup();
     await renderDetailsScreen();
 
     await user.press(await screen.findByText('Usuń przepis'));
+    expect(screen.getByText('Usunąć przepis?')).toBeOnTheScreen();
 
-    cancelDeleteButton(alertSpy)?.onPress?.();
+    await user.press(screen.getByText('Anuluj'));
 
     expect(apiClient.deleteRecipe).not.toHaveBeenCalled();
     expect(router.back).not.toHaveBeenCalled();
+    expect(screen.queryByText('Usunąć przepis?')).not.toBeOnTheScreen();
+    expect(screen.getByText('Usuń przepis')).toBeOnTheScreen();
   });
 
   it('shows a safe message when deletion fails', async () => {
-    const alertSpy = vi.spyOn(Alert, 'alert');
     vi.mocked(apiClient.deleteRecipe).mockRejectedValue(
       new ApiError('Wystąpił błąd.', 500),
     );
@@ -153,8 +134,7 @@ describe('RecipeDetails screen', () => {
     await renderDetailsScreen();
 
     await user.press(await screen.findByText('Usuń przepis'));
-
-    confirmDeleteButton(alertSpy)?.onPress?.();
+    await user.press(screen.getByText('Usuń'));
 
     expect(
       await screen.findByText(/Nie udało się usunąć przepisu/),
