@@ -1,9 +1,5 @@
-import {
-  render,
-  screen,
-  userEvent,
-  waitFor,
-} from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RecipeDetailsResponse } from '@dinner/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -63,11 +59,11 @@ function recipeDetails(): RecipeDetailsResponse {
   };
 }
 
-async function renderEditScreen() {
+function renderEditScreen() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  await render(
+  render(
     <QueryClientProvider client={queryClient}>
       <EditRecipe />
     </QueryClientProvider>,
@@ -107,15 +103,15 @@ beforeEach(() => {
 describe('EditRecipe screen', () => {
   it('prefills the loaded recipe and saves changes', async () => {
     const user = userEvent.setup();
-    await renderEditScreen();
+    renderEditScreen();
 
-    expect(await screen.findByText('Edytuj przepis')).toBeOnTheScreen();
-    expect(screen.getByLabelText('Tytuł').props.value).toBe('Zupa');
-    expect(screen.getByLabelText('Liczba porcji').props.value).toBe('4');
+    expect(await screen.findByText('Edytuj przepis')).toBeInTheDocument();
+    expect(screen.getByLabelText('Tytuł')).toHaveValue('Zupa');
+    expect(screen.getByLabelText('Liczba porcji')).toHaveValue('4');
 
     await user.clear(screen.getByLabelText('Liczba porcji'));
     await user.type(screen.getByLabelText('Liczba porcji'), '6');
-    await user.press(screen.getByText('Zapisz zmiany'));
+    await user.click(screen.getByText('Zapisz zmiany'));
 
     await waitFor(() =>
       expect(apiClient.updateRecipe).toHaveBeenCalledWith(
@@ -143,10 +139,10 @@ describe('EditRecipe screen', () => {
     vi.mocked(apiClient.getRecipe).mockRejectedValue(
       new ApiError('Nie znaleziono przepisu.', 404, 'RECIPE_NOT_FOUND'),
     );
-    await renderEditScreen();
+    renderEditScreen();
 
     expect(
       await screen.findByText('Nie znaleziono przepisu.'),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
   });
 });

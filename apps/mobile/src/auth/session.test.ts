@@ -7,13 +7,7 @@ import {
   subscribeToSession,
 } from './session';
 
-const secureStore = vi.hoisted(() => ({
-  getItemAsync: vi.fn(),
-  setItemAsync: vi.fn().mockResolvedValue(undefined),
-  deleteItemAsync: vi.fn().mockResolvedValue(undefined),
-}));
-
-vi.mock('expo-secure-store', () => secureStore);
+const SESSION_KEY = 'dinner.authenticated-session';
 
 const state = {
   session: {
@@ -30,30 +24,34 @@ const state = {
   },
 };
 
-describe('session persistence', () => {
+describe('session persistence on web', () => {
   beforeEach(() => {
+    localStorage.clear();
     clearAuthenticatedState();
-    secureStore.getItemAsync.mockReset();
-    secureStore.setItemAsync.mockClear();
-    secureStore.deleteItemAsync.mockClear();
   });
 
-  it('persists and restores an authenticated state', async () => {
+  it('persists the authenticated state to localStorage', async () => {
     await setAuthenticatedState(state);
-    expect(secureStore.setItemAsync).toHaveBeenCalledWith(
-      'dinner.authenticated-session',
-      JSON.stringify(state),
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null')).toEqual(
+      state,
     );
+  });
 
-    secureStore.getItemAsync.mockResolvedValue(JSON.stringify(state));
-    clearAuthenticatedState();
+  it('restores a previously persisted session from localStorage', async () => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(state));
 
     await expect(restoreAuthenticatedState()).resolves.toEqual(state);
     expect(getAuthenticatedState()).toEqual(state);
   });
 
-  it('removes expired persisted sessions', async () => {
-    secureStore.getItemAsync.mockResolvedValue(
+  it('returns null when no session is stored', async () => {
+    await expect(restoreAuthenticatedState()).resolves.toBeNull();
+    expect(getAuthenticatedState()).toBeNull();
+  });
+
+  it('removes expired persisted sessions from localStorage', async () => {
+    localStorage.setItem(
+      SESSION_KEY,
       JSON.stringify({
         ...state,
         session: { ...state.session, expiresAt: 1 },
@@ -61,17 +59,14 @@ describe('session persistence', () => {
     );
 
     await expect(restoreAuthenticatedState()).resolves.toBeNull();
-    expect(secureStore.deleteItemAsync).toHaveBeenCalledWith(
-      'dinner.authenticated-session',
-    );
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
   it('clears the persisted state on logout', () => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(state));
     clearAuthenticatedState();
     expect(getAuthenticatedState()).toBeNull();
-    expect(secureStore.deleteItemAsync).toHaveBeenCalledWith(
-      'dinner.authenticated-session',
-    );
+    expect(localStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
   it('notifies subscribers when the authenticated state changes', async () => {

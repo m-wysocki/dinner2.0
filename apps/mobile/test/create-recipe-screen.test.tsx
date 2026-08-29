@@ -1,9 +1,5 @@
-import {
-  render,
-  screen,
-  userEvent,
-  waitFor,
-} from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateRecipe from '../app/create-recipe';
 
@@ -66,14 +62,14 @@ beforeEach(() => {
 describe('CreateRecipe screen', () => {
   it('validates and submits the basic recipe fields', async () => {
     const user = userEvent.setup();
-    await render(<CreateRecipe />);
+    render(<CreateRecipe />);
     await user.type(screen.getByPlaceholderText('Np. Zupa pomidorowa'), 'Zupa');
     await user.type(
       screen.getByPlaceholderText('Kilka słów o przepisie'),
       'Domowa',
     );
     await user.type(screen.getByPlaceholderText('Np. 4'), '4');
-    await user.press(screen.getByText('Zapisz przepis'));
+    await user.click(screen.getByText('Zapisz przepis'));
 
     await waitFor(() =>
       expect(apiClient.createRecipe).toHaveBeenCalledWith({
@@ -82,25 +78,25 @@ describe('CreateRecipe screen', () => {
         servingCount: 4,
       }),
     );
-    expect(await screen.findByText('Przepis zapisany')).toBeOnTheScreen();
-    expect(screen.getByText('Zupa')).toBeOnTheScreen();
+    expect(await screen.findByText('Przepis zapisany')).toBeInTheDocument();
+    expect(screen.getByText('Zupa')).toBeInTheDocument();
   });
 
   it('submits ingredients and preparation steps with their positions', async () => {
     const user = userEvent.setup();
-    await render(<CreateRecipe />);
+    render(<CreateRecipe />);
     await user.type(screen.getByPlaceholderText('Np. Zupa pomidorowa'), 'Zupa');
     await user.type(screen.getByPlaceholderText('Np. 4'), '4');
-    await user.press(screen.getByText('Dodaj składnik'));
+    await user.click(screen.getByText('Dodaj składnik'));
     await user.type(screen.getByLabelText('Nazwa składnika 1'), 'Pomidor');
     await user.type(screen.getByLabelText('Ilość składnika 1'), '2');
-    await user.press(screen.getByText('Pomidor'));
-    await user.press(screen.getByText('Dodaj krok'));
+    await user.click(screen.getByText('Pomidor'));
+    await user.click(screen.getByText('Dodaj krok'));
     await user.type(
       screen.getByLabelText('Krok przygotowania 1'),
       'Pokrój warzywa',
     );
-    await user.press(screen.getByText('Zapisz przepis'));
+    await user.click(screen.getByText('Zapisz przepis'));
 
     await waitFor(() =>
       expect(apiClient.createRecipe).toHaveBeenCalledWith(

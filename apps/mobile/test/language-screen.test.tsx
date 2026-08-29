@@ -1,4 +1,5 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Language from '../app/language';
 import { translate } from '../src/i18n/translations';
@@ -59,22 +60,22 @@ beforeEach(() => {
 });
 
 describe('Language screen', () => {
-  it('highlights the current interface language', async () => {
+  it('highlights the current interface language', () => {
     mockI18n('pl');
-    await render(<Language />);
+    render(<Language />);
 
-    expect(screen.getByText('Język interfejsu')).toBeOnTheScreen();
-    expect(screen.getByText('Polski')).toBeOnTheScreen();
-    expect(screen.getByText('Angielski')).toBeOnTheScreen();
+    expect(screen.getByText('Język interfejsu')).toBeInTheDocument();
+    expect(screen.getByText('Polski')).toBeInTheDocument();
+    expect(screen.getByText('Angielski')).toBeInTheDocument();
     expect(screen.getAllByText('Obecny')).toHaveLength(1);
   });
 
   it('switches to English and persists the preference', async () => {
     mockI18n('pl');
     const user = userEvent.setup();
-    await render(<Language />);
+    render(<Language />);
 
-    await user.press(screen.getByText('Angielski'));
+    await user.click(screen.getByText('Angielski'));
 
     expect(apiClient.updateUser).toHaveBeenCalledWith({
       interfaceLanguage: 'en',
@@ -91,20 +92,20 @@ describe('Language screen', () => {
     mockI18n('pl');
     vi.mocked(apiClient.updateUser).mockRejectedValue(new Error('offline'));
     const user = userEvent.setup();
-    await render(<Language />);
+    render(<Language />);
 
-    await user.press(screen.getByText('Angielski'));
+    await user.click(screen.getByText('Angielski'));
 
     expect(setLanguageMock).toHaveBeenNthCalledWith(1, 'en');
     expect(setLanguageMock).toHaveBeenNthCalledWith(2, 'pl');
-    expect(await screen.findByText('offline')).toBeOnTheScreen();
+    expect(await screen.findByText('offline')).toBeInTheDocument();
   });
 
-  it('renders nothing without an authenticated session', async () => {
+  it('renders nothing without an authenticated session', () => {
     mockI18n('pl');
     vi.mocked(getAuthenticatedState).mockReturnValue(null);
-    await render(<Language />);
+    render(<Language />);
 
-    expect(screen.queryByText('Język interfejsu')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Język interfejsu')).not.toBeInTheDocument();
   });
 });

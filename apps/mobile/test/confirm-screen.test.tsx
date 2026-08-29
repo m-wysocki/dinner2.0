@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Linking from 'expo-linking';
 import Confirm from '../app/confirm';
@@ -31,12 +31,12 @@ beforeEach(() => {
 });
 
 describe('Confirm screen', () => {
-  it('shows a pending state while the link is being checked', async () => {
+  it('shows a pending state while the link is being checked', () => {
     getInitialURL.mockReturnValue(new Promise(() => {}));
 
-    await render(<Confirm />);
+    render(<Confirm />);
 
-    expect(screen.getByText('Sprawdzanie linku...')).toBeOnTheScreen();
+    expect(screen.getByText('Sprawdzanie linku...')).toBeInTheDocument();
     expect(confirmMock).not.toHaveBeenCalled();
   });
 
@@ -44,11 +44,11 @@ describe('Confirm screen', () => {
     getInitialURL.mockResolvedValue(url);
     confirmMock.mockResolvedValue({ kind: 'success' });
 
-    await render(<Confirm />);
+    render(<Confirm />);
 
     expect(
       await screen.findByText('Adres e-mail został potwierdzony.'),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
     expect(confirmMock).toHaveBeenCalledWith(url);
   });
 
@@ -59,23 +59,23 @@ describe('Confirm screen', () => {
       message: 'Link potwierdzający jest nieprawidłowy lub wygasł.',
     });
 
-    await render(<Confirm />);
+    render(<Confirm />);
 
     expect(
       await screen.findByText(
         'Link potwierdzający jest nieprawidłowy lub wygasł.',
       ),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
   });
 
   it('explains that no confirmation link was found', async () => {
     getInitialURL.mockResolvedValue(null);
 
-    await render(<Confirm />);
+    render(<Confirm />);
 
     expect(
       await screen.findByText('Nie znaleziono linku potwierdzającego.'),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
     expect(confirmMock).not.toHaveBeenCalled();
   });
 
@@ -83,7 +83,7 @@ describe('Confirm screen', () => {
     getInitialURL.mockResolvedValue(null);
     confirmMock.mockResolvedValue({ kind: 'success' });
 
-    await render(<Confirm />);
+    render(<Confirm />);
 
     const handler = addEventListener.mock.calls[0][1] as (event: {
       url: string;
@@ -92,7 +92,7 @@ describe('Confirm screen', () => {
 
     expect(
       await screen.findByText('Adres e-mail został potwierdzony.'),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
     expect(confirmMock).toHaveBeenCalledWith(url);
   });
 });

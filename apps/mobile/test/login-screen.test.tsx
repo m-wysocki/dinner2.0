@@ -1,4 +1,5 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Login from '../app/login';
 import { submitLogin } from '../src/auth/login';
@@ -18,7 +19,7 @@ const password = 'correct horse';
 async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByPlaceholderText('Adres e-mail'), email);
   await user.type(screen.getByPlaceholderText('Hasło'), password);
-  await user.press(screen.getByText('Zaloguj się'));
+  await user.click(screen.getByText('Zaloguj się'));
 }
 
 beforeEach(() => {
@@ -28,13 +29,13 @@ beforeEach(() => {
 });
 
 describe('Login screen', () => {
-  it('renders the login form initially', async () => {
-    await render(<Login />);
+  it('renders the login form initially', () => {
+    render(<Login />);
 
-    expect(screen.getByText('Logowanie')).toBeOnTheScreen();
-    expect(screen.getByPlaceholderText('Adres e-mail')).toBeOnTheScreen();
-    expect(screen.getByPlaceholderText('Hasło')).toBeOnTheScreen();
-    expect(screen.getByText('Zaloguj się')).toBeOnTheScreen();
+    expect(screen.getByText('Logowanie')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Adres e-mail')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Hasło')).toBeInTheDocument();
+    expect(screen.getByText('Zaloguj się')).toBeInTheDocument();
   });
 
   it('shows a loading state while submitting', async () => {
@@ -46,13 +47,15 @@ describe('Login screen', () => {
     );
 
     const user = userEvent.setup();
-    await render(<Login />);
+    render(<Login />);
 
     await fillAndSubmit(user);
 
     expect(submitLoginMock).toHaveBeenCalledWith({ email, password });
-    expect(screen.getByPlaceholderText('Adres e-mail')).toBeDisabled();
-    expect(screen.getByPlaceholderText('Hasło')).toBeDisabled();
+    expect(screen.getByPlaceholderText('Adres e-mail')).toHaveAttribute(
+      'readonly',
+    );
+    expect(screen.getByPlaceholderText('Hasło')).toHaveAttribute('readonly');
 
     resolveSubmit({ kind: 'success' });
     await vi.waitFor(() =>
@@ -64,7 +67,7 @@ describe('Login screen', () => {
     submitLoginMock.mockResolvedValue({ kind: 'success' });
 
     const user = userEvent.setup();
-    await render(<Login />);
+    render(<Login />);
 
     await fillAndSubmit(user);
 
@@ -78,13 +81,13 @@ describe('Login screen', () => {
     });
 
     const user = userEvent.setup();
-    await render(<Login />);
+    render(<Login />);
 
     await fillAndSubmit(user);
 
     expect(
       await screen.findByText('Nieprawidłowy adres e-mail lub hasło.'),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
     expect(router.replace).not.toHaveBeenCalled();
   });
 });

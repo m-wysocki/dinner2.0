@@ -1,9 +1,5 @@
-import {
-  render,
-  screen,
-  userEvent,
-  waitFor,
-} from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RecipeDetailsResponse } from '@dinner/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -59,11 +55,11 @@ function recipeDetails(): RecipeDetailsResponse {
   };
 }
 
-async function renderDetailsScreen() {
+function renderDetailsScreen() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  await render(
+  render(
     <QueryClientProvider client={queryClient}>
       <RecipeDetails />
     </QueryClientProvider>,
@@ -81,29 +77,29 @@ beforeEach(() => {
 
 describe('RecipeDetails screen', () => {
   it('shows the complete saved recipe', async () => {
-    await renderDetailsScreen();
+    renderDetailsScreen();
 
-    expect(await screen.findByText('Zupa')).toBeOnTheScreen();
-    expect(screen.getByText('Domowa')).toBeOnTheScreen();
-    expect(screen.getByText('4 porcje')).toBeOnTheScreen();
-    expect(screen.getByText(/Pomidor/)).toBeOnTheScreen();
-    expect(screen.getByText('Pokrój')).toBeOnTheScreen();
+    expect(await screen.findByText('Zupa')).toBeInTheDocument();
+    expect(screen.getByText('Domowa')).toBeInTheDocument();
+    expect(screen.getByText('4 porcje')).toBeInTheDocument();
+    expect(screen.getByText(/Pomidor/)).toBeInTheDocument();
+    expect(screen.getByText('Pokrój')).toBeInTheDocument();
   });
 
   it('asks for confirmation and deletes the recipe on success', async () => {
     const user = userEvent.setup();
-    await renderDetailsScreen();
+    renderDetailsScreen();
 
-    await user.press(await screen.findByText('Usuń przepis'));
+    await user.click(await screen.findByText('Usuń przepis'));
 
-    expect(screen.getByText('Usunąć przepis?')).toBeOnTheScreen();
+    expect(screen.getByText('Usunąć przepis?')).toBeInTheDocument();
     expect(
       screen.getByText(
         'Przepis zostanie trwale usunięty wraz ze składnikami i krokami.',
       ),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
 
-    await user.press(screen.getByText('Usuń'));
+    await user.click(screen.getByText('Usuń'));
 
     await waitFor(() =>
       expect(apiClient.deleteRecipe).toHaveBeenCalledWith(recipeId),
@@ -113,17 +109,17 @@ describe('RecipeDetails screen', () => {
 
   it('does not delete when the user cancels the confirmation', async () => {
     const user = userEvent.setup();
-    await renderDetailsScreen();
+    renderDetailsScreen();
 
-    await user.press(await screen.findByText('Usuń przepis'));
-    expect(screen.getByText('Usunąć przepis?')).toBeOnTheScreen();
+    await user.click(await screen.findByText('Usuń przepis'));
+    expect(screen.getByText('Usunąć przepis?')).toBeInTheDocument();
 
-    await user.press(screen.getByText('Anuluj'));
+    await user.click(screen.getByText('Anuluj'));
 
     expect(apiClient.deleteRecipe).not.toHaveBeenCalled();
     expect(router.back).not.toHaveBeenCalled();
-    expect(screen.queryByText('Usunąć przepis?')).not.toBeOnTheScreen();
-    expect(screen.getByText('Usuń przepis')).toBeOnTheScreen();
+    expect(screen.queryByText('Usunąć przepis?')).not.toBeInTheDocument();
+    expect(screen.getByText('Usuń przepis')).toBeInTheDocument();
   });
 
   it('shows a safe message when deletion fails', async () => {
@@ -131,24 +127,24 @@ describe('RecipeDetails screen', () => {
       new ApiError('Wystąpił błąd.', 500),
     );
     const user = userEvent.setup();
-    await renderDetailsScreen();
+    renderDetailsScreen();
 
-    await user.press(await screen.findByText('Usuń przepis'));
-    await user.press(screen.getByText('Usuń'));
+    await user.click(await screen.findByText('Usuń przepis'));
+    await user.click(screen.getByText('Usuń'));
 
     expect(
       await screen.findByText(/Nie udało się usunąć przepisu/),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
   });
 
   it('shows a safe message when the recipe is not found', async () => {
     vi.mocked(apiClient.getRecipe).mockRejectedValue(
       new ApiError('Nie znaleziono przepisu.', 404, 'RECIPE_NOT_FOUND'),
     );
-    await renderDetailsScreen();
+    renderDetailsScreen();
 
     expect(
       await screen.findByText('Nie znaleziono przepisu.'),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
   });
 });
