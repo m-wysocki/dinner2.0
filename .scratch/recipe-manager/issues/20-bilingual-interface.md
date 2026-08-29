@@ -41,5 +41,9 @@
   `api.networkError`, `api.httpError`, `api.invalidResponse`) and auth-form
   messages are now localized; server-provided `error.message` safe messages
   are surfaced as-is.
-- Verified with workspace tests (shared 36, api 97, mobile 72), typecheck,
+- Polish pluralization is case-aware: `formatServings` supports an accusative
+  form so the saved-recipe message reads "Przepis na 1 porcję" (not
+  "1 porcja"). Recipe details render ingredient lines without leading-space
+  artifacts for optional quantities and the `OTHER` unit.
+- Verified with workspace tests (shared 36, api 97, mobile 73), typecheck,
   lint, and format check.

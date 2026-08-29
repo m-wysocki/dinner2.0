@@ -75,13 +75,22 @@ export default function RecipeDetails() {
 
       <Text style={styles.heading}>{t('details.ingredients')}</Text>
       {recipe.ingredients?.length ? (
-        recipe.ingredients.map((ingredient) => (
-          <Text key={ingredient.id} style={styles.item}>
-            {ingredient.quantity === null ? '' : `${ingredient.quantity} `}
-            {unitLabel(ingredient.unit, language)} {ingredient.name}
-            {ingredient.note ? ` (${ingredient.note})` : ''}
-          </Text>
-        ))
+        recipe.ingredients.map((ingredient) => {
+          const label = [
+            ingredient.quantity !== null ? String(ingredient.quantity) : null,
+            unitLabel(ingredient.unit, language) || null,
+            ingredient.name,
+          ]
+            .filter((part): part is string => part !== null)
+            .join(' ');
+
+          return (
+            <Text key={ingredient.id} style={styles.item}>
+              {label}
+              {ingredient.note ? ` (${ingredient.note})` : ''}
+            </Text>
+          );
+        })
       ) : (
         <Text style={styles.muted}>{t('details.noIngredients')}</Text>
       )}

@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { InterfaceLanguage } from '@dinner/shared';
 import {
   formatServings,
   translate,
   translations,
   unitLabel,
 } from './translations';
-
-const languages: InterfaceLanguage[] = ['pl', 'en'];
 
 describe('translations', () => {
   it('provides every Polish key in English', () => {
@@ -39,6 +36,13 @@ describe('formatServings', () => {
     expect(formatServings(14, 'pl')).toBe('14 porcji');
     expect(formatServings(22, 'pl')).toBe('22 porcje');
     expect(formatServings(25, 'pl')).toBe('25 porcji');
+  });
+
+  it('uses the accusative singular after "for" in Polish', () => {
+    expect(formatServings(1, 'pl', 'accusative')).toBe('1 porcję');
+    expect(formatServings(4, 'pl', 'accusative')).toBe('4 porcje');
+    expect(formatServings(5, 'pl', 'accusative')).toBe('5 porcji');
+    expect(formatServings(1, 'en', 'accusative')).toBe('1 serving');
   });
 
   it('uses singular and plural forms in English', () => {

@@ -27,7 +27,11 @@ export default function CreateRecipe() {
         <Text style={styles.savedTitle}>{savedRecipe.title}</Text>
         <Text style={styles.savedMessage}>
           {t('create.savedMessage', {
-            servings: formatServings(savedRecipe.servingCount, language),
+            servings: formatServings(
+              savedRecipe.servingCount,
+              language,
+              'accusative',
+            ),
           })}
         </Text>
         <Pressable onPress={() => router.replace('/')} style={styles.button}>

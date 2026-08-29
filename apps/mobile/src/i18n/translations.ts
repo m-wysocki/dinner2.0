@@ -30,6 +30,7 @@ const pl = {
   'servings.one': 'porcja',
   'servings.few': 'porcje',
   'servings.many': 'porcji',
+  'servings.oneAccusative': 'porcję',
 
   'user.titlePending': 'Oczekiwanie na aktywację',
   'user.messagePending':
@@ -176,6 +177,7 @@ const en: Record<TranslationKey, string> = {
   'servings.one': 'serving',
   'servings.few': 'servings',
   'servings.many': 'servings',
+  'servings.oneAccusative': 'serving',
 
   'user.titlePending': 'Waiting for activation',
   'user.messagePending':
@@ -313,9 +315,12 @@ export function translate(
   return text;
 }
 
+export type GrammaticalCase = 'nominative' | 'accusative';
+
 export function formatServings(
   count: number,
   language: InterfaceLanguage,
+  grammaticalCase: GrammaticalCase = 'nominative',
 ): string {
   const dict = translations[language];
 
@@ -326,10 +331,10 @@ export function formatServings(
   const mod10 = count % 10;
   const mod100 = count % 100;
 
-  let form: 'one' | 'few' | 'many' = 'many';
+  let form: 'one' | 'oneAccusative' | 'few' | 'many' = 'many';
 
   if (count === 1) {
-    form = 'one';
+    form = grammaticalCase === 'accusative' ? 'oneAccusative' : 'one';
   } else if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
     form = 'few';
   }
