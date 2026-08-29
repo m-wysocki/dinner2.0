@@ -1,0 +1,3 @@
+# AI-assisted recipe creation behind an AI abstraction
+
+AI-assisted recipe creation extracts a structured recipe from pasted text. The API exposes `POST /api/v1/recipes/extract`, which returns a validated draft without persisting anything, and only the reviewed result is saved through the existing recipe create endpoint. The AI call sits behind a thin provider abstraction in the API with OpenAI as the first provider, so the API key never reaches the client and the provider can be swapped without touching domain logic. Catalog identity resolution is deterministic on the server rather than delegated to the model, so extraction results are testable and not dependent on the provider.

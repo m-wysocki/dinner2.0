@@ -34,6 +34,14 @@ _Avoid_: Instruction, recipe step text
 The workflow in which a user enters recipe information directly instead of importing it from another source.
 _Avoid_: Recipe import, recipe scan
 
+**AI-assisted recipe creation**:
+The workflow in which a user pastes a complete recipe as text and an AI service extracts the structured recipe, subject to user review before saving. The extracted content remains in the language of the pasted text and is never translated.
+_Avoid_: AI import, automated recipe entry
+
+**Recipe source text**:
+The unprocessed text a user pastes when creating a recipe through AI-assisted creation; it is retained with the recipe for provenance but is not displayed as recipe content.
+_Avoid_: Description, raw description, paste field
+
 **Serving count**:
 The number of portions represented by a recipe's ingredient quantities.
 _Avoid_: Portions, yield

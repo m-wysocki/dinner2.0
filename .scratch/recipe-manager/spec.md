@@ -4,11 +4,11 @@ Status: ready-for-agent
 
 ## Problem Statement
 
-The project currently exists as a broad product idea without an executable foundation. The first implementation must establish a secure, multi-user recipe workflow without prematurely building AI imports, media processing, shopping lists, or other future features.
+The project currently exists as a broad product idea without an executable foundation. The first implementation must establish a secure, multi-user recipe workflow with AI-assisted recipe creation from pasted text, without prematurely building media imports, shopping lists, or other future features.
 
 ## Solution
 
-Build a mobile-first recipe manager with a React Native/Expo client and an independent NestJS REST API. The first vertical slice lets an email-authenticated and administrator-activated user create, review, list, view, edit, and delete private recipes with structured ingredients and preparation steps.
+Build a mobile-first recipe manager with a React Native/Expo client and an independent NestJS REST API. The first vertical slice lets an email-authenticated and administrator-activated user create recipes by pasting a title and recipe text, review the AI-extracted structure, and list, view, edit, and delete private recipes with structured ingredients and preparation steps.
 
 The application supports Polish and English interface languages from the beginning, with Polish as the default. Supabase provides hosted PostgreSQL and authentication infrastructure. The mobile client communicates with application data only through the NestJS API.
 
@@ -42,6 +42,13 @@ The application supports Polish and English interface languages from the beginni
 26. As a user, I want Polish to be the default interface language, so that the initial experience matches the primary audience.
 27. As a user, I want to switch the interface language, so that I can use the application in English when needed.
 28. As a user, I want recipe content to remain in the language in which I entered it, so that my manually written content is not unexpectedly changed.
+29. As a user creating a recipe, I want to paste a complete recipe as text with only a title and serving count, so that I can save a structured recipe with minimal effort.
+30. As a user creating a recipe, I want the AI to extract ingredients, quantities, units, and preparation steps from my pasted text into the application's structure.
+31. As a user creating a recipe, I want to review and correct the extracted recipe before it is saved, so that AI errors never reach my collection unreviewed.
+32. As a user creating a recipe, I want unmatched ingredients to appear as proposed custom identities that I can accept or remap to the catalog, so that the stored identity is accurate.
+33. As a user, I want extraction to fail loudly without saving anything when the AI output cannot be validated, so that the database contains only valid recipes.
+34. As a user, I want my pasted recipe text retained with the recipe but not displayed as recipe content, so that I keep the original without clutter.
+35. As a user, I want the extracted content to remain in the language I pasted it in, so that my recipe is never translated.
 
 ## Implementation Decisions
 
@@ -95,19 +102,33 @@ The first vertical slice should provide these resource operations:
 - `GET /api/v1/recipes/:id`
 - `PATCH /api/v1/recipes/:id`
 - `DELETE /api/v1/recipes/:id`
+- `POST /api/v1/recipes/extract`
 - `GET /api/v1/ingredient-catalog`
 - `POST /api/v1/ingredient-catalog/custom`
 
 All recipe endpoints require authentication and enforce ownership in the backend. The list is initially newest-first with a server-side maximum result count and no search, filters, or pagination contract. API errors use a predictable shape containing a machine-readable code, a safe message, and optional validation details.
+
+### AI-assisted creation
+
+- Recipe creation collects a title, recipe source text, and serving count; the structured form is used only when editing an existing recipe.
+- `POST /api/v1/recipes/extract` returns a validated, non-persisted draft; saving happens only through `POST /api/v1/recipes` after user review.
+- The AI call is isolated behind a provider abstraction in the API; OpenAI is the first provider and the API key never reaches the client.
+- The AI extracts ingredient names, quantities, units, and preparation steps; the server resolves canonical identities deterministically against the catalog using both Polish and English display names.
+- Ingredient units map to canonical units when possible; unrecognized units use `OTHER` and preserve the original text in the ingredient note.
+- Unmatched ingredients are presented in review as proposed custom identities for the user to accept or remap; custom entries are created only when the user confirms them.
+- The AI also produces a clean description from the source text; extraction output is validated with Zod before it is returned.
+- Extraction keeps the language of the pasted text; content is never translated.
+- Failed or invalid extraction returns a loud, retryable error and never persists anything.
+- The recipe source text is stored with the recipe for provenance and is not displayed as recipe content.
 
 ### Mobile navigation
 
 The first authenticated shell contains:
 
 - recipe list;
-- create recipe;
+- create recipe (title, recipe source text, serving count, then review of the extracted draft);
 - recipe details;
-- edit recipe;
+- edit recipe (full structured form);
 - account pending/activation state;
 - language selection.
 
@@ -134,12 +155,13 @@ The primary test seam is the REST API boundary: HTTP request, JWT authentication
 4. Recipe API with ownership checks and integration tests.
 5. Mobile recipe list, empty state, create form, details, edit, and delete flows.
 6. Ingredient identity selection/custom creation, quantity and unit editing, and validation.
-7. Automated scaling behavior for serving counts.
-8. Image and media support.
-9. AI abstraction and validated structured output.
-10. Photo/OCR importer, then URL, YouTube, voice, and Instagram integrations.
-11. Search and organization.
-12. Shopping lists and ingredient merging.
+7. Web as the source of truth for platform verification: web renderer screen tests and a web export build step in CI.
+8. AI-assisted creation: extract endpoint, provider abstraction with OpenAI, deterministic catalog resolution, review-before-save, and the create screen rewrite.
+9. Automated scaling behavior for serving counts.
+10. Image and media support.
+11. Photo/OCR importer, then URL, YouTube, voice, and Instagram integrations.
+12. Search and organization.
+13. Shopping lists and ingredient merging.
 
 The first implementation task is repository foundation only. It must end with a runnable mobile app, runnable API, configured Supabase connection, shared package, basic checks, and CI. It must not implement recipes or authentication behavior yet.
 
@@ -155,7 +177,7 @@ The first implementation task is repository foundation only. It must end with a 
 
 ## Out of Scope
 
-- AI providers, OCR, speech-to-text, scraping, URL imports, YouTube imports, Instagram imports, and translation of imported content.
+- OCR, speech-to-text, scraping, URL imports, YouTube imports, Instagram imports, translation of imported content, and AI providers other than the OpenAI-backed extraction provider.
 - Recipe images, camera access, audio, object storage, and media processing.
 - Shopping lists, ingredient merging workflows, search, filters, sorting controls, collections, favorites, and meal planning.
 - Social login, password reset UX, administrator panel, invitation system, and automated administrator email notifications.
