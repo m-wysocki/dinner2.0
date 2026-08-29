@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { apiClient, ApiError } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
+import { useI18n } from '../../src/i18n/i18n';
 import { RecipeForm } from '../../src/recipe/recipe-form';
 
 export default function EditRecipe() {
+  const { t } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
   const state = getAuthenticatedState();
@@ -41,12 +43,10 @@ export default function EditRecipe() {
     return (
       <View style={styles.centered}>
         <Text style={styles.error}>
-          {isNotFound
-            ? 'Nie znaleziono przepisu.'
-            : 'Nie udało się pobrać przepisu.'}
+          {isNotFound ? t('details.notFound') : t('details.loadFailed')}
         </Text>
         <Pressable style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>Wróć</Text>
+          <Text style={styles.buttonText}>{t('app.back')}</Text>
         </Pressable>
       </View>
     );
@@ -55,7 +55,7 @@ export default function EditRecipe() {
   const recipe = recipeQuery.data;
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Edytuj przepis</Text>
+      <Text style={styles.title}>{t('edit.title')}</Text>
       <RecipeForm
         initialValues={{
           title: recipe.title,
@@ -70,7 +70,7 @@ export default function EditRecipe() {
           })),
           preparationSteps: recipe.preparationSteps.map((step) => step.text),
         }}
-        submitLabel="Zapisz zmiany"
+        submitLabel={t('edit.submit')}
         onSubmit={async (input) => {
           await apiClient.updateRecipe(recipe.id, {
             title: input.title,

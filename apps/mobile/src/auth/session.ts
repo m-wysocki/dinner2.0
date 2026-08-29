@@ -8,6 +8,24 @@ export interface AuthenticatedState {
   user: AuthUserResponse;
 }
 
+type SessionListener = () => void;
+
+const listeners = new Set<SessionListener>();
+
+export function subscribeToSession(listener: SessionListener): () => void {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notifySessionChanged(): void {
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
 let current: AuthenticatedState | null = null;
 const SESSION_KEY = 'dinner.authenticated-session';
 
@@ -51,6 +69,7 @@ export async function setAuthenticatedState(
     current = null;
     throw error;
   }
+  notifySessionChanged();
 }
 
 export function getAuthenticatedState(): AuthenticatedState | null {
@@ -60,6 +79,7 @@ export function getAuthenticatedState(): AuthenticatedState | null {
 export function clearAuthenticatedState(): void {
   current = null;
   void deleteStoredSession().catch(() => undefined);
+  notifySessionChanged();
 }
 
 export async function restoreAuthenticatedState(): Promise<AuthenticatedState | null> {
@@ -83,6 +103,7 @@ export async function restoreAuthenticatedState(): Promise<AuthenticatedState | 
     }
 
     current = state;
+    notifySessionChanged();
     return state;
   } catch {
     clearAuthenticatedState();

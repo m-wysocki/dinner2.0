@@ -1,11 +1,13 @@
 import { Link, Redirect, router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useI18n } from '../src/i18n/i18n';
 import {
   clearAuthenticatedState,
   getAuthenticatedState,
 } from '../src/auth/session';
 
 export default function User() {
+  const { t } = useI18n();
   const state = getAuthenticatedState();
 
   if (!state) {
@@ -17,23 +19,20 @@ export default function User() {
       <Text style={styles.email}>{state.user.email}</Text>
       {state.user.accessStatus === 'PENDING' ? (
         <>
-          <Text style={styles.title}>Oczekiwanie na aktywację</Text>
-          <Text style={styles.message}>
-            Twoje konto zostało potwierdzone, ale administrator nie aktywował
-            jeszcze dostępu. Otrzymasz dostęp do prywatnych przepisów po
-            aktywacji konta.
-          </Text>
+          <Text style={styles.title}>{t('user.titlePending')}</Text>
+          <Text style={styles.message}>{t('user.messagePending')}</Text>
         </>
       ) : (
         <>
-          <Text style={styles.title}>Zalogowano</Text>
-          <Text style={styles.message}>
-            Jesteś zalogowany i możesz zarządzać swoimi przepisami.
-          </Text>
+          <Text style={styles.title}>{t('user.titleActive')}</Text>
+          <Text style={styles.message}>{t('user.messageActive')}</Text>
         </>
       )}
       <Link href="/" style={styles.button}>
-        <Text style={styles.buttonText}>Wróć do ekranu głównego</Text>
+        <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
+      </Link>
+      <Link href="/language" style={styles.button}>
+        <Text style={styles.buttonText}>{t('user.language')}</Text>
       </Link>
       <Pressable
         style={styles.logoutButton}
@@ -42,7 +41,7 @@ export default function User() {
           router.replace('/login');
         }}
       >
-        <Text style={styles.logoutText}>Wyloguj się</Text>
+        <Text style={styles.logoutText}>{t('app.logout')}</Text>
       </Pressable>
     </ScrollView>
   );

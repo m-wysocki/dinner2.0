@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { submitRegistration } from '../src/auth/register';
+import { useI18n } from '../src/i18n/i18n';
 
 type SubmitState =
   | { kind: 'idle' }
@@ -20,6 +21,7 @@ type SubmitState =
   | { kind: 'failure'; message: string };
 
 export default function Register() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submit, setSubmit] = useState<SubmitState>({ kind: 'idle' });
@@ -44,14 +46,10 @@ export default function Register() {
   if (submit.kind === 'success') {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Konto utworzone</Text>
-        <Text style={styles.message}>
-          Sprawdź swoją skrzynkę e-mail i kliknij link potwierdzający w
-          wiadomości od nas. Po potwierdzeniu adresu Twoje konto będzie
-          oczekiwać na aktywację przez administratora.
-        </Text>
+        <Text style={styles.title}>{t('register.successTitle')}</Text>
+        <Text style={styles.message}>{t('register.successMessage')}</Text>
         <Link href="/" style={styles.button}>
-          <Text style={styles.buttonText}>Wróć do ekranu głównego</Text>
+          <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
         </Link>
       </View>
     );
@@ -66,16 +64,14 @@ export default function Register() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Załóż konto</Text>
-        <Text style={styles.subtitle}>
-          Zarejestruj się, aby zarządzać swoimi przepisami.
-        </Text>
+        <Text style={styles.title}>{t('register.title')}</Text>
+        <Text style={styles.subtitle}>{t('register.subtitle')}</Text>
 
         <TextInput
           style={styles.input}
           value={email}
           onChangeText={setEmail}
-          placeholder="Adres e-mail"
+          placeholder={t('register.emailPlaceholder')}
           placeholderTextColor="#9aa39e"
           autoCapitalize="none"
           autoComplete="email"
@@ -87,7 +83,7 @@ export default function Register() {
           style={styles.input}
           value={password}
           onChangeText={setPassword}
-          placeholder="Hasło"
+          placeholder={t('register.passwordPlaceholder')}
           placeholderTextColor="#9aa39e"
           secureTextEntry
           autoCapitalize="none"
@@ -109,12 +105,12 @@ export default function Register() {
           {submit.kind === 'submitting' ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Zarejestruj się</Text>
+            <Text style={styles.buttonText}>{t('register.submit')}</Text>
           )}
         </Pressable>
 
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Wróć</Text>
+          <Text style={styles.linkText}>{t('app.back')}</Text>
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -22,8 +22,10 @@ import {
   type RecipeCollectionResponse,
   type IngredientCatalogEntry,
   type CreateCustomIngredientRequest,
+  type UpdateUserRequest,
 } from '@dinner/shared';
 import { apiUrl } from '../config';
+import { translate } from '../i18n/i18n';
 import {
   clearAuthenticatedState,
   getAuthenticatedState,
@@ -59,7 +61,7 @@ export async function request<T>(
   if (authenticated && (!state || !hasValidAuthenticatedState())) {
     clearAuthenticatedState();
     throw new ApiError(
-      'Sesja wygasła. Zaloguj się ponownie.',
+      translate('api.sessionExpired'),
       401,
       'INVALID_CREDENTIALS',
     );
@@ -87,7 +89,7 @@ export async function request<T>(
         : {}),
     });
   } catch {
-    throw new ApiError('Nie można połączyć się z API.', 0);
+    throw new ApiError(translate('api.networkError'), 0);
   }
 
   if (!response.ok) {
@@ -106,7 +108,7 @@ export async function request<T>(
     }
 
     throw new ApiError(
-      `API zwróciło błąd (${response.status}).`,
+      translate('api.httpError', { status: response.status }),
       response.status,
     );
   }
@@ -116,19 +118,13 @@ export async function request<T>(
   }
 
   if (!schema) {
-    throw new ApiError(
-      'API zwróciło nieprawidłową odpowiedź.',
-      response.status,
-    );
+    throw new ApiError(translate('api.invalidResponse'), response.status);
   }
 
   try {
     return schema.parse(await response.json());
   } catch {
-    throw new ApiError(
-      'API zwróciło nieprawidłową odpowiedź.',
-      response.status,
-    );
+    throw new ApiError(translate('api.invalidResponse'), response.status);
   }
 }
 
@@ -160,6 +156,14 @@ export const apiClient = {
 
   currentUser(): Promise<AuthUserResponse> {
     return request('/auth/me', authUserResponseSchema, {
+      authenticated: true,
+    });
+  },
+
+  updateUser(input: UpdateUserRequest): Promise<AuthUserResponse> {
+    return request('/auth/me', authUserResponseSchema, {
+      method: 'PATCH',
+      body: input,
       authenticated: true,
     });
   },

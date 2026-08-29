@@ -86,4 +86,26 @@ describe('AuthController', () => {
 
     expect(getCurrentUser).toHaveBeenCalledWith('auth-user-id');
   });
+
+  it('delegates language updates using the verified identity', async () => {
+    const updateCurrentUser = vi.fn().mockResolvedValue({
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      email: 'user@example.com',
+      emailConfirmedAt: null,
+      accessStatus: 'PENDING',
+      interfaceLanguage: 'en',
+    });
+    const controller = new AuthController({ updateCurrentUser } as never);
+
+    await expect(
+      controller.updateMe(
+        { headers: {}, supabaseAuthId: 'auth-user-id' },
+        { interfaceLanguage: 'en' },
+      ),
+    ).resolves.toEqual(expect.objectContaining({ interfaceLanguage: 'en' }));
+
+    expect(updateCurrentUser).toHaveBeenCalledWith('auth-user-id', {
+      interfaceLanguage: 'en',
+    });
+  });
 });

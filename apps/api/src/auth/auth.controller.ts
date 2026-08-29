@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -12,6 +13,7 @@ import {
   confirmEmailRequestSchema,
   loginRequestSchema,
   registerRequestSchema,
+  updateUserRequestSchema,
   type ConfirmEmailRequest,
   type ConfirmEmailResponse,
   type LoginRequest,
@@ -19,6 +21,7 @@ import {
   type RegisterRequest,
   type RegisterResponse,
   type AuthUserResponse,
+  type UpdateUserRequest,
 } from '@dinner/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthGuard, type AuthenticatedRequest } from './auth.guard';
@@ -32,6 +35,16 @@ export class AuthController {
   @UseGuards(AuthGuard)
   me(@Req() request: AuthenticatedRequest): Promise<AuthUserResponse> {
     return this.authService.getCurrentUser(request.supabaseAuthId!);
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  updateMe(
+    @Req() request: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(updateUserRequestSchema))
+    input: UpdateUserRequest,
+  ): Promise<AuthUserResponse> {
+    return this.authService.updateCurrentUser(request.supabaseAuthId!, input);
   }
 
   @Post('register')

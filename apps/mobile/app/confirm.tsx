@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { confirmEmailViaLink } from '../src/auth/confirm';
+import { useI18n } from '../src/i18n/i18n';
 
 type ConfirmState =
   | { kind: 'pending' }
@@ -16,6 +17,7 @@ type ConfirmState =
   | { kind: 'failure'; message: string };
 
 export default function Confirm() {
+  const { t } = useI18n();
   const [state, setState] = useState<ConfirmState>({ kind: 'pending' });
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function Confirm() {
       } else {
         setState({
           kind: 'failure',
-          message: 'Nie znaleziono linku potwierdzającego.',
+          message: t('confirm.noLink'),
         });
       }
     }
@@ -62,28 +64,25 @@ export default function Confirm() {
       cancelled = true;
       subscription.remove();
     };
-  }, []);
+  }, [t]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Potwierdzenie adresu e-mail</Text>
+      <Text style={styles.title}>{t('confirm.title')}</Text>
 
       {state.kind === 'pending' && (
         <View style={styles.status}>
           <ActivityIndicator />
-          <Text style={styles.message}>Sprawdzanie linku...</Text>
+          <Text style={styles.message}>{t('confirm.checking')}</Text>
         </View>
       )}
 
       {state.kind === 'success' && (
         <>
-          <Text style={styles.success}>Adres e-mail został potwierdzony.</Text>
-          <Text style={styles.message}>
-            Możesz teraz zalogować się do swojego konta. Dostęp do przepisów
-            zostanie włączony po aktywacji przez administratora.
-          </Text>
+          <Text style={styles.success}>{t('confirm.success')}</Text>
+          <Text style={styles.message}>{t('confirm.successMessage')}</Text>
           <Link href="/" style={styles.button}>
-            <Text style={styles.buttonText}>Wróć do ekranu głównego</Text>
+            <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
           </Link>
         </>
       )}
@@ -92,7 +91,7 @@ export default function Confirm() {
         <>
           <Text style={styles.error}>{state.message}</Text>
           <Link href="/" style={styles.button}>
-            <Text style={styles.buttonText}>Wróć do ekranu głównego</Text>
+            <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
           </Link>
         </>
       )}

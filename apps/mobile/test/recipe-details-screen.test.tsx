@@ -85,7 +85,7 @@ describe('RecipeDetails screen', () => {
 
     expect(await screen.findByText('Zupa')).toBeOnTheScreen();
     expect(screen.getByText('Domowa')).toBeOnTheScreen();
-    expect(screen.getByText('4 porcji')).toBeOnTheScreen();
+    expect(screen.getByText('4 porcje')).toBeOnTheScreen();
     expect(screen.getByText(/Pomidor/)).toBeOnTheScreen();
     expect(screen.getByText('Pokrój')).toBeOnTheScreen();
   });

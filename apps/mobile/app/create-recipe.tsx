@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { apiClient } from '../src/api/client';
 import { getAuthenticatedState } from '../src/auth/session';
+import { formatServings, useI18n } from '../src/i18n/i18n';
 import { RecipeForm } from '../src/recipe/recipe-form';
 
 export default function CreateRecipe() {
+  const { t, language } = useI18n();
   const state = getAuthenticatedState();
   const [savedRecipe, setSavedRecipe] = useState<RecipeResponse | null>(null);
 
@@ -21,14 +23,19 @@ export default function CreateRecipe() {
   if (savedRecipe) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Przepis zapisany</Text>
+        <Text style={styles.title}>{t('create.savedTitle')}</Text>
         <Text style={styles.savedTitle}>{savedRecipe.title}</Text>
         <Text style={styles.savedMessage}>
-          Przepis na {savedRecipe.servingCount} porcji został dodany do Twojej
-          kolekcji.
+          {t('create.savedMessage', {
+            servings: formatServings(
+              savedRecipe.servingCount,
+              language,
+              'accusative',
+            ),
+          })}
         </Text>
         <Pressable onPress={() => router.replace('/')} style={styles.button}>
-          <Text style={styles.buttonText}>Wróć do strony głównej</Text>
+          <Text style={styles.buttonText}>{t('app.backToHomeScreen')}</Text>
         </Pressable>
       </View>
     );
@@ -36,7 +43,7 @@ export default function CreateRecipe() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nowy przepis</Text>
+      <Text style={styles.title}>{t('create.title')}</Text>
       <RecipeForm
         initialValues={{
           title: '',
@@ -45,7 +52,7 @@ export default function CreateRecipe() {
           ingredients: [],
           preparationSteps: [],
         }}
-        submitLabel="Zapisz przepis"
+        submitLabel={t('create.submit')}
         onSubmit={async (input) => {
           const body =
             (input.ingredients?.length ?? 0) === 0 &&

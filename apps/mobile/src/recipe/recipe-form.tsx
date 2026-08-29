@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { apiClient } from '../api/client';
-import { getAuthenticatedState } from '../auth/session';
+import { unitLabel, useI18n } from '../i18n/i18n';
 
 export interface RecipeFormValues {
   title: string;
@@ -55,7 +55,7 @@ export function RecipeForm({
   onSubmit,
   onCancel,
 }: RecipeFormProps) {
-  const state = getAuthenticatedState();
+  const { t, language } = useI18n();
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
   const [servingCount, setServingCount] = useState(initialValues.servingCount);
@@ -105,12 +105,12 @@ export function RecipeForm({
       );
       setError(
         hasMissingIdentity
-          ? 'Wybierz kanoniczny składnik z katalogu dla każdej pozycji.'
+          ? t('form.errorIdentity')
           : hasInvalidQuantity
-            ? 'Podaj ilość jako liczbę, maksymalnie z sześcioma miejscami po przecinku, albo zostaw ją pustą.'
+            ? t('form.errorQuantity')
             : hasInvalidStep
-              ? 'Każdy krok przygotowania musi zawierać treść.'
-              : 'Podaj tytuł i prawidłową liczbę porcji.',
+              ? t('form.errorStep')
+              : t('form.errorBasics'),
       );
       return;
     }
@@ -120,11 +120,7 @@ export function RecipeForm({
     try {
       await onSubmit(parsed.data);
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Nie udało się zapisać przepisu.',
-      );
+      setError(caught instanceof Error ? caught.message : t('form.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -144,45 +140,47 @@ export function RecipeForm({
       setError(
         caught instanceof Error
           ? caught.message
-          : 'Nie udało się dodać składnika.',
+          : t('form.addIngredientFailed'),
       );
     }
   }
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
-      <Text style={styles.label}>Tytuł</Text>
+      <Text style={styles.label}>{t('form.title')}</Text>
       <TextInput
-        accessibilityLabel="Tytuł"
+        accessibilityLabel={t('form.title')}
         autoCapitalize="sentences"
         onChangeText={setTitle}
-        placeholder="Np. Zupa pomidorowa"
+        placeholder={t('form.titlePlaceholder')}
         style={styles.input}
         value={title}
       />
-      <Text style={styles.label}>Opis (opcjonalnie)</Text>
+      <Text style={styles.label}>{t('form.description')}</Text>
       <TextInput
-        accessibilityLabel="Opis"
+        accessibilityLabel={t('form.description')}
         multiline
         onChangeText={setDescription}
-        placeholder="Kilka słów o przepisie"
+        placeholder={t('form.descriptionPlaceholder')}
         style={[styles.input, styles.description]}
         value={description}
       />
-      <Text style={styles.label}>Liczba porcji</Text>
+      <Text style={styles.label}>{t('form.servingCount')}</Text>
       <TextInput
-        accessibilityLabel="Liczba porcji"
+        accessibilityLabel={t('form.servingCount')}
         keyboardType="number-pad"
         onChangeText={setServingCount}
-        placeholder="Np. 4"
+        placeholder={t('form.servingCountPlaceholder')}
         style={styles.input}
         value={servingCount}
       />
-      <Text style={styles.sectionTitle}>Składniki</Text>
+      <Text style={styles.sectionTitle}>{t('form.ingredients')}</Text>
       {ingredients.map((ingredient, index) => (
         <View key={index} style={styles.ingredient}>
           <TextInput
-            accessibilityLabel={`Nazwa składnika ${index + 1}`}
+            accessibilityLabel={t('form.ingredientNameA11y', {
+              number: index + 1,
+            })}
             onChangeText={(name) =>
               setIngredients((current) =>
                 current.map((item, itemIndex) =>
@@ -190,12 +188,14 @@ export function RecipeForm({
                 ),
               )
             }
-            placeholder="Nazwa składnika"
+            placeholder={t('form.ingredientName')}
             style={styles.input}
             value={ingredient.name}
           />
           <TextInput
-            accessibilityLabel={`Ilość składnika ${index + 1}`}
+            accessibilityLabel={t('form.ingredientQuantityA11y', {
+              number: index + 1,
+            })}
             onChangeText={(quantity) =>
               setIngredients((current) =>
                 current.map((item, itemIndex) =>
@@ -203,12 +203,14 @@ export function RecipeForm({
                 ),
               )
             }
-            placeholder="Ilość, np. 2 (opcjonalnie)"
+            placeholder={t('form.quantityPlaceholder')}
             style={styles.input}
             value={ingredient.quantity}
           />
           <TextInput
-            accessibilityLabel={`Notatka składnika ${index + 1}`}
+            accessibilityLabel={t('form.ingredientNoteA11y', {
+              number: index + 1,
+            })}
             onChangeText={(note) =>
               setIngredients((current) =>
                 current.map((item, itemIndex) =>
@@ -216,7 +218,7 @@ export function RecipeForm({
                 ),
               )
             }
-            placeholder="Notatka (opcjonalnie)"
+            placeholder={t('form.notePlaceholder')}
             style={styles.input}
             value={ingredient.note}
           />
@@ -237,7 +239,7 @@ export function RecipeForm({
                     : styles.catalogEntry
                 }
               >
-                <Text>{unit}</Text>
+                <Text>{unitLabel(unit, language)}</Text>
               </Pressable>
             ))}
           </View>
@@ -260,11 +262,7 @@ export function RecipeForm({
                     : styles.catalogEntry
                 }
               >
-                <Text>
-                  {state?.user.interfaceLanguage === 'en'
-                    ? entry.nameEn
-                    : entry.namePl}
-                </Text>
+                <Text>{language === 'en' ? entry.nameEn : entry.namePl}</Text>
               </Pressable>
             ))}
           </View>
@@ -283,7 +281,7 @@ export function RecipeForm({
               }
               style={styles.action}
             >
-              <Text>W górę</Text>
+              <Text>{t('form.moveUp')}</Text>
             </Pressable>
             <Pressable
               disabled={index === ingredients.length - 1}
@@ -299,7 +297,7 @@ export function RecipeForm({
               }
               style={styles.action}
             >
-              <Text>W dół</Text>
+              <Text>{t('form.moveDown')}</Text>
             </Pressable>
             <Pressable
               onPress={() =>
@@ -309,7 +307,7 @@ export function RecipeForm({
               }
               style={styles.action}
             >
-              <Text>Usuń składnik</Text>
+              <Text>{t('form.removeIngredient')}</Text>
             </Pressable>
           </View>
         </View>
@@ -323,12 +321,12 @@ export function RecipeForm({
         }
         style={styles.secondaryButton}
       >
-        <Text>Dodaj składnik</Text>
+        <Text>{t('form.addIngredient')}</Text>
       </Pressable>
       <TextInput
-        accessibilityLabel="Nazwa własnego składnika"
+        accessibilityLabel={t('form.customIngredientA11y')}
         onChangeText={setCustomName}
-        placeholder="Nowy własny składnik"
+        placeholder={t('form.customIngredientPlaceholder')}
         style={[styles.input, styles.customInput]}
         value={customName}
       />
@@ -336,13 +334,13 @@ export function RecipeForm({
         onPress={() => void addCustomIngredient()}
         style={styles.secondaryButton}
       >
-        <Text>Utwórz własny składnik</Text>
+        <Text>{t('form.createCustomIngredient')}</Text>
       </Pressable>
-      <Text style={styles.sectionTitle}>Przygotowanie</Text>
+      <Text style={styles.sectionTitle}>{t('form.preparation')}</Text>
       {preparationSteps.map((step, index) => (
         <View key={index} style={styles.step}>
           <TextInput
-            accessibilityLabel={`Krok przygotowania ${index + 1}`}
+            accessibilityLabel={t('form.stepA11y', { number: index + 1 })}
             multiline
             onChangeText={(text) =>
               setPreparationSteps((current) =>
@@ -351,7 +349,7 @@ export function RecipeForm({
                 ),
               )
             }
-            placeholder="Opisz krok przygotowania"
+            placeholder={t('form.stepPlaceholder')}
             style={[styles.input, styles.description]}
             value={step}
           />
@@ -370,7 +368,7 @@ export function RecipeForm({
               }
               style={styles.action}
             >
-              <Text>W górę</Text>
+              <Text>{t('form.moveUp')}</Text>
             </Pressable>
             <Pressable
               disabled={index === preparationSteps.length - 1}
@@ -386,7 +384,7 @@ export function RecipeForm({
               }
               style={styles.action}
             >
-              <Text>W dół</Text>
+              <Text>{t('form.moveDown')}</Text>
             </Pressable>
             <Pressable
               onPress={() =>
@@ -396,7 +394,7 @@ export function RecipeForm({
               }
               style={styles.action}
             >
-              <Text>Usuń krok</Text>
+              <Text>{t('form.removeStep')}</Text>
             </Pressable>
           </View>
         </View>
@@ -405,7 +403,7 @@ export function RecipeForm({
         onPress={() => setPreparationSteps((current) => [...current, ''])}
         style={styles.secondaryButton}
       >
-        <Text>Dodaj krok</Text>
+        <Text>{t('form.addStep')}</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
       <Pressable
@@ -420,7 +418,7 @@ export function RecipeForm({
         )}
       </Pressable>
       <Pressable disabled={isSaving} onPress={onCancel} style={styles.cancel}>
-        <Text style={styles.cancelText}>Anuluj</Text>
+        <Text style={styles.cancelText}>{t('app.cancel')}</Text>
       </Pressable>
     </ScrollView>
   );

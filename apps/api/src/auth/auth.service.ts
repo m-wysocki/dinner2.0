@@ -8,6 +8,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  UpdateUserRequest,
 } from '@dinner/shared';
 import { authUserResponseSchema } from '@dinner/shared';
 import type { AuthUserResponse } from '@dinner/shared';
@@ -235,6 +236,30 @@ export class AuthService {
     }
 
     return this.toAuthUserResponse(user);
+  }
+
+  async updateCurrentUser(
+    supabaseAuthId: string,
+    input: UpdateUserRequest,
+  ): Promise<AuthUserResponse> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { supabaseAuthId },
+        data: { interfaceLanguage: input.interfaceLanguage },
+      });
+
+      return this.toAuthUserResponse(user);
+    } catch (error) {
+      if (this.isPrismaError(error, 'P2025')) {
+        throw new ApiException(
+          USER_NOT_FOUND.code,
+          USER_NOT_FOUND.message,
+          404,
+        );
+      }
+
+      throw error;
+    }
   }
 
   private throwInvalidCredentials(): never {
