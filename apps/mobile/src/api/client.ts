@@ -50,7 +50,7 @@ export interface RequestOptions {
 
 export async function request<T>(
   path: string,
-  schema: { parse: (value: unknown) => T },
+  schema: { parse: (value: unknown) => T } | undefined,
   options: RequestOptions = {},
 ) {
   const authenticated = options.authenticated ?? false;
@@ -113,6 +113,13 @@ export async function request<T>(
 
   if (response.status === 204) {
     return undefined as T;
+  }
+
+  if (!schema) {
+    throw new ApiError(
+      'API zwróciło nieprawidłową odpowiedź.',
+      response.status,
+    );
   }
 
   try {
@@ -197,14 +204,10 @@ export const apiClient = {
   },
 
   deleteRecipe(id: string): Promise<void> {
-    return request(
-      `/recipes/${encodeURIComponent(id)}`,
-      { parse: () => undefined },
-      {
-        method: 'DELETE',
-        authenticated: true,
-      },
-    );
+    return request<void>(`/recipes/${encodeURIComponent(id)}`, undefined, {
+      method: 'DELETE',
+      authenticated: true,
+    });
   },
 
   ingredientCatalog(): Promise<IngredientCatalogEntry[]> {

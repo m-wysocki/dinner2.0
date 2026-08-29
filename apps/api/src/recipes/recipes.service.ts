@@ -230,19 +230,16 @@ export class RecipesService {
       );
     }
 
-    const existing = await this.prisma.recipe.findFirst({
+    const { count } = await this.prisma.recipe.deleteMany({
       where: { id: recipeId, ownerId: owner.id },
-      select: { id: true },
     });
-    if (!existing) {
+    if (count === 0) {
       throw new ApiException(
         'RECIPE_NOT_FOUND',
         'Nie znaleziono przepisu.',
         404,
       );
     }
-
-    await this.prisma.recipe.delete({ where: { id: recipeId } });
   }
 
   async listCatalog(supabaseAuthId: string): Promise<IngredientCatalogEntry[]> {

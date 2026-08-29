@@ -342,13 +342,10 @@ describe('RecipesService', () => {
 
   it('deletes a recipe owned by the authenticated user', async () => {
     const findUnique = vi.fn().mockResolvedValue({ id: 'owner-id' });
-    const findFirst = vi
-      .fn()
-      .mockResolvedValue({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' });
-    const deleteRecipe = vi.fn();
+    const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
     const service = new RecipesService({
       user: { findUnique },
-      recipe: { findFirst, delete: deleteRecipe },
+      recipe: { deleteMany },
     } as never);
 
     await expect(
@@ -357,22 +354,19 @@ describe('RecipesService', () => {
         'f47ac10b-58cc-4372-a567-0e02b2c3d479',
       ),
     ).resolves.toBeUndefined();
-    expect(findFirst).toHaveBeenCalledWith({
+    expect(deleteMany).toHaveBeenCalledWith({
       where: {
         id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
         ownerId: 'owner-id',
       },
-      select: { id: true },
-    });
-    expect(deleteRecipe).toHaveBeenCalledWith({
-      where: { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' },
     });
   });
 
   it('uses the same not-found response when deleting another user recipe', async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
     const service = new RecipesService({
       user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
-      recipe: { findFirst: vi.fn().mockResolvedValue(null) },
+      recipe: { deleteMany },
     } as never);
 
     await expect(
@@ -384,10 +378,10 @@ describe('RecipesService', () => {
   });
 
   it('uses the same not-found response for a malformed recipe id when deleting', async () => {
-    const findFirst = vi.fn();
+    const deleteMany = vi.fn();
     const service = new RecipesService({
       user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
-      recipe: { findFirst },
+      recipe: { deleteMany },
     } as never);
 
     await expect(
@@ -396,6 +390,6 @@ describe('RecipesService', () => {
       code: 'RECIPE_NOT_FOUND',
       status: 404,
     });
-    expect(findFirst).not.toHaveBeenCalled();
+    expect(deleteMany).not.toHaveBeenCalled();
   });
 });
