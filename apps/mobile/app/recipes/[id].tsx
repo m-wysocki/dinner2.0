@@ -46,7 +46,15 @@ export default function RecipeDetails() {
       <Pressable onPress={() => router.back()}>
         <Text style={styles.back}>Wróć</Text>
       </Pressable>
-      <Text style={styles.title}>{recipe.title}</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>{recipe.title}</Text>
+        <Pressable
+          style={styles.editButton}
+          onPress={() => router.push(`/edit-recipe/${recipe.id}`)}
+        >
+          <Text style={styles.editButtonText}>Edytuj</Text>
+        </Pressable>
+      </View>
       {recipe.description && (
         <Text style={styles.description}>{recipe.description}</Text>
       )}
@@ -89,7 +97,15 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   back: { color: '#68736d', fontSize: 16, marginBottom: 24 },
-  title: { color: '#25352d', fontSize: 32, fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  title: { color: '#25352d', flex: 1, fontSize: 32, fontWeight: '700' },
+  editButton: {
+    backgroundColor: '#eef1ed',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  editButtonText: { color: '#25352d', fontWeight: '600' },
   description: { color: '#68736d', fontSize: 16, marginTop: 12 },
   servings: { color: '#28734a', fontWeight: '600', marginTop: 12 },
   heading: {

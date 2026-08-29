@@ -6,6 +6,7 @@ import {
   canonicalUnitSchema,
   confirmEmailRequestSchema,
   createRecipeRequestSchema,
+  updateRecipeRequestSchema,
   interfaceLanguageSchema,
   loginRequestSchema,
   loginResponseSchema,
@@ -319,6 +320,66 @@ describe('recipe contracts', () => {
         preparationSteps: [
           { text: 'Gotuj', position: 0 },
           { text: 'Podaj', position: 0 },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('update recipe request contract', () => {
+  const valid = {
+    title: 'Zupa',
+    servingCount: 4,
+    ingredients: [],
+    preparationSteps: [],
+  };
+
+  it('accepts a full recipe update', () => {
+    expect(updateRecipeRequestSchema.parse(valid)).toEqual(valid);
+  });
+
+  it('requires ingredients and preparation steps to be present', () => {
+    expect(
+      updateRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        servingCount: 4,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects ingredients without a canonical identity', () => {
+    expect(
+      updateRecipeRequestSchema.safeParse({
+        ...valid,
+        ingredients: [
+          {
+            catalogEntryId: 'not-a-uuid',
+            name: 'Pomidor',
+            unit: 'PCS',
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects ingredients with non-consecutive positions', () => {
+    expect(
+      updateRecipeRequestSchema.safeParse({
+        ...valid,
+        ingredients: [
+          {
+            catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+            name: 'Pomidor',
+            unit: 'PCS',
+            position: 0,
+          },
+          {
+            catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+            name: 'Cebula',
+            unit: 'PCS',
+            position: 0,
+          },
         ],
       }).success,
     ).toBe(false);

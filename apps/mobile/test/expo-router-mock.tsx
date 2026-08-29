@@ -13,6 +13,18 @@ export function useRouter() {
   return router;
 }
 
+const localParams: Record<string, string | string[]> = {};
+
+export function useLocalSearchParams<
+  TParsedQuery = Record<string, string | string[]>,
+>() {
+  return localParams as TParsedQuery;
+}
+
+export function setLocalParams(params: Record<string, string | string[]>) {
+  Object.assign(localParams, params);
+}
+
 export function useSegments() {
   return [];
 }

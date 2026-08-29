@@ -209,4 +209,134 @@ describe('RecipesService', () => {
     });
     expect(findFirst).not.toHaveBeenCalled();
   });
+
+  it('updates a recipe owned by the authenticated user atomically', async () => {
+    const findUnique = vi.fn().mockResolvedValue({ id: 'owner-id' });
+    const update = vi.fn().mockResolvedValue({
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      title: 'Zupa ulepszona',
+      description: null,
+      servingCount: 6,
+      createdAt: new Date('2026-08-28T12:00:00.000Z'),
+      updatedAt: new Date('2026-08-29T12:00:00.000Z'),
+      ingredients: [
+        {
+          id: '5d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          nameSnapshot: 'Pomidor',
+          quantity: { toString: () => '3' },
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+      ],
+      preparationSteps: [
+        {
+          id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          text: 'Gotuj dłużej',
+          position: 0,
+        },
+      ],
+    });
+    const findFirst = vi.fn().mockResolvedValue({ id: 'recipe-id' });
+    const transaction = vi.fn((callback) =>
+      callback({
+        recipe: { findFirst, update },
+        ingredientCatalogEntry: {
+          findFirst: vi.fn().mockResolvedValue({ id: 'catalog-entry' }),
+        },
+      }),
+    );
+    const service = new RecipesService({
+      user: { findUnique },
+      $transaction: transaction,
+    } as never);
+
+    await expect(
+      service.update(
+        'supabase-user-id',
+        'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        {
+          title: 'Zupa ulepszona',
+          servingCount: 6,
+          ingredients: [
+            {
+              catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+              name: 'Pomidor',
+              quantity: '3',
+              unit: 'PCS',
+              position: 0,
+            },
+          ],
+          preparationSteps: [{ text: 'Gotuj dłużej', position: 0 }],
+        },
+      ),
+    ).resolves.toMatchObject({
+      title: 'Zupa ulepszona',
+      servingCount: 6,
+      ingredients: [{ name: 'Pomidor', quantity: '3' }],
+      preparationSteps: [{ text: 'Gotuj dłużej' }],
+    });
+    expect(findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        ownerId: 'owner-id',
+      },
+      select: { id: true },
+    });
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' },
+      data: {
+        title: 'Zupa ulepszona',
+        description: null,
+        servingCount: 6,
+        ingredients: {
+          deleteMany: {},
+          create: [
+            {
+              catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+              nameSnapshot: 'Pomidor',
+              quantity: '3',
+              unit: 'PCS',
+              note: null,
+              position: 0,
+              identityConfirmed: true,
+            },
+          ],
+        },
+        preparationSteps: {
+          deleteMany: {},
+          create: [{ text: 'Gotuj dłużej', position: 0 }],
+        },
+      },
+      include: { ingredients: true, preparationSteps: true },
+    });
+  });
+
+  it('rejects updating a recipe that is not owned by the user', async () => {
+    const transaction = vi.fn((callback) =>
+      callback({
+        recipe: { findFirst: vi.fn().mockResolvedValue(null) },
+        ingredientCatalogEntry: {
+          findFirst: vi.fn().mockResolvedValue(null),
+        },
+      }),
+    );
+    const service = new RecipesService({
+      user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
+      $transaction: transaction,
+    } as never);
+
+    await expect(
+      service.update('supabase-user-id', 'recipe-id', {
+        title: 'Zupa',
+        servingCount: 4,
+        ingredients: [],
+        preparationSteps: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'RECIPE_NOT_FOUND',
+      status: 404,
+    });
+  });
 });

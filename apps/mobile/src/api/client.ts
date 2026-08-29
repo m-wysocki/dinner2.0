@@ -16,7 +16,9 @@ import {
   type RegisterRequest,
   type RegisterResponse,
   type CreateRecipeRequest,
+  type UpdateRecipeRequest,
   type RecipeResponse,
+  type RecipeDetailsResponse,
   type RecipeCollectionResponse,
   type IngredientCatalogEntry,
   type CreateCustomIngredientRequest,
@@ -41,7 +43,7 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PATCH';
   body?: unknown;
   authenticated?: boolean;
 }
@@ -159,17 +161,32 @@ export const apiClient = {
     });
   },
 
-listRecipes(): Promise<RecipeCollectionResponse> {
+  listRecipes(): Promise<RecipeCollectionResponse> {
     return request('/recipes', recipeCollectionResponseSchema, {
       authenticated: true,
     });
   },
 
-  getRecipe(id: string): Promise<RecipeResponse> {
+  getRecipe(id: string): Promise<RecipeDetailsResponse> {
     return request(
       `/recipes/${encodeURIComponent(id)}`,
       recipeDetailsResponseSchema,
       {
+        authenticated: true,
+      },
+    );
+  },
+
+  updateRecipe(
+    id: string,
+    input: UpdateRecipeRequest,
+  ): Promise<RecipeDetailsResponse> {
+    return request(
+      `/recipes/${encodeURIComponent(id)}`,
+      recipeDetailsResponseSchema,
+      {
+        method: 'PATCH',
+        body: input,
         authenticated: true,
       },
     );

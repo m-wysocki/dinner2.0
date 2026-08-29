@@ -92,10 +92,7 @@ describe('CreateRecipe screen', () => {
     await user.type(screen.getByPlaceholderText('Np. Zupa pomidorowa'), 'Zupa');
     await user.type(screen.getByPlaceholderText('Np. 4'), '4');
     await user.press(screen.getByText('Dodaj składnik'));
-    await user.type(
-      screen.getByLabelText('Nazwa składnika 1'),
-      'Pomidor',
-    );
+    await user.type(screen.getByLabelText('Nazwa składnika 1'), 'Pomidor');
     await user.type(screen.getByLabelText('Ilość składnika 1'), '2');
     await user.press(screen.getByText('Pomidor'));
     await user.press(screen.getByText('Dodaj krok'));

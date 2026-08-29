@@ -3,15 +3,18 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import {
   createRecipeRequestSchema,
+  updateRecipeRequestSchema,
   type CreateRecipeRequest,
   type RecipeResponse,
   type RecipeCollectionResponse,
+  type UpdateRecipeRequest,
 } from '@dinner/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ActiveAccessGuard } from '../auth/active-access.guard';
@@ -45,5 +48,15 @@ export class RecipesController {
     @Param('id') id: string,
   ): Promise<RecipeResponse> {
     return this.recipesService.get(request.supabaseAuthId!, id);
+  }
+
+  @Patch(':id')
+  update(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateRecipeRequestSchema))
+    input: UpdateRecipeRequest,
+  ): Promise<RecipeResponse> {
+    return this.recipesService.update(request.supabaseAuthId!, id, input);
   }
 }

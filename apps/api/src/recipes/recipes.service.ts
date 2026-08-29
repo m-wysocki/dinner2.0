@@ -4,7 +4,9 @@ import type {
   CreateRecipeRequest,
   IngredientCatalogEntry,
   RecipeCollectionResponse,
+  RecipeIngredientRequest,
   RecipeResponse,
+  UpdateRecipeRequest,
 } from '@dinner/shared';
 import {
   ingredientCatalogEntrySchema,
@@ -98,7 +100,9 @@ export class RecipesService {
     const owner = await this.findOwner(supabaseAuthId);
 
     const recipe = await this.prisma.$transaction(async (transaction) => {
-      await this.assertAccessibleIngredients(transaction, owner.id, input);
+      await this.assertAccessibleIngredients(transaction, owner.id, input, {
+        requireActive: true,
+      });
       return transaction.recipe.create({
         data: {
           ownerId: owner.id,
@@ -106,15 +110,9 @@ export class RecipesService {
           description: input.description || null,
           servingCount: input.servingCount,
           ingredients: {
-            create: (input.ingredients ?? []).map((ingredient) => ({
-              catalogEntryId: ingredient.catalogEntryId,
-              nameSnapshot: ingredient.name,
-              quantity: ingredient.quantity ?? null,
-              unit: ingredient.unit,
-              note: ingredient.note || null,
-              position: ingredient.position,
-              identityConfirmed: true,
-            })),
+            create: (input.ingredients ?? []).map((ingredient) =>
+              this.toIngredientCreate(ingredient),
+            ),
           },
           preparationSteps: {
             create: (input.preparationSteps ?? []).map((step) => ({
@@ -141,6 +139,80 @@ export class RecipesService {
         this.toIngredientResponse(ingredient),
       ),
       preparationSteps: (recipe.preparationSteps ?? []).map((step) => ({
+        id: step.id,
+        text: step.text,
+        position: step.position,
+      })),
+    });
+  }
+
+  async update(
+    supabaseAuthId: string,
+    recipeId: string,
+    input: UpdateRecipeRequest,
+  ): Promise<RecipeResponse> {
+    const owner = await this.findOwner(supabaseAuthId);
+    if (!z.string().uuid().safeParse(recipeId).success) {
+      throw new ApiException(
+        'RECIPE_NOT_FOUND',
+        'Nie znaleziono przepisu.',
+        404,
+      );
+    }
+
+    const recipe = await this.prisma.$transaction(async (transaction) => {
+      const existing = await transaction.recipe.findFirst({
+        where: { id: recipeId, ownerId: owner.id },
+        select: { id: true },
+      });
+      if (!existing) {
+        throw new ApiException(
+          'RECIPE_NOT_FOUND',
+          'Nie znaleziono przepisu.',
+          404,
+        );
+      }
+      await this.assertAccessibleIngredients(transaction, owner.id, input, {
+        requireActive: false,
+      });
+      return transaction.recipe.update({
+        where: { id: recipeId },
+        data: {
+          title: input.title,
+          description: input.description || null,
+          servingCount: input.servingCount,
+          ingredients: {
+            deleteMany: {},
+            create: input.ingredients.map((ingredient) =>
+              this.toIngredientCreate(ingredient),
+            ),
+          },
+          preparationSteps: {
+            deleteMany: {},
+            create: input.preparationSteps.map((step) => ({
+              text: step.text,
+              position: step.position,
+            })),
+          },
+        },
+        include: {
+          ingredients: true,
+          preparationSteps: true,
+        },
+      });
+    });
+
+    return recipeDetailsResponseSchema.parse({
+      id: recipe.id,
+      title: recipe.title,
+      description: recipe.description,
+      servingCount: recipe.servingCount,
+      ingredients: recipe.ingredients.map((ingredient) =>
+        this.toIngredientResponse(ingredient),
+      ),
+      createdAt: recipe.createdAt.toISOString(),
+      updatedAt: recipe.updatedAt.toISOString(),
+      preparationSteps: recipe.preparationSteps.map((step) => ({
         id: step.id,
         text: step.text,
         position: step.position,
@@ -231,6 +303,18 @@ export class RecipesService {
     return owner;
   }
 
+  private toIngredientCreate(ingredient: RecipeIngredientRequest) {
+    return {
+      catalogEntryId: ingredient.catalogEntryId,
+      nameSnapshot: ingredient.name,
+      quantity: ingredient.quantity ?? null,
+      unit: ingredient.unit,
+      note: ingredient.note || null,
+      position: ingredient.position,
+      identityConfirmed: true,
+    };
+  }
+
   private async assertAccessibleIngredients(
     transaction: {
       ingredientCatalogEntry: {
@@ -239,12 +323,13 @@ export class RecipesService {
     },
     ownerId: string,
     input: { ingredients?: Array<{ catalogEntryId: string }> },
+    options: { requireActive?: boolean } = {},
   ) {
     for (const ingredient of input.ingredients ?? []) {
       const catalogEntry = await transaction.ingredientCatalogEntry.findFirst({
         where: {
           id: ingredient.catalogEntryId,
-          isActive: true,
+          ...(options.requireActive === false ? {} : { isActive: true }),
           OR: [{ isSystem: true }, { ownerId }],
         },
       });

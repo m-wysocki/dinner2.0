@@ -73,12 +73,13 @@ export type PreparationStepRequest = z.infer<
   typeof preparationStepRequestSchema
 >;
 
+const hasConsecutivePositions = (items: Array<{ position: number }>): boolean =>
+  items.every((item, index) => item.position === index);
+
 const preparationStepsSchema = z
   .array(preparationStepRequestSchema)
   .superRefine((steps, context) => {
-    const positions = steps.map((step) => step.position);
-    const expected = steps.map((_, index) => index);
-    if (positions.some((position, index) => position !== expected[index])) {
+    if (!hasConsecutivePositions(steps)) {
       context.addIssue({
         code: 'custom',
         message: 'Preparation steps must have consecutive positions',
@@ -136,6 +137,17 @@ export type RecipeIngredientRequest = z.infer<
   typeof recipeIngredientRequestSchema
 >;
 
+const recipeIngredientsSchema = z
+  .array(recipeIngredientRequestSchema)
+  .superRefine((ingredients, context) => {
+    if (!hasConsecutivePositions(ingredients)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Ingredients must have consecutive positions',
+      });
+    }
+  });
+
 export const recipeIngredientResponseSchema = z.object({
   id: z.string().uuid(),
   catalogEntryId: z.string().uuid(),
@@ -171,10 +183,19 @@ export const createRecipeRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(5000).optional(),
   servingCount: z.number().int().min(1).max(1000),
-  ingredients: z.array(recipeIngredientRequestSchema).optional(),
+  ingredients: recipeIngredientsSchema.optional(),
   preparationSteps: preparationStepsSchema.optional(),
 });
 export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
+
+export const updateRecipeRequestSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(5000).optional(),
+  servingCount: z.number().int().min(1).max(1000),
+  ingredients: recipeIngredientsSchema,
+  preparationSteps: preparationStepsSchema,
+});
+export type UpdateRecipeRequest = z.infer<typeof updateRecipeRequestSchema>;
 
 export const recipeResponseSchema = z.object({
   id: z.string().uuid(),

@@ -40,4 +40,28 @@ describe('RecipesController', () => {
     ).resolves.toEqual({ id: 'recipe-id' });
     expect(get).toHaveBeenCalledWith('supabase-user-id', 'recipe-id');
   });
+
+  it('delegates recipe updates using the verified identity and route id', async () => {
+    const update = vi.fn().mockResolvedValue({ id: 'recipe-id' });
+    const controller = new RecipesController({ update } as never);
+
+    await expect(
+      controller.update(
+        { headers: {}, supabaseAuthId: 'supabase-user-id' },
+        'recipe-id',
+        {
+          title: 'Zupa ulepszona',
+          servingCount: 6,
+          ingredients: [],
+          preparationSteps: [],
+        },
+      ),
+    ).resolves.toEqual({ id: 'recipe-id' });
+    expect(update).toHaveBeenCalledWith('supabase-user-id', 'recipe-id', {
+      title: 'Zupa ulepszona',
+      servingCount: 6,
+      ingredients: [],
+      preparationSteps: [],
+    });
+  });
 });
