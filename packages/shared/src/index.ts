@@ -123,7 +123,8 @@ export type ApiErrorBody = z.infer<typeof apiErrorSchema>;
 const decimalSchema = z
   .string()
   .trim()
-  .regex(/^\d+(\.\d{1,6})?$/, 'Quantity must be a positive decimal');
+  .regex(/^\d+(\.\d{1,6})?$/, 'Quantity must be a positive decimal')
+  .refine((value) => Number(value) > 0, 'Quantity must be greater than zero');
 
 export const recipeIngredientRequestSchema = z.object({
   catalogEntryId: z.string().uuid(),

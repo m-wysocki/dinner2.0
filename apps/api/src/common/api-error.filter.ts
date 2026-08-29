@@ -31,7 +31,9 @@ export class ApiErrorFilter implements ExceptionFilter {
     const { status, payload } = this.toError(exception);
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(String(exception));
+      this.logger.error(
+        exception instanceof Error ? exception.message : String(exception),
+      );
     }
 
     response.status(status).json({ error: payload });

@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import { describe, expect, it, vi } from 'vitest';
+import { BadRequestException, Logger } from '@nestjs/common';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiException } from './api-error';
 import { ApiErrorFilter } from './api-error.filter';
 
@@ -14,6 +14,10 @@ function createHost(json: ReturnType<typeof vi.fn>) {
 }
 
 describe('ApiErrorFilter', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('formats ApiException with code, message, and status', () => {
     const json = vi.fn();
     const filter = new ApiErrorFilter();
@@ -65,5 +69,42 @@ describe('ApiErrorFilter', () => {
         message: 'Wystąpił nieoczekiwany błąd serwera.',
       },
     });
+  });
+
+  it('does not leak internal exception details to the client', () => {
+    const json = vi.fn();
+    const filter = new ApiErrorFilter();
+
+    filter.catch(
+      new Error('connection string postgresql://user:secret@db'),
+      createHost(json),
+    );
+
+    expect(json).toHaveBeenCalledWith({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Wystąpił nieoczekiwany błąd serwera.',
+      },
+    });
+    expect(JSON.stringify(json.mock.calls[0][0])).not.toContain('secret');
+  });
+
+  it('logs internal errors but not client errors', () => {
+    const errorLog = vi
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    const json = vi.fn();
+    const filter = new ApiErrorFilter();
+
+    filter.catch(
+      new ApiException('RECIPE_NOT_FOUND', 'Nie znaleziono przepisu.', 404),
+      createHost(json),
+    );
+    filter.catch(new BadRequestException('bad request'), createHost(json));
+    expect(errorLog).not.toHaveBeenCalled();
+
+    filter.catch(new Error('database exploded'), createHost(json));
+    expect(errorLog).toHaveBeenCalledTimes(1);
+    expect(errorLog).toHaveBeenCalledWith('database exploded');
   });
 });
