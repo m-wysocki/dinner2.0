@@ -13,11 +13,13 @@
 
 ## Comments
 
-- Added `DELETE /api/v1/recipes/:id` returning `204 No Content` with the same
-  ownership and UUID checks as read/update; the Prisma cascade removes
-  ingredients and preparation steps with the recipe.
+- Added `DELETE /api/v1/recipes/:id` returning `204 No Content`. Deletion uses
+  `deleteMany` scoped by owner id so it is atomic (no check-then-act race) and
+  non-owned or missing recipes produce the same `404`; the Prisma cascade
+  removes ingredients and preparation steps with the recipe.
 - Added `apiClient.deleteRecipe` plus `DELETE` method and `204` no-content
-  handling in the shared request helper.
+  handling in the shared request helper; the helper's response schema is now
+  optional so bodyless calls need no no-op parser.
 - The details screen now offers a destructive "Usuń przepis" action behind an
   `Alert` confirmation, invalidates the details/collection caches and navigates
   back on success, and shows a safe inline error on failure.
