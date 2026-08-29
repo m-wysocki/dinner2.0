@@ -1,5 +1,5 @@
 import { Link, Redirect, router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   clearAuthenticatedState,
   getAuthenticatedState,
@@ -13,7 +13,7 @@ export default function User() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.email}>{state.user.email}</Text>
       {state.user.accessStatus === 'PENDING' ? (
         <>
@@ -44,13 +44,13 @@ export default function User() {
       >
         <Text style={styles.logoutText}>Wyloguj się</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
     backgroundColor: '#fffaf3',

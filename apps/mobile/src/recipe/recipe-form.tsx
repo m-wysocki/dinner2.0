@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -149,7 +150,7 @@ export function RecipeForm({
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.label}>Tytuł</Text>
       <TextInput
         accessibilityLabel="Tytuł"
@@ -421,12 +422,13 @@ export function RecipeForm({
       <Pressable disabled={isSaving} onPress={onCancel} style={styles.cancel}>
         <Text style={styles.cancelText}>Anuluj</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: '#fffaf3' },
+  scroll: { flex: 1, backgroundColor: '#fffaf3' },
+  container: { flexGrow: 1, padding: 24 },
   label: {
     color: '#25352d',
     fontSize: 15,

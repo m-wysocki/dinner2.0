@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
 import { Link } from 'expo-router';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { confirmEmailViaLink } from '../src/auth/confirm';
 
 type ConfirmState =
@@ -59,7 +65,7 @@ export default function Confirm() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Potwierdzenie adresu e-mail</Text>
 
       {state.kind === 'pending' && (
@@ -90,13 +96,13 @@ export default function Confirm() {
           </Link>
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
     backgroundColor: '#fffaf3',

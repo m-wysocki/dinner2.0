@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -44,61 +45,66 @@ export default function Login() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Logowanie</Text>
-      <Text style={styles.subtitle}>
-        Wpisz dane konta, aby zarządzać swoimi przepisami.
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Adres e-mail"
-        placeholderTextColor="#9aa39e"
-        autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        editable={submit.kind !== 'submitting'}
-      />
-
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Hasło"
-        placeholderTextColor="#9aa39e"
-        secureTextEntry
-        autoCapitalize="none"
-        editable={submit.kind !== 'submitting'}
-      />
-
-      {submit.kind === 'failure' && (
-        <Text style={styles.error}>{submit.message}</Text>
-      )}
-
-      <Pressable
-        style={[
-          styles.button,
-          submit.kind === 'submitting' && styles.buttonDisabled,
-        ]}
-        onPress={() => void handleSubmit()}
-        disabled={submit.kind === 'submitting'}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        {submit.kind === 'submitting' ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Zaloguj się</Text>
-        )}
-      </Pressable>
-
-      <Link href="/register" style={styles.link}>
-        <Text style={styles.linkText}>
-          Nie masz jeszcze konta? Zarejestruj się.
+        <Text style={styles.title}>Logowanie</Text>
+        <Text style={styles.subtitle}>
+          Wpisz dane konta, aby zarządzać swoimi przepisami.
         </Text>
-      </Link>
-      <Link href="/" style={styles.link}>
-        <Text style={styles.linkText}>Wróć</Text>
-      </Link>
+
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Adres e-mail"
+          placeholderTextColor="#9aa39e"
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          editable={submit.kind !== 'submitting'}
+        />
+
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Hasło"
+          placeholderTextColor="#9aa39e"
+          secureTextEntry
+          autoCapitalize="none"
+          editable={submit.kind !== 'submitting'}
+        />
+
+        {submit.kind === 'failure' && (
+          <Text style={styles.error}>{submit.message}</Text>
+        )}
+
+        <Pressable
+          style={[
+            styles.button,
+            submit.kind === 'submitting' && styles.buttonDisabled,
+          ]}
+          onPress={() => void handleSubmit()}
+          disabled={submit.kind === 'submitting'}
+        >
+          {submit.kind === 'submitting' ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Zaloguj się</Text>
+          )}
+        </Pressable>
+
+        <Link href="/register" style={styles.link}>
+          <Text style={styles.linkText}>
+            Nie masz jeszcze konta? Zarejestruj się.
+          </Text>
+        </Link>
+        <Link href="/" style={styles.link}>
+          <Text style={styles.linkText}>Wróć</Text>
+        </Link>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -106,9 +112,12 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fffaf3',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#fffaf3',
   },
   title: { color: '#25352d', fontSize: 28, fontWeight: '700' },
   subtitle: { color: '#68736d', fontSize: 16, marginTop: 8, marginBottom: 24 },
