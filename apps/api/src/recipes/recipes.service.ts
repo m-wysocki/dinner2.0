@@ -220,6 +220,31 @@ export class RecipesService {
     });
   }
 
+  async delete(supabaseAuthId: string, recipeId: string): Promise<void> {
+    const owner = await this.findOwner(supabaseAuthId);
+    if (!z.string().uuid().safeParse(recipeId).success) {
+      throw new ApiException(
+        'RECIPE_NOT_FOUND',
+        'Nie znaleziono przepisu.',
+        404,
+      );
+    }
+
+    const existing = await this.prisma.recipe.findFirst({
+      where: { id: recipeId, ownerId: owner.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new ApiException(
+        'RECIPE_NOT_FOUND',
+        'Nie znaleziono przepisu.',
+        404,
+      );
+    }
+
+    await this.prisma.recipe.delete({ where: { id: recipeId } });
+  }
+
   async listCatalog(supabaseAuthId: string): Promise<IngredientCatalogEntry[]> {
     const owner = await this.findOwner(supabaseAuthId);
     const entries = await this.prisma.ingredientCatalogEntry.findMany({

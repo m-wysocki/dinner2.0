@@ -279,6 +279,85 @@ describe('apiClient.login', () => {
   });
 });
 
+describe('apiClient.deleteRecipe', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    clearAuthenticatedState();
+  });
+
+  it('DELETEs the recipe with the bearer token and resolves on 204', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      apiClient.deleteRecipe('f47ac10b-58cc-4372-a567-0e02b2c3d479'),
+    ).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/recipes/f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer access-token' },
+      },
+    );
+  });
+
+  it('surfaces the safe message when deletion fails', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          error: {
+            code: 'RECIPE_NOT_FOUND',
+            message: 'Nie znaleziono przepisu.',
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      apiClient.deleteRecipe('f47ac10b-58cc-4372-a567-0e02b2c3d479'),
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 404,
+      code: 'RECIPE_NOT_FOUND',
+      message: 'Nie znaleziono przepisu.',
+    });
+  });
+});
+
 describe('authenticated requests', () => {
   beforeEach(() => {
     vi.restoreAllMocks();

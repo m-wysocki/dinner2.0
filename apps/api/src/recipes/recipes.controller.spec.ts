@@ -64,4 +64,17 @@ describe('RecipesController', () => {
       preparationSteps: [],
     });
   });
+
+  it('delegates recipe deletion using the verified identity and route id', async () => {
+    const deleteRecipe = vi.fn().mockResolvedValue(undefined);
+    const controller = new RecipesController({ delete: deleteRecipe } as never);
+
+    await expect(
+      controller.delete(
+        { headers: {}, supabaseAuthId: 'supabase-user-id' },
+        'recipe-id',
+      ),
+    ).resolves.toBeUndefined();
+    expect(deleteRecipe).toHaveBeenCalledWith('supabase-user-id', 'recipe-id');
+  });
 });

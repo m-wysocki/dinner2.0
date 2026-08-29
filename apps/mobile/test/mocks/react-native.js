@@ -39,8 +39,13 @@ const Platform = {
   },
 };
 
+const Alert = {
+  alert: () => {},
+};
+
 module.exports = {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,

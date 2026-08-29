@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,11 +13,35 @@ import { ApiError, apiClient } from '../../src/api/client';
 
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const recipeQuery = useQuery({
     queryKey: ['recipe', id],
     queryFn: () => apiClient.getRecipe(id),
     enabled: Boolean(id),
   });
+  const deleteMutation = useMutation({
+    mutationFn: () => apiClient.deleteRecipe(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', id] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      router.back();
+    },
+  });
+
+  const confirmDelete = () => {
+    Alert.alert(
+      'Usunąć przepis?',
+      'Przepis zostanie trwale usunięty wraz ze składnikami i krokami.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: () => deleteMutation.mutate(),
+        },
+      ],
+    );
+  };
 
   if (recipeQuery.isPending) {
     return <ActivityIndicator style={styles.centered} />;
@@ -84,6 +109,21 @@ export default function RecipeDetails() {
       ) : (
         <Text style={styles.muted}>Brak kroków przygotowania.</Text>
       )}
+
+      {deleteMutation.isError && (
+        <Text style={styles.deleteError}>
+          Nie udało się usunąć przepisu. {deleteMutation.error.message}
+        </Text>
+      )}
+      <Pressable
+        style={styles.deleteButton}
+        onPress={confirmDelete}
+        disabled={deleteMutation.isPending}
+      >
+        <Text style={styles.deleteButtonText}>
+          {deleteMutation.isPending ? 'Usuwanie...' : 'Usuń przepis'}
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -128,4 +168,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   buttonText: { color: '#fff', fontWeight: '600' },
+  deleteError: { color: '#a43b32', fontSize: 15, marginTop: 28 },
+  deleteButton: {
+    alignItems: 'center',
+    borderColor: '#a43b32',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 12,
+    paddingVertical: 12,
+  },
+  deleteButtonText: { color: '#a43b32', fontSize: 16, fontWeight: '600' },
 });

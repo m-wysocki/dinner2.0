@@ -43,7 +43,7 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH';
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   authenticated?: boolean;
 }
@@ -109,6 +109,10 @@ export async function request<T>(
       `API zwróciło błąd (${response.status}).`,
       response.status,
     );
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   try {
@@ -187,6 +191,17 @@ export const apiClient = {
       {
         method: 'PATCH',
         body: input,
+        authenticated: true,
+      },
+    );
+  },
+
+  deleteRecipe(id: string): Promise<void> {
+    return request(
+      `/recipes/${encodeURIComponent(id)}`,
+      { parse: () => undefined },
+      {
+        method: 'DELETE',
         authenticated: true,
       },
     );

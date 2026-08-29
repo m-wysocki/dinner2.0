@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -58,5 +61,14 @@ export class RecipesController {
     input: UpdateRecipeRequest,
   ): Promise<RecipeResponse> {
     return this.recipesService.update(request.supabaseAuthId!, id, input);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(
+    @Req() request: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.recipesService.delete(request.supabaseAuthId!, id);
   }
 }
