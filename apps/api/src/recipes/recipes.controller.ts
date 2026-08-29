@@ -13,8 +13,11 @@ import {
 } from '@nestjs/common';
 import {
   createRecipeRequestSchema,
+  extractRecipeRequestSchema,
   updateRecipeRequestSchema,
   type CreateRecipeRequest,
+  type ExtractRecipeDraft,
+  type ExtractRecipeRequest,
   type RecipeResponse,
   type RecipeCollectionResponse,
   type UpdateRecipeRequest,
@@ -22,12 +25,25 @@ import {
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ActiveAccessGuard } from '../auth/active-access.guard';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { RecipeExtractionService } from '../ai/recipe-extraction.service';
 import { RecipesService } from './recipes.service';
 
 @Controller('api/v1/recipes')
 @UseGuards(AuthGuard, ActiveAccessGuard)
 export class RecipesController {
-  constructor(private readonly recipesService: RecipesService) {}
+  constructor(
+    private readonly recipesService: RecipesService,
+    private readonly recipeExtractionService: RecipeExtractionService,
+  ) {}
+
+  @Post('extract')
+  @HttpCode(HttpStatus.OK)
+  extract(
+    @Body(new ZodValidationPipe(extractRecipeRequestSchema))
+    input: ExtractRecipeRequest,
+  ): Promise<ExtractRecipeDraft> {
+    return this.recipeExtractionService.extract(input);
+  }
 
   @Get()
   list(

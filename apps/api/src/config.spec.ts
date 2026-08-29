@@ -5,6 +5,7 @@ const validEnvironment = {
   SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'public-anon-key',
   DATABASE_URL: 'postgresql://user:password@localhost:5432/dinner',
+  OPENAI_API_KEY: 'openai-test-key',
 };
 
 describe('environment configuration', () => {

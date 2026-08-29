@@ -107,6 +107,7 @@ export const apiErrorCodeSchema = z.enum([
   'INGREDIENT_NOT_FOUND',
   'INGREDIENT_NOT_ACCESSIBLE',
   'INGREDIENT_NAME_TAKEN',
+  'EXTRACTION_FAILED',
 ]);
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 
@@ -235,3 +236,41 @@ export const recipeCollectionResponseSchema = z.array(recipeResponseSchema);
 export type RecipeCollectionResponse = z.infer<
   typeof recipeCollectionResponseSchema
 >;
+
+export const extractRecipeRequestSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  sourceText: z.string().trim().min(1).max(20000),
+  servingCount: z.number().int().min(1).max(1000),
+});
+export type ExtractRecipeRequest = z.infer<typeof extractRecipeRequestSchema>;
+
+export const extractedRecipeIngredientSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  quantity: decimalSchema.nullable(),
+  unit: canonicalUnitSchema,
+  note: z.string().trim().max(500).nullable(),
+  position: z.number().int().min(0),
+});
+export type ExtractedRecipeIngredient = z.infer<
+  typeof extractedRecipeIngredientSchema
+>;
+
+const extractedRecipeIngredientsSchema = z
+  .array(extractedRecipeIngredientSchema)
+  .superRefine((ingredients, context) => {
+    if (!hasConsecutivePositions(ingredients)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Ingredients must have consecutive positions',
+      });
+    }
+  });
+
+export const extractRecipeDraftSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(5000),
+  servingCount: z.number().int().min(1).max(1000),
+  ingredients: extractedRecipeIngredientsSchema,
+  preparationSteps: preparationStepsSchema,
+});
+export type ExtractRecipeDraft = z.infer<typeof extractRecipeDraftSchema>;

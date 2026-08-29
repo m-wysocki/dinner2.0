@@ -4,7 +4,7 @@
 
 **Blocked by:** 21: Web as the source of truth
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Background
 

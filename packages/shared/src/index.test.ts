@@ -6,6 +6,8 @@ import {
   canonicalUnitSchema,
   confirmEmailRequestSchema,
   createRecipeRequestSchema,
+  extractRecipeDraftSchema,
+  extractRecipeRequestSchema,
   updateRecipeRequestSchema,
   updateUserRequestSchema,
   interfaceLanguageSchema,
@@ -470,6 +472,139 @@ describe('update recipe request contract', () => {
             position: 0,
           },
         ],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('recipe extraction request contract', () => {
+  it('accepts and trims title and source text', () => {
+    expect(
+      extractRecipeRequestSchema.parse({
+        title: '  Zupa  ',
+        sourceText: '  Składniki: pomidor.  ',
+        servingCount: 4,
+      }),
+    ).toEqual({
+      title: 'Zupa',
+      sourceText: 'Składniki: pomidor.',
+      servingCount: 4,
+    });
+  });
+
+  it('rejects an empty title or source text', () => {
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: ' ',
+        sourceText: 'Pomidor',
+        servingCount: 4,
+      }).success,
+    ).toBe(false);
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        sourceText: '',
+        servingCount: 4,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a serving count outside one to one thousand', () => {
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        sourceText: 'Pomidor',
+        servingCount: 0,
+      }).success,
+    ).toBe(false);
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        sourceText: 'Pomidor',
+        servingCount: 1001,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('recipe extraction draft contract', () => {
+  const validDraft = {
+    title: 'Zupa',
+    description: 'Kremowa zupa pomidorowa.',
+    servingCount: 4,
+    ingredients: [
+      { name: 'Pomidor', quantity: '2', unit: 'PCS', note: null, position: 0 },
+      {
+        name: 'Mąka',
+        quantity: null,
+        unit: 'OTHER',
+        note: 'szklanka',
+        position: 1,
+      },
+    ],
+    preparationSteps: [{ text: 'Gotuj', position: 0 }],
+  };
+
+  it('accepts a validated draft', () => {
+    expect(extractRecipeDraftSchema.parse(validDraft)).toEqual(validDraft);
+  });
+
+  it('rejects a draft with a non-canonical unit', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            quantity: '2',
+            unit: 'gramy',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a malformed or zero quantity', () => {
+    for (const quantity of ['0', 'abc', '-1']) {
+      expect(
+        extractRecipeDraftSchema.safeParse({
+          ...validDraft,
+          ingredients: [
+            { name: 'Pomidor', quantity, unit: 'PCS', note: null, position: 0 },
+          ],
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('rejects non-consecutive ingredient or step positions', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+          {
+            name: 'Cebula',
+            quantity: '1',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        preparationSteps: [{ text: 'Gotuj', position: 1 }],
       }).success,
     ).toBe(false);
   });
