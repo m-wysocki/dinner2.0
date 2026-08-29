@@ -252,48 +252,67 @@ export type CustomIngredientProposal = z.infer<
   typeof customIngredientProposalSchema
 >;
 
-export const extractedRecipeIngredientSchema = z
-  .object({
-    name: z.string().trim().min(1).max(200),
-    catalogEntryId: z.string().uuid().nullable(),
-    customProposal: customIngredientProposalSchema.nullable(),
-    quantity: decimalSchema.nullable(),
-    unit: canonicalUnitSchema,
-    note: z.string().trim().max(500).nullable(),
-    position: z.number().int().min(0),
-  })
-  .superRefine((ingredient, context) => {
-    const matched = ingredient.catalogEntryId !== null;
-    const proposed = ingredient.customProposal !== null;
-    if (matched === proposed) {
-      context.addIssue({
-        code: 'custom',
-        path: ['catalogEntryId'],
-        message:
-          'An extracted ingredient must carry exactly one of catalogEntryId or customProposal',
-      });
-    }
-  });
+export const rawExtractedRecipeIngredientSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  quantity: decimalSchema.nullable(),
+  unit: canonicalUnitSchema,
+  note: z.string().trim().max(500).nullable(),
+  position: z.number().int().min(0),
+});
+export type RawExtractedRecipeIngredient = z.infer<
+  typeof rawExtractedRecipeIngredientSchema
+>;
+
+export const extractedRecipeIngredientSchema =
+  rawExtractedRecipeIngredientSchema
+    .extend({
+      catalogEntryId: z.string().uuid().nullable(),
+      customProposal: customIngredientProposalSchema.nullable(),
+    })
+    .superRefine((ingredient, context) => {
+      const matched = ingredient.catalogEntryId !== null;
+      const proposed = ingredient.customProposal !== null;
+      if (matched === proposed) {
+        context.addIssue({
+          code: 'custom',
+          path: ['catalogEntryId'],
+          message:
+            'An extracted ingredient must carry exactly one of catalogEntryId or customProposal',
+        });
+      }
+    });
 export type ExtractedRecipeIngredient = z.infer<
   typeof extractedRecipeIngredientSchema
 >;
 
-const extractedRecipeIngredientsSchema = z
-  .array(extractedRecipeIngredientSchema)
-  .superRefine((ingredients, context) => {
-    if (!hasConsecutivePositions(ingredients)) {
+const positionedItemsSchema = <T extends { position: number }>(
+  itemSchema: z.ZodType<T>,
+) =>
+  z.array(itemSchema).superRefine((items, context) => {
+    if (!hasConsecutivePositions(items)) {
       context.addIssue({
         code: 'custom',
-        message: 'Ingredients must have consecutive positions',
+        message: 'Items must have consecutive positions',
       });
     }
   });
+
+export const rawExtractedRecipeDraftSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(5000),
+  servingCount: z.number().int().min(1).max(1000),
+  ingredients: positionedItemsSchema(rawExtractedRecipeIngredientSchema),
+  preparationSteps: preparationStepsSchema,
+});
+export type RawExtractRecipeDraft = z.infer<
+  typeof rawExtractedRecipeDraftSchema
+>;
 
 export const extractRecipeDraftSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(5000),
   servingCount: z.number().int().min(1).max(1000),
-  ingredients: extractedRecipeIngredientsSchema,
+  ingredients: positionedItemsSchema(extractedRecipeIngredientSchema),
   preparationSteps: preparationStepsSchema,
 });
 export type ExtractRecipeDraft = z.infer<typeof extractRecipeDraftSchema>;

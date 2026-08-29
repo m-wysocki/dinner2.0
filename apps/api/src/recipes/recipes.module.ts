@@ -10,6 +10,5 @@ import { RecipesService } from './recipes.service';
   imports: [AuthModule, AiModule],
   controllers: [RecipesController, IngredientCatalogController],
   providers: [RecipesService, IngredientCatalogResolver],
-  exports: [IngredientCatalogResolver],
 })
 export class RecipesModule {}

@@ -8,6 +8,7 @@ import {
   createRecipeRequestSchema,
   extractRecipeDraftSchema,
   extractRecipeRequestSchema,
+  rawExtractedRecipeDraftSchema,
   updateRecipeRequestSchema,
   updateUserRequestSchema,
   interfaceLanguageSchema,
@@ -556,6 +557,49 @@ describe('recipe extraction draft contract', () => {
 
   it('accepts a validated draft', () => {
     expect(extractRecipeDraftSchema.parse(validDraft)).toEqual(validDraft);
+  });
+
+  it('accepts a raw draft without identity resolution', () => {
+    const rawDraft = {
+      title: 'Zupa',
+      description: 'Kremowa zupa pomidorowa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Pomidor',
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Mąka',
+          quantity: null,
+          unit: 'OTHER',
+          note: 'szklanka',
+          position: 1,
+        },
+      ],
+      preparationSteps: [{ text: 'Gotuj', position: 0 }],
+    };
+    expect(rawExtractedRecipeDraftSchema.parse(rawDraft)).toEqual(rawDraft);
+  });
+
+  it('rejects a resolved ingredient that is missing identity fields', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   it('rejects an ingredient that is neither matched nor proposed', () => {

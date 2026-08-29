@@ -3,6 +3,7 @@ import {
   extractRecipeDraftSchema,
   type CustomIngredientProposal,
   type ExtractRecipeDraft,
+  type RawExtractRecipeDraft,
 } from '@dinner/shared';
 import { ApiException } from '../common/api-error';
 import { PrismaService } from '../prisma.service';
@@ -23,8 +24,10 @@ interface CatalogEntryRow {
 export function normalizeIngredientName(raw: string): string {
   return raw
     .toLowerCase()
-    .replace(/[.,;:!?]+/g, ' ')
+    .replace(/[.,;:!?/\-–—]+/g, ' ')
     .replace(/['"()[\]{}*]+/g, ' ')
+    .replace(/^[\d.,]+[a-z%]*\s*/, '')
+    .replace(/\s+[\d.,]+[a-z%]*$/, '')
     .replace(/(?:^|\s)\d+(?:\.\d+)?(?=\s|$)/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -83,13 +86,13 @@ export class IngredientCatalogResolver {
 
   async resolveDraft(
     supabaseAuthId: string,
-    draft: ExtractRecipeDraft,
+    draft: RawExtractRecipeDraft,
   ): Promise<ExtractRecipeDraft> {
     const identities = await this.resolve(
       supabaseAuthId,
       draft.ingredients.map((ingredient) => ingredient.name),
     );
-    const resolved: ExtractRecipeDraft = {
+    const resolved = {
       ...draft,
       ingredients: draft.ingredients.map((ingredient, position) => ({
         ...ingredient,

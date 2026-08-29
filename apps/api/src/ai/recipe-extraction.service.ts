@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  extractRecipeDraftSchema,
-  type ExtractRecipeDraft,
+  rawExtractedRecipeDraftSchema,
   type ExtractRecipeRequest,
+  type RawExtractRecipeDraft,
 } from '@dinner/shared';
 import { ApiException } from '../common/api-error';
 import { RecipeExtractionProvider } from './recipe-extraction.provider';
@@ -19,7 +19,7 @@ export class RecipeExtractionService {
 
   constructor(private readonly provider: RecipeExtractionProvider) {}
 
-  async extract(input: ExtractRecipeRequest): Promise<ExtractRecipeDraft> {
+  async extract(input: ExtractRecipeRequest): Promise<RawExtractRecipeDraft> {
     let extracted;
 
     try {
@@ -37,11 +37,6 @@ export class RecipeExtractionService {
       const mapped = mapUnitToCanonical(ingredient.unit, ingredient.note);
       return {
         name: ingredient.name,
-        catalogEntryId: null,
-        customProposal: {
-          namePl: ingredient.name,
-          nameEn: ingredient.name,
-        },
         quantity: ingredient.quantity,
         unit: mapped.unit,
         note: mapped.note || null,
@@ -56,7 +51,7 @@ export class RecipeExtractionService {
       }),
     );
 
-    const result = extractRecipeDraftSchema.safeParse({
+    const result = rawExtractedRecipeDraftSchema.safeParse({
       title: input.title,
       servingCount: input.servingCount,
       description: extracted.description,

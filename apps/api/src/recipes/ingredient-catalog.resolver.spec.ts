@@ -3,7 +3,7 @@ import {
   IngredientCatalogResolver,
   normalizeIngredientName,
 } from './ingredient-catalog.resolver';
-import type { ExtractRecipeDraft } from '@dinner/shared';
+import type { RawExtractRecipeDraft } from '@dinner/shared';
 
 interface FakeCatalogEntry {
   id: string;
@@ -70,7 +70,15 @@ describe('normalizeIngredientName', () => {
   it('strips quantity artifacts and parenthetical noise', () => {
     expect(normalizeIngredientName('2 pomidory')).toBe('pomidory');
     expect(normalizeIngredientName('mleko 3,2')).toBe('mleko');
+    expect(normalizeIngredientName('Mleko 500g')).toBe('mleko');
     expect(normalizeIngredientName('jajko (duże)')).toBe('jajko duże');
+  });
+
+  it('treats hyphenated and slash forms as word separators', () => {
+    expect(normalizeIngredientName('oliwa-z-oliwek')).toBe('oliwa z oliwek');
+    expect(normalizeIngredientName('ser topiony/dojrzewający')).toBe(
+      'ser topiony dojrzewający',
+    );
   });
 });
 
@@ -172,6 +180,30 @@ describe('IngredientCatalogResolver', () => {
       },
       {
         catalogEntryId: '10601a72-f0f8-4928-95a0-e27bd2fee67f',
+        customProposal: null,
+      },
+    ]);
+  });
+
+  it('matches hyphenated and slash forms against spaced catalog names', async () => {
+    const { resolver } = createResolver([
+      entry(
+        '7dbdedb1-6b12-46e1-9ec2-0aba0898f8ba',
+        'Oliwa z oliwek',
+        'Olive oil',
+        '2026-01-01',
+      ),
+    ]);
+
+    await expect(
+      resolver.resolve('auth-user-a', ['oliwa-z-oliwek', 'olive-oil']),
+    ).resolves.toEqual([
+      {
+        catalogEntryId: '7dbdedb1-6b12-46e1-9ec2-0aba0898f8ba',
+        customProposal: null,
+      },
+      {
+        catalogEntryId: '7dbdedb1-6b12-46e1-9ec2-0aba0898f8ba',
         customProposal: null,
       },
     ]);
@@ -327,8 +359,6 @@ describe('IngredientCatalogResolver', () => {
       ingredients: [
         {
           name: 'Mąka',
-          catalogEntryId: null,
-          customProposal: { namePl: 'Mąka', nameEn: 'Mąka' },
           quantity: '200',
           unit: 'G',
           note: null,
@@ -336,8 +366,6 @@ describe('IngredientCatalogResolver', () => {
         },
         {
           name: 'Szafran',
-          catalogEntryId: null,
-          customProposal: { namePl: 'Szafran', nameEn: 'Szafran' },
           quantity: null,
           unit: 'OTHER',
           note: null,
@@ -345,7 +373,7 @@ describe('IngredientCatalogResolver', () => {
         },
       ],
       preparationSteps: [{ text: 'Gotuj', position: 0 }],
-    } as ExtractRecipeDraft;
+    } as RawExtractRecipeDraft;
 
     await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
       ...draft,
