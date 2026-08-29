@@ -42,6 +42,11 @@ export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
 export type RegisterResponse = AuthUserResponse;
 export type ConfirmEmailResponse = AuthUserResponse;
 
+export const updateUserRequestSchema = z.object({
+  interfaceLanguage: interfaceLanguageSchema,
+});
+export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
+
 export const confirmEmailRequestSchema = z.object({
   url: z.string().min(1),
 });

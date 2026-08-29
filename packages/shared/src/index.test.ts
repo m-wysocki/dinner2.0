@@ -7,6 +7,7 @@ import {
   confirmEmailRequestSchema,
   createRecipeRequestSchema,
   updateRecipeRequestSchema,
+  updateUserRequestSchema,
   interfaceLanguageSchema,
   loginRequestSchema,
   loginResponseSchema,
@@ -218,6 +219,20 @@ describe('confirm email request contract', () => {
     expect(confirmEmailRequestSchema.safeParse({ url: '' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('update user request contract', () => {
+  it('accepts a supported interface language', () => {
+    expect(updateUserRequestSchema.parse({ interfaceLanguage: 'en' })).toEqual({
+      interfaceLanguage: 'en',
+    });
+  });
+
+  it('rejects an unsupported interface language', () => {
+    expect(
+      updateUserRequestSchema.safeParse({ interfaceLanguage: 'de' }).success,
+    ).toBe(false);
   });
 });
 

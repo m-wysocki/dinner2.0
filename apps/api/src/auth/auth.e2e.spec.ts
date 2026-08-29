@@ -497,5 +497,63 @@ describe('POST /api/v1/auth (HTTP)', () => {
       expect(response.status).toBe(401);
       expect(userFindUnique).not.toHaveBeenCalled();
     });
+
+    it('updates the interface language for the verified bearer token', async () => {
+      getUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      });
+      userUpdate.mockResolvedValue({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'en',
+      });
+
+      const response = await fetch(`${baseUrl}/auth/me`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: 'Bearer verified-token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ interfaceLanguage: 'en' }),
+      });
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'en',
+      });
+      expect(getUser).toHaveBeenCalledWith('verified-token');
+      expect(userUpdate).toHaveBeenCalledWith({
+        where: { supabaseAuthId: 'auth-user-id' },
+        data: { interfaceLanguage: 'en' },
+      });
+    });
+
+    it('rejects an unsupported interface language', async () => {
+      getUser.mockResolvedValue({
+        data: { user: { id: 'auth-user-id' } },
+        error: null,
+      });
+
+      const response = await fetch(`${baseUrl}/auth/me`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: 'Bearer verified-token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ interfaceLanguage: 'de' }),
+      });
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(userUpdate).not.toHaveBeenCalled();
+    });
   });
 });

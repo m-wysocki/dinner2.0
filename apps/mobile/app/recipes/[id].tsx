@@ -10,8 +10,10 @@ import {
   View,
 } from 'react-native';
 import { ApiError, apiClient } from '../../src/api/client';
+import { formatServings, unitLabel, useI18n } from '../../src/i18n/i18n';
 
 export default function RecipeDetails() {
+  const { t, language } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -40,12 +42,10 @@ export default function RecipeDetails() {
     return (
       <View style={styles.centered}>
         <Text style={styles.error}>
-          {isNotFound
-            ? 'Nie znaleziono przepisu.'
-            : 'Nie udało się pobrać przepisu.'}
+          {isNotFound ? t('details.notFound') : t('details.loadFailed')}
         </Text>
         <Pressable style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>Wróć</Text>
+          <Text style={styles.buttonText}>{t('app.back')}</Text>
         </Pressable>
       </View>
     );
@@ -55,7 +55,7 @@ export default function RecipeDetails() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Pressable onPress={() => router.back()}>
-        <Text style={styles.back}>Wróć</Text>
+        <Text style={styles.back}>{t('app.back')}</Text>
       </Pressable>
       <View style={styles.header}>
         <Text style={styles.title}>{recipe.title}</Text>
@@ -63,28 +63,30 @@ export default function RecipeDetails() {
           style={styles.editButton}
           onPress={() => router.push(`/edit-recipe/${recipe.id}`)}
         >
-          <Text style={styles.editButtonText}>Edytuj</Text>
+          <Text style={styles.editButtonText}>{t('details.edit')}</Text>
         </Pressable>
       </View>
       {recipe.description && (
         <Text style={styles.description}>{recipe.description}</Text>
       )}
-      <Text style={styles.servings}>{recipe.servingCount} porcji</Text>
+      <Text style={styles.servings}>
+        {formatServings(recipe.servingCount, language)}
+      </Text>
 
-      <Text style={styles.heading}>Składniki</Text>
+      <Text style={styles.heading}>{t('details.ingredients')}</Text>
       {recipe.ingredients?.length ? (
         recipe.ingredients.map((ingredient) => (
           <Text key={ingredient.id} style={styles.item}>
             {ingredient.quantity === null ? '' : `${ingredient.quantity} `}
-            {ingredient.unit} {ingredient.name}
+            {unitLabel(ingredient.unit, language)} {ingredient.name}
             {ingredient.note ? ` (${ingredient.note})` : ''}
           </Text>
         ))
       ) : (
-        <Text style={styles.muted}>Brak składników.</Text>
+        <Text style={styles.muted}>{t('details.noIngredients')}</Text>
       )}
 
-      <Text style={styles.heading}>Przygotowanie</Text>
+      <Text style={styles.heading}>{t('details.preparation')}</Text>
       {recipe.preparationSteps?.length ? (
         recipe.preparationSteps.map((step, index) => (
           <View key={step.id} style={styles.step}>
@@ -93,27 +95,25 @@ export default function RecipeDetails() {
           </View>
         ))
       ) : (
-        <Text style={styles.muted}>Brak kroków przygotowania.</Text>
+        <Text style={styles.muted}>{t('details.noSteps')}</Text>
       )}
 
       {deleteMutation.isError && (
         <Text style={styles.deleteError}>
-          Nie udało się usunąć przepisu. {deleteMutation.error.message}
+          {t('details.deleteFailed')} {deleteMutation.error.message}
         </Text>
       )}
       {confirmingDelete ? (
         <View style={styles.confirmPanel}>
-          <Text style={styles.confirmTitle}>Usunąć przepis?</Text>
-          <Text style={styles.muted}>
-            Przepis zostanie trwale usunięty wraz ze składnikami i krokami.
-          </Text>
+          <Text style={styles.confirmTitle}>{t('details.deleteQuestion')}</Text>
+          <Text style={styles.muted}>{t('details.deleteWarning')}</Text>
           <View style={styles.confirmActions}>
             <Pressable
               style={styles.cancelButton}
               onPress={() => setConfirmingDelete(false)}
               disabled={deleteMutation.isPending}
             >
-              <Text style={styles.cancelButtonText}>Anuluj</Text>
+              <Text style={styles.cancelButtonText}>{t('app.cancel')}</Text>
             </Pressable>
             <Pressable
               style={styles.deleteConfirmButton}
@@ -121,7 +121,9 @@ export default function RecipeDetails() {
               disabled={deleteMutation.isPending}
             >
               <Text style={styles.deleteConfirmButtonText}>
-                {deleteMutation.isPending ? 'Usuwanie...' : 'Usuń'}
+                {deleteMutation.isPending
+                  ? t('details.deleting')
+                  : t('details.delete')}
               </Text>
             </Pressable>
           </View>
@@ -132,7 +134,9 @@ export default function RecipeDetails() {
           onPress={() => setConfirmingDelete(true)}
           disabled={deleteMutation.isPending}
         >
-          <Text style={styles.deleteButtonText}>Usuń przepis</Text>
+          <Text style={styles.deleteButtonText}>
+            {t('details.deleteRecipe')}
+          </Text>
         </Pressable>
       )}
     </ScrollView>

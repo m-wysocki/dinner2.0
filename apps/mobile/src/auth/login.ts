@@ -1,6 +1,7 @@
 import type { LoginRequest } from '@dinner/shared';
 import { loginRequestSchema } from '@dinner/shared';
 import { ApiError, apiClient } from '../api/client';
+import { translate } from '../i18n/i18n';
 import { setAuthenticatedState } from './session';
 
 export type LoginForm = LoginRequest;
@@ -16,7 +17,7 @@ export async function submitLogin(form: LoginForm): Promise<LoginFormResult> {
   if (!parsed.success) {
     return {
       kind: 'invalid',
-      message: 'Podaj poprawny adres e-mail i hasło (minimum 8 znaków).',
+      message: translate('auth.invalidForm'),
     };
   }
 
@@ -38,6 +39,6 @@ export async function submitLogin(form: LoginForm): Promise<LoginFormResult> {
       return { kind: 'error', message: error.message };
     }
 
-    return { kind: 'error', message: 'Wystąpił nieoczekiwany błąd.' };
+    return { kind: 'error', message: translate('auth.unexpectedError') };
   }
 }

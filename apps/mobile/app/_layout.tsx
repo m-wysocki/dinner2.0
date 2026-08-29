@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { apiClient } from '../src/api/client';
+import { I18nProvider, useI18n } from '../src/i18n/i18n';
 import {
   restoreAuthenticatedState,
   setAuthenticatedState,
@@ -16,6 +17,17 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function LoadingScreen() {
+  const { t } = useI18n();
+
+  return (
+    <View style={styles.loading}>
+      <ActivityIndicator color="#28734a" />
+      <Text style={styles.loadingText}>{t('app.loading')}</Text>
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [sessionRestored, setSessionRestored] = useState(false);
@@ -37,19 +49,16 @@ export default function RootLayout() {
     })();
   }, []);
 
-  if (!sessionRestored) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color="#28734a" />
-        <Text style={styles.loadingText}>Ładowanie dinner2...</Text>
-      </View>
-    );
-  }
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </QueryClientProvider>
+    <I18nProvider>
+      {!sessionRestored ? (
+        <LoadingScreen />
+      ) : (
+        <QueryClientProvider client={queryClient}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </QueryClientProvider>
+      )}
+    </I18nProvider>
   );
 }
 

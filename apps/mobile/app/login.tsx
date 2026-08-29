@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { submitLogin } from '../src/auth/login';
+import { useI18n } from '../src/i18n/i18n';
 
 type SubmitState =
   | { kind: 'idle' }
@@ -19,6 +20,7 @@ type SubmitState =
   | { kind: 'failure'; message: string };
 
 export default function Login() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submit, setSubmit] = useState<SubmitState>({ kind: 'idle' });
@@ -49,16 +51,14 @@ export default function Login() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Logowanie</Text>
-        <Text style={styles.subtitle}>
-          Wpisz dane konta, aby zarządzać swoimi przepisami.
-        </Text>
+        <Text style={styles.title}>{t('login.title')}</Text>
+        <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
 
         <TextInput
           style={styles.input}
           value={email}
           onChangeText={setEmail}
-          placeholder="Adres e-mail"
+          placeholder={t('login.emailPlaceholder')}
           placeholderTextColor="#9aa39e"
           autoCapitalize="none"
           autoComplete="email"
@@ -70,7 +70,7 @@ export default function Login() {
           style={styles.input}
           value={password}
           onChangeText={setPassword}
-          placeholder="Hasło"
+          placeholder={t('login.passwordPlaceholder')}
           placeholderTextColor="#9aa39e"
           secureTextEntry
           autoCapitalize="none"
@@ -92,17 +92,15 @@ export default function Login() {
           {submit.kind === 'submitting' ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Zaloguj się</Text>
+            <Text style={styles.buttonText}>{t('login.submit')}</Text>
           )}
         </Pressable>
 
         <Link href="/register" style={styles.link}>
-          <Text style={styles.linkText}>
-            Nie masz jeszcze konta? Zarejestruj się.
-          </Text>
+          <Text style={styles.linkText}>{t('login.noAccount')}</Text>
         </Link>
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Wróć</Text>
+          <Text style={styles.linkText}>{t('app.back')}</Text>
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

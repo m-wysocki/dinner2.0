@@ -9,12 +9,14 @@ import {
   View,
 } from 'react-native';
 import { apiClient } from '../src/api/client';
+import { formatServings, useI18n } from '../src/i18n/i18n';
 import {
   clearAuthenticatedState,
   getAuthenticatedState,
 } from '../src/auth/session';
 
 export default function Index() {
+  const { t, language } = useI18n();
   const authenticatedState = getAuthenticatedState();
   const isActiveUser =
     authenticatedState?.user.accessStatus === 'ACTIVE' &&
@@ -32,65 +34,63 @@ export default function Index() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>dinner2</Text>
-      <Text style={styles.subtitle}>Menedżer przepisów</Text>
+      <Text style={styles.subtitle}>{t('app.subtitle')}</Text>
 
       {healthQuery.isPending && (
         <View style={styles.status}>
           <ActivityIndicator />
-          <Text style={styles.message}>Łączenie z API...</Text>
+          <Text style={styles.message}>{t('home.connecting')}</Text>
         </View>
       )}
 
       {healthQuery.isError && (
         <View style={styles.status}>
-          <Text style={styles.error}>Nie udało się połączyć z API.</Text>
+          <Text style={styles.error}>{t('home.connectFailed')}</Text>
           <Text style={styles.details}>{healthQuery.error.message}</Text>
           <Pressable
             style={styles.button}
             onPress={() => void healthQuery.refetch()}
           >
-            <Text style={styles.buttonText}>Spróbuj ponownie</Text>
+            <Text style={styles.buttonText}>{t('app.retry')}</Text>
           </Pressable>
         </View>
       )}
 
       {healthQuery.isSuccess && (
         <View style={styles.status}>
-          <Text style={styles.success}>API działa prawidłowo</Text>
-          <Text style={styles.details}>Połączenie zostało ustanowione.</Text>
+          <Text style={styles.success}>{t('home.apiWorking')}</Text>
+          <Text style={styles.details}>{t('home.connected')}</Text>
         </View>
       )}
 
       {isActiveUser ? (
         <View style={styles.authenticatedPanel}>
-          <Text style={styles.collectionTitle}>Twoja kolekcja</Text>
+          <Text style={styles.collectionTitle}>{t('home.collection')}</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
           {recipesQuery.isPending && (
             <View style={styles.collectionStatus}>
               <ActivityIndicator />
-              <Text style={styles.message}>Ładowanie przepisów...</Text>
+              <Text style={styles.message}>{t('home.loadingRecipes')}</Text>
             </View>
           )}
           {recipesQuery.isError && (
             <View style={styles.collectionStatus}>
-              <Text style={styles.error}>Nie udało się pobrać przepisów.</Text>
+              <Text style={styles.error}>{t('home.loadRecipesFailed')}</Text>
               <Text style={styles.details}>{recipesQuery.error.message}</Text>
               <Pressable
                 style={styles.button}
                 onPress={() => void recipesQuery.refetch()}
               >
-                <Text style={styles.buttonText}>Spróbuj ponownie</Text>
+                <Text style={styles.buttonText}>{t('app.retry')}</Text>
               </Pressable>
             </View>
           )}
           {recipesQuery.isSuccess && recipesQuery.data.length === 0 && (
             <View style={styles.collectionStatus}>
-              <Text style={styles.emptyTitle}>Nie masz jeszcze przepisów</Text>
-              <Text style={styles.details}>
-                Dodaj pierwszy przepis do swojej kolekcji.
-              </Text>
+              <Text style={styles.emptyTitle}>{t('home.emptyTitle')}</Text>
+              <Text style={styles.details}>{t('home.emptyMessage')}</Text>
               <Link href="/create-recipe" style={styles.button}>
-                <Text style={styles.buttonText}>Dodaj przepis</Text>
+                <Text style={styles.buttonText}>{t('home.addRecipe')}</Text>
               </Link>
             </View>
           )}
@@ -104,12 +104,12 @@ export default function Index() {
                 >
                   <Text style={styles.recipeTitle}>{recipe.title}</Text>
                   <Text style={styles.details}>
-                    {recipe.servingCount} porcji
+                    {formatServings(recipe.servingCount, language)}
                   </Text>
                 </Pressable>
               ))}
               <Link href="/create-recipe" style={styles.button}>
-                <Text style={styles.buttonText}>Dodaj przepis</Text>
+                <Text style={styles.buttonText}>{t('home.addRecipe')}</Text>
               </Link>
             </View>
           )}
@@ -120,17 +120,15 @@ export default function Index() {
               router.replace('/');
             }}
           >
-            <Text style={styles.logoutText}>Wyloguj się</Text>
+            <Text style={styles.logoutText}>{t('app.logout')}</Text>
           </Pressable>
         </View>
       ) : authenticatedState ? (
         <View style={styles.authenticatedPanel}>
-          <Text style={styles.collectionTitle}>
-            Dostęp oczekuje na aktywację
-          </Text>
+          <Text style={styles.collectionTitle}>{t('home.accessPending')}</Text>
           <Text style={styles.details}>{authenticatedState.user.email}</Text>
           <Link href="/user" style={styles.button}>
-            <Text style={styles.buttonText}>Sprawdź status konta</Text>
+            <Text style={styles.buttonText}>{t('home.checkAccount')}</Text>
           </Link>
           <Pressable
             style={styles.logoutButton}
@@ -139,18 +137,16 @@ export default function Index() {
               router.replace('/');
             }}
           >
-            <Text style={styles.logoutText}>Wyloguj się</Text>
+            <Text style={styles.logoutText}>{t('app.logout')}</Text>
           </Pressable>
         </View>
       ) : (
         <>
           <Link href="/login" style={styles.button}>
-            <Text style={styles.buttonText}>Zaloguj się</Text>
+            <Text style={styles.buttonText}>{t('home.login')}</Text>
           </Link>
           <Link href="/register" style={styles.link}>
-            <Text style={styles.linkText}>
-              Nie masz konta? Zarejestruj się.
-            </Text>
+            <Text style={styles.linkText}>{t('home.noAccount')}</Text>
           </Link>
         </>
       )}

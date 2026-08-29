@@ -478,4 +478,51 @@ describe('AuthService', () => {
       });
     });
   });
+
+  describe('updateCurrentUser', () => {
+    it('updates the interface language for the verified identity', async () => {
+      const { prisma, service } = setup();
+      (prisma.user.update as Mock).mockResolvedValue({
+        ...pendingUser,
+        interfaceLanguage: 'en',
+      });
+
+      await expect(
+        service.updateCurrentUser('auth-user-id', {
+          interfaceLanguage: 'en',
+        }),
+      ).resolves.toEqual({ ...pendingUser, interfaceLanguage: 'en' });
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { supabaseAuthId: 'auth-user-id' },
+        data: { interfaceLanguage: 'en' },
+      });
+    });
+
+    it('maps a missing application user to a safe 404', async () => {
+      const { prisma, service } = setup();
+      (prisma.user.update as Mock).mockRejectedValue({ code: 'P2025' });
+
+      await expect(
+        service.updateCurrentUser('missing-auth-user', {
+          interfaceLanguage: 'en',
+        }),
+      ).rejects.toMatchObject({
+        code: 'USER_NOT_FOUND',
+        status: 404,
+      });
+    });
+
+    it('rethrows a non-record-not-found update failure', async () => {
+      const { prisma, service } = setup();
+      const failure = new Error('database down');
+      (prisma.user.update as Mock).mockRejectedValue(failure);
+
+      await expect(
+        service.updateCurrentUser('auth-user-id', {
+          interfaceLanguage: 'en',
+        }),
+      ).rejects.toBe(failure);
+    });
+  });
 });

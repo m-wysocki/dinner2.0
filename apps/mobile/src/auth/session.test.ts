@@ -4,6 +4,7 @@ import {
   getAuthenticatedState,
   restoreAuthenticatedState,
   setAuthenticatedState,
+  subscribeToSession,
 } from './session';
 
 const secureStore = vi.hoisted(() => ({
@@ -71,5 +72,20 @@ describe('session persistence', () => {
     expect(secureStore.deleteItemAsync).toHaveBeenCalledWith(
       'dinner.authenticated-session',
     );
+  });
+
+  it('notifies subscribers when the authenticated state changes', async () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeToSession(listener);
+
+    await setAuthenticatedState(state);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    clearAuthenticatedState();
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    unsubscribe();
+    clearAuthenticatedState();
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 });
