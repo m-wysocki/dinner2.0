@@ -13,7 +13,7 @@ describe('environment configuration', () => {
     expect(validateEnvironment(validEnvironment)).toEqual({
       ...validEnvironment,
       API_PORT: 3000,
-      OPENAI_MODEL: 'GPT 5.6 Luna',
+      OPENAI_MODEL: 'gpt-5.6-luna',
     });
   });
 
