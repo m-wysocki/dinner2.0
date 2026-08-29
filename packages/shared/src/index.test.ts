@@ -324,6 +324,80 @@ describe('recipe contracts', () => {
       }).success,
     ).toBe(false);
   });
+
+  it('accepts positive decimal quantities with up to six fractional digits', () => {
+    expect(
+      createRecipeRequestSchema.parse({
+        title: 'Zupa',
+        servingCount: 4,
+        ingredients: [
+          {
+            catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+            name: 'Pomidor',
+            quantity: '0.5',
+            unit: 'KG',
+            position: 0,
+          },
+          {
+            catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+            name: 'Mąka',
+            quantity: '10.123456',
+            unit: 'G',
+            position: 1,
+          },
+        ],
+      }).ingredients,
+    ).toMatchObject([{ quantity: '0.5' }, { quantity: '10.123456' }]);
+  });
+
+  it('rejects zero, negative, malformed, or over-precise quantities', () => {
+    const base = {
+      title: 'Zupa',
+      servingCount: 4,
+      ingredients: [
+        {
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          name: 'Pomidor',
+          unit: 'PCS',
+          position: 0,
+        },
+      ],
+    };
+
+    for (const quantity of [
+      '0',
+      '0.000',
+      '-2',
+      'abc',
+      '.5',
+      '1.',
+      '1.1234567',
+    ]) {
+      expect(
+        createRecipeRequestSchema.safeParse({
+          ...base,
+          ingredients: [{ ...base.ingredients[0], quantity }],
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('accepts an ingredient without a quantity for expressions such as "to taste"', () => {
+    const result = createRecipeRequestSchema.parse({
+      title: 'Zupa',
+      servingCount: 4,
+      ingredients: [
+        {
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          name: 'Sól',
+          quantity: null,
+          unit: 'OTHER',
+          position: 0,
+        },
+      ],
+    });
+    expect(result.ingredients?.[0].quantity).toBeNull();
+  });
 });
 
 describe('update recipe request contract', () => {
