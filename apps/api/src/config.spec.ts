@@ -9,10 +9,11 @@ const validEnvironment = {
 };
 
 describe('environment configuration', () => {
-  it('validates and defaults the API port', () => {
+  it('validates and defaults the API port and model', () => {
     expect(validateEnvironment(validEnvironment)).toEqual({
       ...validEnvironment,
       API_PORT: 3000,
+      OPENAI_MODEL: 'GPT 5.6 Luna',
     });
   });
 

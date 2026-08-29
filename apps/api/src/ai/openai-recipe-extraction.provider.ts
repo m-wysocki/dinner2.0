@@ -9,7 +9,6 @@ import {
 
 const OPENAI_CHAT_COMPLETIONS_URL =
   'https://api.openai.com/v1/chat/completions';
-const OPENAI_MODEL = 'gpt-4o-mini';
 
 const SYSTEM_PROMPT = `You are a recipe extraction assistant. Extract a structured recipe from the pasted source text.
 
@@ -80,6 +79,7 @@ export class OpenAiRecipeExtractionProvider extends RecipeExtractionProvider {
 
   async extractRecipe(input: RecipeExtractionInput): Promise<ExtractedRecipe> {
     const apiKey = this.configService.getOrThrow('OPENAI_API_KEY');
+    const model = this.configService.getOrThrow('OPENAI_MODEL');
 
     const response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
       method: 'POST',
@@ -88,7 +88,7 @@ export class OpenAiRecipeExtractionProvider extends RecipeExtractionProvider {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: OPENAI_MODEL,
+        model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: buildUserPrompt(input) },

@@ -3,7 +3,11 @@ import { OpenAiRecipeExtractionProvider } from './openai-recipe-extraction.provi
 
 const configService = {
   getOrThrow: (key: string) =>
-    key === 'OPENAI_API_KEY' ? 'test-openai-key' : undefined,
+    key === 'OPENAI_API_KEY'
+      ? 'test-openai-key'
+      : key === 'OPENAI_MODEL'
+        ? 'my-configured-model'
+        : undefined,
 } as never;
 
 const provider = new OpenAiRecipeExtractionProvider(configService);
@@ -70,7 +74,7 @@ describe('OpenAiRecipeExtractionProvider', () => {
 
     const [, init] = fetchMock.mock.calls[0];
     const body = JSON.parse((init as { body: string }).body);
-    expect(body.model).toBe('gpt-4o-mini');
+    expect(body.model).toBe('my-configured-model');
     expect(body.response_format.type).toBe('json_schema');
     expect(body.response_format.json_schema.name).toBe('extracted_recipe');
     const unitProperty =
