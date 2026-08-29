@@ -43,14 +43,14 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH';
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   authenticated?: boolean;
 }
 
 export async function request<T>(
   path: string,
-  schema: { parse: (value: unknown) => T },
+  schema: { parse: (value: unknown) => T } | undefined,
   options: RequestOptions = {},
 ) {
   const authenticated = options.authenticated ?? false;
@@ -107,6 +107,17 @@ export async function request<T>(
 
     throw new ApiError(
       `API zwróciło błąd (${response.status}).`,
+      response.status,
+    );
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  if (!schema) {
+    throw new ApiError(
+      'API zwróciło nieprawidłową odpowiedź.',
       response.status,
     );
   }
@@ -190,6 +201,13 @@ export const apiClient = {
         authenticated: true,
       },
     );
+  },
+
+  deleteRecipe(id: string): Promise<void> {
+    return request<void>(`/recipes/${encodeURIComponent(id)}`, undefined, {
+      method: 'DELETE',
+      authenticated: true,
+    });
   },
 
   ingredientCatalog(): Promise<IngredientCatalogEntry[]> {

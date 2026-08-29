@@ -339,4 +339,57 @@ describe('RecipesService', () => {
       status: 404,
     });
   });
+
+  it('deletes a recipe owned by the authenticated user', async () => {
+    const findUnique = vi.fn().mockResolvedValue({ id: 'owner-id' });
+    const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+    const service = new RecipesService({
+      user: { findUnique },
+      recipe: { deleteMany },
+    } as never);
+
+    await expect(
+      service.delete(
+        'supabase-user-id',
+        'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      ),
+    ).resolves.toBeUndefined();
+    expect(deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        ownerId: 'owner-id',
+      },
+    });
+  });
+
+  it('uses the same not-found response when deleting another user recipe', async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
+    const service = new RecipesService({
+      user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
+      recipe: { deleteMany },
+    } as never);
+
+    await expect(
+      service.delete('supabase-user-id', 'recipe-id'),
+    ).rejects.toMatchObject({
+      code: 'RECIPE_NOT_FOUND',
+      status: 404,
+    });
+  });
+
+  it('uses the same not-found response for a malformed recipe id when deleting', async () => {
+    const deleteMany = vi.fn();
+    const service = new RecipesService({
+      user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
+      recipe: { deleteMany },
+    } as never);
+
+    await expect(
+      service.delete('supabase-user-id', 'not-a-uuid'),
+    ).rejects.toMatchObject({
+      code: 'RECIPE_NOT_FOUND',
+      status: 404,
+    });
+    expect(deleteMany).not.toHaveBeenCalled();
+  });
 });

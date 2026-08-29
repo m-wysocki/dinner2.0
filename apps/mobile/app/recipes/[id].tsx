@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -12,10 +13,20 @@ import { ApiError, apiClient } from '../../src/api/client';
 
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const recipeQuery = useQuery({
     queryKey: ['recipe', id],
     queryFn: () => apiClient.getRecipe(id),
     enabled: Boolean(id),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: () => apiClient.deleteRecipe(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipe', id] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      router.back();
+    },
   });
 
   if (recipeQuery.isPending) {
@@ -84,6 +95,46 @@ export default function RecipeDetails() {
       ) : (
         <Text style={styles.muted}>Brak kroków przygotowania.</Text>
       )}
+
+      {deleteMutation.isError && (
+        <Text style={styles.deleteError}>
+          Nie udało się usunąć przepisu. {deleteMutation.error.message}
+        </Text>
+      )}
+      {confirmingDelete ? (
+        <View style={styles.confirmPanel}>
+          <Text style={styles.confirmTitle}>Usunąć przepis?</Text>
+          <Text style={styles.muted}>
+            Przepis zostanie trwale usunięty wraz ze składnikami i krokami.
+          </Text>
+          <View style={styles.confirmActions}>
+            <Pressable
+              style={styles.cancelButton}
+              onPress={() => setConfirmingDelete(false)}
+              disabled={deleteMutation.isPending}
+            >
+              <Text style={styles.cancelButtonText}>Anuluj</Text>
+            </Pressable>
+            <Pressable
+              style={styles.deleteConfirmButton}
+              onPress={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
+              <Text style={styles.deleteConfirmButtonText}>
+                {deleteMutation.isPending ? 'Usuwanie...' : 'Usuń'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <Pressable
+          style={styles.deleteButton}
+          onPress={() => setConfirmingDelete(true)}
+          disabled={deleteMutation.isPending}
+        >
+          <Text style={styles.deleteButtonText}>Usuń przepis</Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
@@ -128,4 +179,41 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   buttonText: { color: '#fff', fontWeight: '600' },
+  deleteError: { color: '#a43b32', fontSize: 15, marginTop: 28 },
+  confirmPanel: {
+    backgroundColor: '#fff',
+    borderColor: '#d9ded8',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 28,
+    padding: 16,
+  },
+  confirmTitle: { color: '#25352d', fontSize: 17, fontWeight: '700' },
+  confirmActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  cancelButton: {
+    alignItems: 'center',
+    borderColor: '#d9ded8',
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    paddingVertical: 12,
+  },
+  cancelButtonText: { color: '#68736d', fontSize: 16, fontWeight: '600' },
+  deleteConfirmButton: {
+    alignItems: 'center',
+    backgroundColor: '#a43b32',
+    borderRadius: 8,
+    flex: 1,
+    paddingVertical: 12,
+  },
+  deleteConfirmButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  deleteButton: {
+    alignItems: 'center',
+    borderColor: '#a43b32',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 28,
+    paddingVertical: 12,
+  },
+  deleteButtonText: { color: '#a43b32', fontSize: 16, fontWeight: '600' },
 });
