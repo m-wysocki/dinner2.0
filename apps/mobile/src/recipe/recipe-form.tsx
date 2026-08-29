@@ -2,6 +2,8 @@ import {
   createRecipeRequestSchema,
   type CanonicalUnit,
   type CreateRecipeRequest,
+  type CustomIngredientProposal,
+  type ExtractRecipeDraft,
   type IngredientCatalogEntry,
 } from '@dinner/shared';
 import { useEffect, useState } from 'react';
@@ -27,8 +29,28 @@ export interface RecipeFormValues {
     quantity: string;
     unit: CanonicalUnit;
     note: string;
+    customProposal?: CustomIngredientProposal | null;
   }>;
   preparationSteps: string[];
+}
+
+export function recipeFormValuesFromDraft(
+  draft: ExtractRecipeDraft,
+): RecipeFormValues {
+  return {
+    title: draft.title,
+    description: draft.description,
+    servingCount: String(draft.servingCount),
+    ingredients: draft.ingredients.map((ingredient) => ({
+      catalogEntryId: ingredient.catalogEntryId ?? undefined,
+      name: ingredient.name,
+      quantity: ingredient.quantity ?? '',
+      unit: ingredient.unit,
+      note: ingredient.note ?? '',
+      customProposal: ingredient.customProposal,
+    })),
+    preparationSteps: draft.preparationSteps.map((step) => step.text),
+  };
 }
 
 interface RecipeFormProps {
@@ -145,6 +167,32 @@ export function RecipeForm({
     }
   }
 
+  async function acceptProposal(index: number) {
+    const ingredient = ingredients[index];
+    if (!ingredient.customProposal) {
+      return;
+    }
+    try {
+      const entry = await apiClient.createCustomIngredient({
+        name: ingredient.customProposal.namePl,
+      });
+      setCatalog((current) => [...current, entry]);
+      setIngredients((current) =>
+        current.map((item, itemIndex) =>
+          itemIndex === index
+            ? { ...item, catalogEntryId: entry.id, customProposal: null }
+            : item,
+        ),
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : t('form.addIngredientFailed'),
+      );
+    }
+  }
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.label}>{t('form.title')}</Text>
@@ -184,7 +232,19 @@ export function RecipeForm({
             onChangeText={(name) =>
               setIngredients((current) =>
                 current.map((item, itemIndex) =>
-                  itemIndex === index ? { ...item, name } : item,
+                  itemIndex === index
+                    ? {
+                        ...item,
+                        name,
+                        customProposal: item.customProposal
+                          ? {
+                              ...item.customProposal,
+                              namePl: name,
+                              nameEn: name,
+                            }
+                          : item.customProposal,
+                      }
+                    : item,
                 ),
               )
             }
@@ -222,6 +282,23 @@ export function RecipeForm({
             style={styles.input}
             value={ingredient.note}
           />
+          {!ingredient.catalogEntryId && ingredient.customProposal && (
+            <View style={styles.proposal}>
+              <Text style={styles.proposalText}>
+                {t('review.proposalText', {
+                  name: ingredient.customProposal.namePl,
+                })}
+              </Text>
+              <Pressable
+                onPress={() => void acceptProposal(index)}
+                style={styles.proposalButton}
+              >
+                <Text style={styles.proposalButtonText}>
+                  {t('review.acceptProposal')}
+                </Text>
+              </Pressable>
+            </View>
+          )}
           <View style={styles.catalog}>
             {UNITS.map((unit) => (
               <Pressable
@@ -251,7 +328,11 @@ export function RecipeForm({
                   setIngredients((current) =>
                     current.map((item, itemIndex) =>
                       itemIndex === index
-                        ? { ...item, catalogEntryId: entry.id }
+                        ? {
+                            ...item,
+                            catalogEntryId: entry.id,
+                            customProposal: null,
+                          }
                         : item,
                     ),
                   )
@@ -454,6 +535,22 @@ const styles = StyleSheet.create({
   catalog: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   catalogEntry: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 6 },
   selected: { backgroundColor: '#b7d7bf', borderRadius: 6, padding: 6 },
+  proposal: {
+    backgroundColor: '#fdf3e3',
+    borderColor: '#e0c98a',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 8,
+    padding: 10,
+  },
+  proposalText: { color: '#6b5a2e', fontSize: 14, lineHeight: 20 },
+  proposalButton: {
+    backgroundColor: '#25352d',
+    borderRadius: 6,
+    marginTop: 8,
+    padding: 8,
+  },
+  proposalButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   step: { marginTop: 8 },
   stepActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
   action: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 8 },

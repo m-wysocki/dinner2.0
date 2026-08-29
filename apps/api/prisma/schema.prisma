@@ -43,6 +43,7 @@ model Recipe {
   title        String
   description  String?
   servingCount Int
+  sourceText   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -109,6 +109,7 @@ export class RecipesService {
           title: input.title,
           description: input.description || null,
           servingCount: input.servingCount,
+          sourceText: input.sourceText || null,
           ingredients: {
             create: (input.ingredients ?? []).map((ingredient) =>
               this.toIngredientCreate(ingredient),

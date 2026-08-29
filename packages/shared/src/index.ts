@@ -190,6 +190,7 @@ export const createRecipeRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(5000).optional(),
   servingCount: z.number().int().min(1).max(1000),
+  sourceText: z.string().trim().max(20000).optional(),
   ingredients: recipeIngredientsSchema.optional(),
   preparationSteps: preparationStepsSchema.optional(),
 });

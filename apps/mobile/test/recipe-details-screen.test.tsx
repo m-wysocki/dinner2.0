@@ -147,4 +147,19 @@ describe('RecipeDetails screen', () => {
       await screen.findByText('Nie znaleziono przepisu.'),
     ).toBeInTheDocument();
   });
+
+  it('never renders the pasted source text as recipe content', async () => {
+    const withSource = {
+      ...recipeDetails(),
+      sourceText: 'Składniki: pomidor. Pokrój i gotuj.',
+    } as RecipeDetailsResponse;
+    vi.mocked(apiClient.getRecipe).mockResolvedValue(withSource);
+    renderDetailsScreen();
+
+    expect(await screen.findByText('Zupa')).toBeInTheDocument();
+    expect(screen.getByText(/Pomidor/)).toBeInTheDocument();
+    expect(
+      screen.queryByText('Składniki: pomidor. Pokrój i gotuj.'),
+    ).not.toBeInTheDocument();
+  });
 });

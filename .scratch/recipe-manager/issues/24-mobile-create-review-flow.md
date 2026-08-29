@@ -4,7 +4,7 @@
 
 **Blocked by:** 21: Web as the source of truth; 22: Recipe extraction endpoint; 23: Catalog resolution for drafts
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Background
 
@@ -21,8 +21,8 @@ Q3/Q5 decisions (grill-with-docs): recipe creation is limited to `title` + `sour
 
 ## Definition of done
 
-- [ ] Create screen sends `{ title, sourceText, servingCount }` to the extract endpoint and shows the result in a review step.
-- [ ] Extraction failure shows a loud localized error with retry and keeps user input.
-- [ ] Review lets the user edit the draft and accept/remap proposed custom identities before saving.
-- [ ] Save goes through the existing recipe create endpoint; `sourceText` is stored but never rendered on details.
-- [ ] Web-renderer tests cover create, failure/retry, review, and proposal handling; workspace typecheck, lint, and format pass.
+- [x] Create screen sends `{ title, sourceText, servingCount }` to the extract endpoint and shows the result in a review step.
+- [x] Extraction failure shows a loud localized error with retry and keeps user input.
+- [x] Review lets the user edit the draft and accept/remap proposed custom identities before saving.
+- [x] Save goes through the existing recipe create endpoint; `sourceText` is stored but never rendered on details.
+- [x] Web-renderer tests cover create, failure/retry, review, and proposal handling; workspace typecheck, lint, and format pass.

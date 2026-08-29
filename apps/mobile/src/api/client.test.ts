@@ -279,6 +279,121 @@ describe('apiClient.login', () => {
   });
 });
 
+describe('apiClient.extractRecipe', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    clearAuthenticatedState();
+  });
+
+  async function setActiveSession() {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'user@example.com',
+        emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+        accessStatus: 'ACTIVE',
+        interfaceLanguage: 'pl',
+      },
+    });
+  }
+
+  it('POSTs the source text and returns a validated draft', async () => {
+    await setActiveSession();
+    const draft = {
+      title: 'Zupa',
+      description: 'Kremowa zupa pomidorowa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Pomidor',
+          catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          customProposal: null,
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Szafran',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Szafran', nameEn: 'Szafran' },
+          quantity: null,
+          unit: 'OTHER',
+          note: null,
+          position: 1,
+        },
+      ],
+      preparationSteps: [{ text: 'Gotuj', position: 0 }],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => draft,
+      }),
+    );
+
+    await expect(
+      apiClient.extractRecipe({
+        title: 'Zupa',
+        sourceText: 'Składniki: 2 pomidory, szafran. Gotuj.',
+        servingCount: 4,
+      }),
+    ).resolves.toEqual(draft);
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/recipes/extract',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer access-token',
+        },
+        body: JSON.stringify({
+          title: 'Zupa',
+          sourceText: 'Składniki: 2 pomidory, szafran. Gotuj.',
+          servingCount: 4,
+        }),
+      },
+    );
+  });
+
+  it('surfaces the loud, retryable extraction error code', async () => {
+    await setActiveSession();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 502,
+        json: async () => ({
+          error: {
+            code: 'EXTRACTION_FAILED',
+            message: 'Nie udało się wyodrębnić przepisu. Spróbuj ponownie.',
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      apiClient.extractRecipe({
+        title: 'Zupa',
+        sourceText: 'Pomidor.',
+        servingCount: 4,
+      }),
+    ).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 502,
+      code: 'EXTRACTION_FAILED',
+    });
+  });
+});
+
 describe('apiClient.deleteRecipe', () => {
   beforeEach(() => {
     vi.restoreAllMocks();

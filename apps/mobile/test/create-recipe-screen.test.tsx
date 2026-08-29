@@ -1,20 +1,49 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ExtractRecipeDraft } from '@dinner/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import CreateRecipe from '../app/create-recipe';
+import CreateRecipe from '../app/create-recipe/index';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/auth/session', () => ({ getAuthenticatedState: vi.fn() }));
 vi.mock('../src/api/client', () => ({
+  ApiError: class ApiError extends Error {
+    status = 0;
+    code: string | undefined;
+    constructor(message: string, status = 0, code?: string) {
+      super(message);
+      this.status = status;
+      this.code = code;
+    }
+  },
   apiClient: {
-    createRecipe: vi.fn(),
-    ingredientCatalog: vi.fn(),
-    createCustomIngredient: vi.fn(),
+    extractRecipe: vi.fn(),
   },
 }));
 
-import { apiClient } from '../src/api/client';
+import { ApiError, apiClient } from '../src/api/client';
 import { getAuthenticatedState } from '../src/auth/session';
+import { router } from './expo-router-mock';
+
+function draft(): ExtractRecipeDraft {
+  return {
+    title: 'Zupa pomidorowa',
+    description: 'Kremowa zupa pomidorowa.',
+    servingCount: 4,
+    ingredients: [
+      {
+        name: 'Pomidor',
+        catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        customProposal: null,
+        quantity: '2',
+        unit: 'PCS',
+        note: null,
+        position: 0,
+      },
+    ],
+    preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
+  };
+}
 
 beforeEach(() => {
   vi.mocked(getAuthenticatedState).mockReturnValue({
@@ -31,91 +60,76 @@ beforeEach(() => {
       interfaceLanguage: 'pl',
     },
   });
-  vi.mocked(apiClient.createRecipe).mockResolvedValue({
-    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    title: 'Zupa',
-    description: null,
-    servingCount: 4,
-    ingredients: [],
-    preparationSteps: [],
-    createdAt: '2026-08-28T12:00:00.000Z',
-    updatedAt: '2026-08-28T12:00:00.000Z',
-  });
-  vi.mocked(apiClient.ingredientCatalog).mockResolvedValue([
-    {
-      id: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-      slug: 'tomato',
-      namePl: 'Pomidor',
-      nameEn: 'Tomato',
-      isSystem: true,
-    },
-  ]);
-  vi.mocked(apiClient.createCustomIngredient).mockResolvedValue({
-    id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-    slug: 'custom-owner',
-    namePl: 'Kurczak',
-    nameEn: 'Kurczak',
-    isSystem: false,
-  });
+  vi.mocked(apiClient.extractRecipe).mockReset();
+  vi.mocked(apiClient.extractRecipe).mockResolvedValue(draft());
+  router.push.mockClear();
 });
 
 describe('CreateRecipe screen', () => {
-  it('validates and submits the basic recipe fields', async () => {
+  it('sends title, source text, and serving count to extraction and opens the review step', async () => {
     const user = userEvent.setup();
     render(<CreateRecipe />);
     await user.type(screen.getByPlaceholderText('Np. Zupa pomidorowa'), 'Zupa');
     await user.type(
-      screen.getByPlaceholderText('Kilka słów o przepisie'),
-      'Domowa',
+      screen.getByLabelText('Treść przepisu'),
+      'Składniki: 2 pomidory. Gotuj.',
     );
-    await user.type(screen.getByPlaceholderText('Np. 4'), '4');
-    await user.click(screen.getByText('Zapisz przepis'));
+    await user.type(screen.getByLabelText('Liczba porcji'), '4');
+    await user.click(screen.getByText('Wyodrębnij przepis'));
 
     await waitFor(() =>
-      expect(apiClient.createRecipe).toHaveBeenCalledWith({
+      expect(apiClient.extractRecipe).toHaveBeenCalledWith({
         title: 'Zupa',
-        description: 'Domowa',
+        sourceText: 'Składniki: 2 pomidory. Gotuj.',
         servingCount: 4,
       }),
     );
-    expect(await screen.findByText('Przepis zapisany')).toBeInTheDocument();
-    expect(screen.getByText('Zupa')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(router.push).toHaveBeenCalledWith('/create-recipe/review'),
+    );
   });
 
-  it('submits ingredients and preparation steps with their positions', async () => {
+  it('requires the title, source text, and serving count before extracting', async () => {
+    const user = userEvent.setup();
+    render(<CreateRecipe />);
+    await user.click(screen.getByText('Wyodrębnij przepis'));
+
+    expect(
+      await screen.findByText('Podaj tytuł, treść przepisu i liczbę porcji.'),
+    ).toBeInTheDocument();
+    expect(apiClient.extractRecipe).not.toHaveBeenCalled();
+  });
+
+  it('shows a loud localized error on failure and keeps the input for a retry', async () => {
+    vi.mocked(apiClient.extractRecipe).mockRejectedValue(
+      new ApiError('Nie udało się wyodrębnić przepisu. Spróbuj ponownie.', 502),
+    );
     const user = userEvent.setup();
     render(<CreateRecipe />);
     await user.type(screen.getByPlaceholderText('Np. Zupa pomidorowa'), 'Zupa');
-    await user.type(screen.getByPlaceholderText('Np. 4'), '4');
-    await user.click(screen.getByText('Dodaj składnik'));
-    await user.type(screen.getByLabelText('Nazwa składnika 1'), 'Pomidor');
-    await user.type(screen.getByLabelText('Ilość składnika 1'), '2');
-    await user.click(screen.getByText('Pomidor'));
-    await user.click(screen.getByText('Dodaj krok'));
     await user.type(
-      screen.getByLabelText('Krok przygotowania 1'),
-      'Pokrój warzywa',
+      screen.getByLabelText('Treść przepisu'),
+      'Składniki: pomidor.',
     );
-    await user.click(screen.getByText('Zapisz przepis'));
+    await user.type(screen.getByLabelText('Liczba porcji'), '4');
+    await user.click(screen.getByText('Wyodrębnij przepis'));
+
+    expect(
+      await screen.findByText(
+        'Nie udało się wyodrębnić przepisu. Spróbuj ponownie.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Spróbuj ponownie')).toBeInTheDocument();
+    expect(
+      (screen.getByPlaceholderText('Np. Zupa pomidorowa') as HTMLInputElement)
+        .value,
+    ).toBe('Zupa');
+
+    vi.mocked(apiClient.extractRecipe).mockResolvedValue(draft());
+    await user.click(screen.getByText('Spróbuj ponownie'));
 
     await waitFor(() =>
-      expect(apiClient.createRecipe).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Zupa',
-          servingCount: 4,
-          ingredients: [
-            {
-              name: 'Pomidor',
-              quantity: '2',
-              unit: 'PCS',
-              note: undefined,
-              catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-              position: 0,
-            },
-          ],
-          preparationSteps: [{ text: 'Pokrój warzywa', position: 0 }],
-        }),
-      ),
+      expect(router.push).toHaveBeenCalledWith('/create-recipe/review'),
     );
   });
 });

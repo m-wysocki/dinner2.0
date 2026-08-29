@@ -72,10 +72,25 @@ const pl = {
   'confirm.invalidLink': 'Link potwierdzający jest nieprawidłowy.',
 
   'create.title': 'Nowy przepis',
+  'create.sourceTextLabel': 'Treść przepisu',
+  'create.sourceTextPlaceholder':
+    'Wklej pełną treść przepisu, np. z notatki albo innej strony',
+  'create.servingCount': 'Liczba porcji',
+  'create.servingCountPlaceholder': 'Np. 4',
+  'create.extract': 'Wyodrębnij przepis',
+  'create.extracting': 'Wyodrębnianie przepisu...',
+  'create.extractFailed':
+    'Nie udało się wyodrębnić przepisu. Spróbuj ponownie.',
+  'create.inputRequired': 'Podaj tytuł, treść przepisu i liczbę porcji.',
   'create.savedTitle': 'Przepis zapisany',
   'create.savedMessage':
     'Przepis na {servings} został dodany do Twojej kolekcji.',
   'create.submit': 'Zapisz przepis',
+
+  'review.title': 'Przejrzyj przepis',
+  'review.proposalText':
+    'Nieznany składnik „{name}”. Zaakceptuj propozycję jako nowy własny składnik albo wybierz istniejący z katalogu.',
+  'review.acceptProposal': 'Zaakceptuj propozycję',
 
   'details.notFound': 'Nie znaleziono przepisu.',
   'details.loadFailed': 'Nie udało się pobrać przepisu.',
@@ -218,10 +233,25 @@ const en: Record<TranslationKey, string> = {
   'confirm.invalidLink': 'The confirmation link is invalid.',
 
   'create.title': 'New recipe',
+  'create.sourceTextLabel': 'Recipe text',
+  'create.sourceTextPlaceholder':
+    'Paste the full recipe text, e.g. from a note or another page',
+  'create.servingCount': 'Number of servings',
+  'create.servingCountPlaceholder': 'e.g. 4',
+  'create.extract': 'Extract recipe',
+  'create.extracting': 'Extracting recipe...',
+  'create.extractFailed': 'Could not extract the recipe. Try again.',
+  'create.inputRequired':
+    'Enter a title, the recipe text, and the number of servings.',
   'create.savedTitle': 'Recipe saved',
   'create.savedMessage':
     'The recipe for {servings} was added to your collection.',
   'create.submit': 'Save recipe',
+
+  'review.title': 'Review the recipe',
+  'review.proposalText':
+    'Unknown ingredient "{name}". Accept the proposal as a new custom ingredient or choose an existing one from the catalog.',
+  'review.acceptProposal': 'Accept proposal',
 
   'details.notFound': 'Recipe not found.',
   'details.loadFailed': 'Could not load the recipe.',

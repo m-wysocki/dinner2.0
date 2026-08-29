@@ -2,12 +2,19 @@ import { type RecipeResponse } from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { apiClient } from '../src/api/client';
-import { getAuthenticatedState } from '../src/auth/session';
-import { formatServings, useI18n } from '../src/i18n/i18n';
-import { RecipeForm } from '../src/recipe/recipe-form';
+import { apiClient } from '../../src/api/client';
+import { getAuthenticatedState } from '../../src/auth/session';
+import { formatServings, useI18n } from '../../src/i18n/i18n';
+import {
+  clearCreateDraft,
+  getCreateDraft,
+} from '../../src/recipe/create-draft';
+import {
+  RecipeForm,
+  recipeFormValuesFromDraft,
+} from '../../src/recipe/recipe-form';
 
-export default function CreateRecipe() {
+export default function CreateReview() {
   const { t, language } = useI18n();
   const state = getAuthenticatedState();
   const [savedRecipe, setSavedRecipe] = useState<RecipeResponse | null>(null);
@@ -20,9 +27,15 @@ export default function CreateRecipe() {
     return <Redirect href="/user" />;
   }
 
+  const stored = getCreateDraft();
+
+  if (!stored) {
+    return <Redirect href="/create-recipe" />;
+  }
+
   if (savedRecipe) {
     return (
-      <View style={styles.container}>
+      <View style={styles.savedContainer}>
         <Text style={styles.title}>{t('create.savedTitle')}</Text>
         <Text style={styles.savedTitle}>{savedRecipe.title}</Text>
         <Text style={styles.savedMessage}>
@@ -43,27 +56,17 @@ export default function CreateRecipe() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('create.title')}</Text>
+      <Text style={styles.title}>{t('review.title')}</Text>
       <RecipeForm
-        initialValues={{
-          title: '',
-          description: '',
-          servingCount: '',
-          ingredients: [],
-          preparationSteps: [],
-        }}
+        initialValues={recipeFormValuesFromDraft(stored.draft)}
         submitLabel={t('create.submit')}
         onSubmit={async (input) => {
-          const body =
-            (input.ingredients?.length ?? 0) === 0 &&
-            (input.preparationSteps?.length ?? 0) === 0
-              ? {
-                  title: input.title,
-                  description: input.description,
-                  servingCount: input.servingCount,
-                }
-              : input;
-          setSavedRecipe(await apiClient.createRecipe(body));
+          const saved = await apiClient.createRecipe({
+            ...input,
+            sourceText: stored.sourceText,
+          });
+          clearCreateDraft();
+          setSavedRecipe(saved);
         }}
         onCancel={() => router.back()}
       />
@@ -73,6 +76,7 @@ export default function CreateRecipe() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fffaf3' },
+  savedContainer: { flex: 1, backgroundColor: '#fffaf3', padding: 24 },
   title: {
     color: '#25352d',
     fontSize: 30,

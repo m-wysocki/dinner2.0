@@ -316,6 +316,27 @@ describe('recipe contracts', () => {
     ).toBe(false);
   });
 
+  it('accepts and trims optional source text for provenance', () => {
+    expect(
+      createRecipeRequestSchema.parse({
+        title: 'Zupa',
+        servingCount: 4,
+        sourceText: '  Składniki: pomidor.  ',
+      }),
+    ).toEqual({
+      title: 'Zupa',
+      servingCount: 4,
+      sourceText: 'Składniki: pomidor.',
+    });
+    expect(
+      createRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        servingCount: 4,
+        sourceText: 'x'.repeat(20001),
+      }).success,
+    ).toBe(false);
+  });
+
   it('rejects empty preparation steps and accepts ordered text', () => {
     expect(
       createRecipeRequestSchema.safeParse({

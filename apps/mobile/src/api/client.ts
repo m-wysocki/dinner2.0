@@ -5,6 +5,7 @@ import {
   recipeDetailsResponseSchema,
   recipeCollectionResponseSchema,
   ingredientCatalogEntrySchema,
+  extractRecipeDraftSchema,
   healthResponseSchema,
   loginResponseSchema,
   type ApiErrorCode,
@@ -22,6 +23,8 @@ import {
   type RecipeCollectionResponse,
   type IngredientCatalogEntry,
   type CreateCustomIngredientRequest,
+  type ExtractRecipeDraft,
+  type ExtractRecipeRequest,
   type UpdateUserRequest,
 } from '@dinner/shared';
 import { apiUrl } from '../config';
@@ -170,6 +173,14 @@ export const apiClient = {
 
   createRecipe(input: CreateRecipeRequest): Promise<RecipeResponse> {
     return request('/recipes', recipeResponseSchema, {
+      method: 'POST',
+      body: input,
+      authenticated: true,
+    });
+  },
+
+  extractRecipe(input: ExtractRecipeRequest): Promise<ExtractRecipeDraft> {
+    return request('/recipes/extract', extractRecipeDraftSchema, {
       method: 'POST',
       body: input,
       authenticated: true,

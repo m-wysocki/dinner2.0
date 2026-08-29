@@ -57,6 +57,7 @@ describe('RecipesService', () => {
       service.create('supabase-user-id', {
         title: 'Zupa',
         servingCount: 4,
+        sourceText: 'Składniki: pomidor.',
       }),
     ).resolves.toMatchObject({ title: 'Zupa', servingCount: 4 });
     expect(findUnique).toHaveBeenCalledWith({
@@ -70,11 +71,40 @@ describe('RecipesService', () => {
         title: 'Zupa',
         description: null,
         servingCount: 4,
+        sourceText: 'Składniki: pomidor.',
         ingredients: { create: [] },
         preparationSteps: { create: [] },
       }),
       include: { ingredients: true, preparationSteps: true },
     });
+  });
+
+  it('stores no source text when a recipe is created without it', async () => {
+    const create = vi.fn().mockResolvedValue({
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      title: 'Zupa',
+      description: null,
+      servingCount: 4,
+      createdAt: new Date('2026-08-28T12:00:00.000Z'),
+      updatedAt: new Date('2026-08-28T12:00:00.000Z'),
+      preparationSteps: [],
+      ingredients: [],
+    });
+    const transaction = vi.fn((callback) => callback({ recipe: { create } }));
+    const service = new RecipesService({
+      user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
+      $transaction: transaction,
+    } as never);
+
+    await service.create('supabase-user-id', {
+      title: 'Zupa',
+      servingCount: 4,
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ sourceText: null }),
+      }),
+    );
   });
 
   it('creates ordered preparation steps in the same transaction', async () => {

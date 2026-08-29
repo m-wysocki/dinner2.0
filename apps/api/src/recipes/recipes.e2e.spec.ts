@@ -692,6 +692,26 @@ describe('recipes API (HTTP)', () => {
       expect($transaction).toHaveBeenCalled();
     });
 
+    it('stores the pasted source text without returning it', async () => {
+      const response = await postRecipe({
+        title: 'Zupa',
+        servingCount: 4,
+        sourceText: 'Składniki: pomidor.',
+      });
+
+      expect(response.status).toBe(201);
+      expect(recipeCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceText: 'Składniki: pomidor.',
+          }),
+        }),
+      );
+      const body = await response.json();
+      expect(body).toMatchObject({ title: 'Zupa' });
+      expect(JSON.stringify(body)).not.toContain('sourceText');
+    });
+
     it('leaves no partial recipe when the write fails mid-transaction', async () => {
       failNextCreate = true;
 
