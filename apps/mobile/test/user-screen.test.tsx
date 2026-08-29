@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import User from '../app/user';
 
@@ -16,7 +16,7 @@ beforeEach(() => {
 });
 
 describe('User screen', () => {
-  it('shows the signed-in email after a successful login', async () => {
+  it('shows the signed-in email after a successful login', () => {
     getStateMock.mockReturnValue({
       session: {
         accessToken: 'header.payload.signature',
@@ -32,25 +32,25 @@ describe('User screen', () => {
       },
     });
 
-    await render(<User />);
+    render(<User />);
 
-    expect(screen.getByText('Zalogowano')).toBeOnTheScreen();
-    expect(screen.getByText('user@example.com')).toBeOnTheScreen();
+    expect(screen.getByText('Zalogowano')).toBeInTheDocument();
+    expect(screen.getByText('user@example.com')).toBeInTheDocument();
     expect(
       screen.getByText(/możesz zarządzać swoimi przepisami/),
-    ).toBeOnTheScreen();
+    ).toBeInTheDocument();
   });
 
-  it('renders nothing when there is no authenticated session', async () => {
+  it('renders nothing when there is no authenticated session', () => {
     getStateMock.mockReturnValue(null);
 
-    await render(<User />);
+    render(<User />);
 
-    expect(screen.queryByText('Zalogowano')).not.toBeOnTheScreen();
-    expect(screen.queryByText('user@example.com')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Zalogowano')).not.toBeInTheDocument();
+    expect(screen.queryByText('user@example.com')).not.toBeInTheDocument();
   });
 
-  it('shows the activation waiting state for a pending user', async () => {
+  it('shows the activation waiting state for a pending user', () => {
     getStateMock.mockReturnValue({
       session: {
         accessToken: 'header.payload.signature',
@@ -66,12 +66,12 @@ describe('User screen', () => {
       },
     });
 
-    await render(<User />);
+    render(<User />);
 
-    expect(screen.getByText('Oczekiwanie na aktywację')).toBeOnTheScreen();
+    expect(screen.getByText('Oczekiwanie na aktywację')).toBeInTheDocument();
     expect(
       screen.getByText(/administrator nie aktywował jeszcze dostępu/),
-    ).toBeOnTheScreen();
-    expect(screen.queryByText('Zalogowano')).not.toBeOnTheScreen();
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Zalogowano')).not.toBeInTheDocument();
   });
 });

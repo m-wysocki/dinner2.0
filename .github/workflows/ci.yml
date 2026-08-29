@@ -23,3 +23,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
+      - name: Web export
+        run: pnpm --filter @dinner/mobile exec expo export --platform web
+        env:
+          EXPO_NO_TELEMETRY: 1

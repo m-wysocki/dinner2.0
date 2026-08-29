@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Index from '../app/index';
 import Register from '../app/register';
@@ -18,11 +19,11 @@ vi.mock('../src/api/client', () => ({
 const healthMock = vi.mocked(apiClient.health);
 const listRecipesMock = vi.mocked(apiClient.listRecipes);
 
-async function renderRootScreen() {
+function renderRootScreen() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  await render(
+  render(
     <QueryClientProvider client={queryClient}>
       <Index />
     </QueryClientProvider>,
@@ -41,27 +42,27 @@ beforeEach(() => {
 describe('mobile shell routing', () => {
   it('navigates from the root screen to the register route', async () => {
     const user = userEvent.setup();
-    await renderRootScreen();
+    renderRootScreen();
 
-    await user.press(screen.getByText('Nie masz konta? Zarejestruj się.'));
+    await user.click(screen.getByText('Nie masz konta? Zarejestruj się.'));
 
     expect(router.push).toHaveBeenCalledWith('/register');
   });
 
   it('navigates from the root screen to the login route', async () => {
     const user = userEvent.setup();
-    await renderRootScreen();
+    renderRootScreen();
 
-    await user.press(screen.getByText('Zaloguj się'));
+    await user.click(screen.getByText('Zaloguj się'));
 
     expect(router.push).toHaveBeenCalledWith('/login');
   });
 
   it('navigates back from the register screen to the root', async () => {
     const user = userEvent.setup();
-    await render(<Register />);
+    render(<Register />);
 
-    await user.press(screen.getByText('Wróć'));
+    await user.click(screen.getByText('Wróć'));
 
     expect(router.push).toHaveBeenCalledWith('/');
   });
@@ -82,12 +83,12 @@ describe('mobile shell routing', () => {
       },
     });
     const user = userEvent.setup();
-    await renderRootScreen();
+    renderRootScreen();
 
-    expect(screen.getByText('Twoja kolekcja')).toBeTruthy();
-    expect(screen.getByText('user@example.com')).toBeTruthy();
+    expect(screen.getByText('Twoja kolekcja')).toBeInTheDocument();
+    expect(screen.getByText('user@example.com')).toBeInTheDocument();
 
-    await user.press(screen.getByText('Wyloguj się'));
+    await user.click(screen.getByText('Wyloguj się'));
 
     expect(router.replace).toHaveBeenCalledWith('/');
   });
@@ -107,10 +108,12 @@ describe('mobile shell routing', () => {
         interfaceLanguage: 'pl',
       },
     });
-    await renderRootScreen();
+    renderRootScreen();
 
-    expect(await screen.findByText('Nie masz jeszcze przepisów')).toBeTruthy();
-    expect(screen.getByText('Dodaj przepis')).toBeTruthy();
+    expect(
+      await screen.findByText('Nie masz jeszcze przepisów'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Dodaj przepis')).toBeInTheDocument();
     expect(listRecipesMock).toHaveBeenCalled();
   });
 
@@ -129,9 +132,11 @@ describe('mobile shell routing', () => {
         interfaceLanguage: 'pl',
       },
     });
-    await renderRootScreen();
+    renderRootScreen();
 
-    expect(screen.getByText('Dostęp oczekuje na aktywację')).toBeTruthy();
-    expect(screen.queryByText('Jesteś zalogowany')).not.toBeTruthy();
+    expect(
+      screen.getByText('Dostęp oczekuje na aktywację'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Jesteś zalogowany')).not.toBeInTheDocument();
   });
 });
