@@ -37,6 +37,11 @@ export class RecipeExtractionService {
       const mapped = mapUnitToCanonical(ingredient.unit, ingredient.note);
       return {
         name: ingredient.name,
+        catalogEntryId: null,
+        customProposal: {
+          namePl: ingredient.name,
+          nameEn: ingredient.name,
+        },
         quantity: ingredient.quantity,
         unit: mapped.unit,
         note: mapped.note || null,

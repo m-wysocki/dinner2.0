@@ -30,6 +30,8 @@ const recipeFindMany = vi.fn();
 const recipeCreate = vi.fn();
 const recipeUpdate = vi.fn();
 const recipeDeleteMany = vi.fn();
+const catalogFindMany = vi.fn();
+const catalogCreate = vi.fn();
 const extractRecipe = vi.fn();
 const $transaction = vi.fn();
 
@@ -63,6 +65,23 @@ function installMocks() {
       return { id: USER_A.ownerId };
     },
   );
+
+  catalogFindMany.mockImplementation(async () => [
+    {
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      namePl: 'Pomidor',
+      nameEn: 'Tomato',
+      isSystem: true,
+      createdAt: new Date('2026-08-01T00:00:00.000Z'),
+    },
+    {
+      id: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+      namePl: 'Mąka',
+      nameEn: 'Flour',
+      isSystem: true,
+      createdAt: new Date('2026-08-01T00:00:00.000Z'),
+    },
+  ]);
 }
 
 function authHeaders(token: string): Record<string, string> {
@@ -97,6 +116,10 @@ describe('recipe extraction endpoint (HTTP)', () => {
           create: recipeCreate,
           update: recipeUpdate,
           deleteMany: recipeDeleteMany,
+        },
+        ingredientCatalogEntry: {
+          findMany: catalogFindMany,
+          create: catalogCreate,
         },
         $transaction,
       } as unknown as PrismaService)
@@ -146,16 +169,27 @@ describe('recipe extraction endpoint (HTTP)', () => {
       ingredients: [
         {
           name: 'Pomidor',
+          catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          customProposal: null,
           quantity: '2',
           unit: 'PCS',
           note: null,
           position: 0,
         },
-        { name: 'Mąka', quantity: '200', unit: 'G', note: null, position: 1 },
+        {
+          name: 'Mąka',
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          customProposal: null,
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 1,
+        },
       ],
       preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
     });
     expect(recipeCreate).not.toHaveBeenCalled();
+    expect(catalogCreate).not.toHaveBeenCalled();
     expect($transaction).not.toHaveBeenCalled();
   });
 
@@ -177,9 +211,74 @@ describe('recipe extraction endpoint (HTTP)', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       ingredients: [
-        { name: 'Mąka', quantity: null, unit: 'OTHER', note: 'szklanka' },
+        {
+          name: 'Mąka',
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          customProposal: null,
+          quantity: null,
+          unit: 'OTHER',
+          note: 'szklanka',
+        },
       ],
     });
+  });
+
+  it('resolves matched identities and proposes custom identities for the rest', async () => {
+    extractRecipe.mockResolvedValue({
+      description: 'Zupa.',
+      ingredients: [
+        { name: 'Flour', quantity: '200', unit: 'G', note: null },
+        { name: 'Szafran', quantity: null, unit: 'OTHER', note: null },
+        { name: 'Pomidor', quantity: '2', unit: 'PCS', note: null },
+      ],
+      preparationSteps: [],
+    });
+
+    const response = await postExtract({
+      title: 'Zupa',
+      sourceText: 'Flour, szafran, pomidor.',
+      servingCount: 4,
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      title: 'Zupa',
+      description: 'Zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Flour',
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          customProposal: null,
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Szafran',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Szafran', nameEn: 'Szafran' },
+          quantity: null,
+          unit: 'OTHER',
+          note: null,
+          position: 1,
+        },
+        {
+          name: 'Pomidor',
+          catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          customProposal: null,
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 2,
+        },
+      ],
+      preparationSteps: [],
+    });
+    expect(recipeCreate).not.toHaveBeenCalled();
+    expect(catalogCreate).not.toHaveBeenCalled();
+    expect($transaction).not.toHaveBeenCalled();
   });
 
   it('returns a loud, retryable error when the provider output fails validation', async () => {

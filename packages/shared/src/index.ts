@@ -244,13 +244,36 @@ export const extractRecipeRequestSchema = z.object({
 });
 export type ExtractRecipeRequest = z.infer<typeof extractRecipeRequestSchema>;
 
-export const extractedRecipeIngredientSchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  quantity: decimalSchema.nullable(),
-  unit: canonicalUnitSchema,
-  note: z.string().trim().max(500).nullable(),
-  position: z.number().int().min(0),
+export const customIngredientProposalSchema = z.object({
+  namePl: z.string().trim().min(1).max(200),
+  nameEn: z.string().trim().min(1).max(200),
 });
+export type CustomIngredientProposal = z.infer<
+  typeof customIngredientProposalSchema
+>;
+
+export const extractedRecipeIngredientSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    catalogEntryId: z.string().uuid().nullable(),
+    customProposal: customIngredientProposalSchema.nullable(),
+    quantity: decimalSchema.nullable(),
+    unit: canonicalUnitSchema,
+    note: z.string().trim().max(500).nullable(),
+    position: z.number().int().min(0),
+  })
+  .superRefine((ingredient, context) => {
+    const matched = ingredient.catalogEntryId !== null;
+    const proposed = ingredient.customProposal !== null;
+    if (matched === proposed) {
+      context.addIssue({
+        code: 'custom',
+        path: ['catalogEntryId'],
+        message:
+          'An extracted ingredient must carry exactly one of catalogEntryId or customProposal',
+      });
+    }
+  });
 export type ExtractedRecipeIngredient = z.infer<
   typeof extractedRecipeIngredientSchema
 >;

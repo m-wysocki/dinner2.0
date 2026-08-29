@@ -32,14 +32,26 @@ describe('RecipeExtractionService', () => {
       ingredients: [
         {
           name: 'Pomidor',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Pomidor', nameEn: 'Pomidor' },
           quantity: '2',
           unit: 'PCS',
           note: null,
           position: 0,
         },
-        { name: 'Mąka', quantity: '200', unit: 'G', note: null, position: 1 },
+        {
+          name: 'Mąka',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Mąka', nameEn: 'Mąka' },
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 1,
+        },
         {
           name: 'Śmietana',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Śmietana', nameEn: 'Śmietana' },
           quantity: null,
           unit: 'OTHER',
           note: 'szklanka',
