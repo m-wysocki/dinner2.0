@@ -5,6 +5,8 @@ const environmentSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1),
   DATABASE_URL: z.string().startsWith('postgresql://'),
   API_PORT: z.coerce.number().int().positive().default(3000),
+  OPENAI_API_KEY: z.string().min(1),
+  OPENAI_MODEL: z.string().min(1).default('gpt-5.6-luna'),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

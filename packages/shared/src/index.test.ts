@@ -6,6 +6,9 @@ import {
   canonicalUnitSchema,
   confirmEmailRequestSchema,
   createRecipeRequestSchema,
+  extractRecipeDraftSchema,
+  extractRecipeRequestSchema,
+  rawExtractedRecipeDraftSchema,
   updateRecipeRequestSchema,
   updateUserRequestSchema,
   interfaceLanguageSchema,
@@ -470,6 +473,262 @@ describe('update recipe request contract', () => {
             position: 0,
           },
         ],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('recipe extraction request contract', () => {
+  it('accepts and trims title and source text', () => {
+    expect(
+      extractRecipeRequestSchema.parse({
+        title: '  Zupa  ',
+        sourceText: '  Składniki: pomidor.  ',
+        servingCount: 4,
+      }),
+    ).toEqual({
+      title: 'Zupa',
+      sourceText: 'Składniki: pomidor.',
+      servingCount: 4,
+    });
+  });
+
+  it('rejects an empty title or source text', () => {
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: ' ',
+        sourceText: 'Pomidor',
+        servingCount: 4,
+      }).success,
+    ).toBe(false);
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        sourceText: '',
+        servingCount: 4,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a serving count outside one to one thousand', () => {
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        sourceText: 'Pomidor',
+        servingCount: 0,
+      }).success,
+    ).toBe(false);
+    expect(
+      extractRecipeRequestSchema.safeParse({
+        title: 'Zupa',
+        sourceText: 'Pomidor',
+        servingCount: 1001,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('recipe extraction draft contract', () => {
+  const matchedIngredient = {
+    name: 'Pomidor',
+    catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    customProposal: null,
+    quantity: '2',
+    unit: 'PCS',
+    note: null,
+    position: 0,
+  };
+  const proposedIngredient = {
+    name: 'Mąka',
+    catalogEntryId: null,
+    customProposal: { namePl: 'Mąka', nameEn: 'Mąka' },
+    quantity: null,
+    unit: 'OTHER',
+    note: 'szklanka',
+    position: 1,
+  };
+  const validDraft = {
+    title: 'Zupa',
+    description: 'Kremowa zupa pomidorowa.',
+    servingCount: 4,
+    ingredients: [matchedIngredient, proposedIngredient],
+    preparationSteps: [{ text: 'Gotuj', position: 0 }],
+  };
+
+  it('accepts a validated draft', () => {
+    expect(extractRecipeDraftSchema.parse(validDraft)).toEqual(validDraft);
+  });
+
+  it('accepts a raw draft without identity resolution', () => {
+    const rawDraft = {
+      title: 'Zupa',
+      description: 'Kremowa zupa pomidorowa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Pomidor',
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Mąka',
+          quantity: null,
+          unit: 'OTHER',
+          note: 'szklanka',
+          position: 1,
+        },
+      ],
+      preparationSteps: [{ text: 'Gotuj', position: 0 }],
+    };
+    expect(rawExtractedRecipeDraftSchema.parse(rawDraft)).toEqual(rawDraft);
+  });
+
+  it('rejects a resolved ingredient that is missing identity fields', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects an ingredient that is neither matched nor proposed', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            catalogEntryId: null,
+            customProposal: null,
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects an ingredient that is both matched and proposed', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            customProposal: { namePl: 'Pomidor', nameEn: 'Tomato' },
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a malformed catalog entry id', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            catalogEntryId: 'not-a-uuid',
+            customProposal: null,
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a draft with a non-canonical unit', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            customProposal: null,
+            quantity: '2',
+            unit: 'gramy',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a malformed or zero quantity', () => {
+    for (const quantity of ['0', 'abc', '-1']) {
+      expect(
+        extractRecipeDraftSchema.safeParse({
+          ...validDraft,
+          ingredients: [
+            {
+              name: 'Pomidor',
+              catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+              customProposal: null,
+              quantity,
+              unit: 'PCS',
+              note: null,
+              position: 0,
+            },
+          ],
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it('rejects non-consecutive ingredient or step positions', () => {
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        ingredients: [
+          {
+            name: 'Pomidor',
+            catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+            customProposal: null,
+            quantity: '2',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+          {
+            name: 'Cebula',
+            catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+            customProposal: null,
+            quantity: '1',
+            unit: 'PCS',
+            note: null,
+            position: 0,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      extractRecipeDraftSchema.safeParse({
+        ...validDraft,
+        preparationSteps: [{ text: 'Gotuj', position: 1 }],
       }).success,
     ).toBe(false);
   });

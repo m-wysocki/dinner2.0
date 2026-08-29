@@ -107,6 +107,7 @@ export const apiErrorCodeSchema = z.enum([
   'INGREDIENT_NOT_FOUND',
   'INGREDIENT_NOT_ACCESSIBLE',
   'INGREDIENT_NAME_TAKEN',
+  'EXTRACTION_FAILED',
 ]);
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 
@@ -235,3 +236,83 @@ export const recipeCollectionResponseSchema = z.array(recipeResponseSchema);
 export type RecipeCollectionResponse = z.infer<
   typeof recipeCollectionResponseSchema
 >;
+
+export const extractRecipeRequestSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  sourceText: z.string().trim().min(1).max(20000),
+  servingCount: z.number().int().min(1).max(1000),
+});
+export type ExtractRecipeRequest = z.infer<typeof extractRecipeRequestSchema>;
+
+export const customIngredientProposalSchema = z.object({
+  namePl: z.string().trim().min(1).max(200),
+  nameEn: z.string().trim().min(1).max(200),
+});
+export type CustomIngredientProposal = z.infer<
+  typeof customIngredientProposalSchema
+>;
+
+export const rawExtractedRecipeIngredientSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  quantity: decimalSchema.nullable(),
+  unit: canonicalUnitSchema,
+  note: z.string().trim().max(500).nullable(),
+  position: z.number().int().min(0),
+});
+export type RawExtractedRecipeIngredient = z.infer<
+  typeof rawExtractedRecipeIngredientSchema
+>;
+
+export const extractedRecipeIngredientSchema =
+  rawExtractedRecipeIngredientSchema
+    .extend({
+      catalogEntryId: z.string().uuid().nullable(),
+      customProposal: customIngredientProposalSchema.nullable(),
+    })
+    .superRefine((ingredient, context) => {
+      const matched = ingredient.catalogEntryId !== null;
+      const proposed = ingredient.customProposal !== null;
+      if (matched === proposed) {
+        context.addIssue({
+          code: 'custom',
+          path: ['catalogEntryId'],
+          message:
+            'An extracted ingredient must carry exactly one of catalogEntryId or customProposal',
+        });
+      }
+    });
+export type ExtractedRecipeIngredient = z.infer<
+  typeof extractedRecipeIngredientSchema
+>;
+
+const positionedItemsSchema = <T extends { position: number }>(
+  itemSchema: z.ZodType<T>,
+) =>
+  z.array(itemSchema).superRefine((items, context) => {
+    if (!hasConsecutivePositions(items)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Items must have consecutive positions',
+      });
+    }
+  });
+
+export const rawExtractedRecipeDraftSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(5000),
+  servingCount: z.number().int().min(1).max(1000),
+  ingredients: positionedItemsSchema(rawExtractedRecipeIngredientSchema),
+  preparationSteps: preparationStepsSchema,
+});
+export type RawExtractRecipeDraft = z.infer<
+  typeof rawExtractedRecipeDraftSchema
+>;
+
+export const extractRecipeDraftSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(5000),
+  servingCount: z.number().int().min(1).max(1000),
+  ingredients: positionedItemsSchema(extractedRecipeIngredientSchema),
+  preparationSteps: preparationStepsSchema,
+});
+export type ExtractRecipeDraft = z.infer<typeof extractRecipeDraftSchema>;

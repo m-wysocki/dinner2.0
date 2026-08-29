@@ -5,13 +5,15 @@ const validEnvironment = {
   SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'public-anon-key',
   DATABASE_URL: 'postgresql://user:password@localhost:5432/dinner',
+  OPENAI_API_KEY: 'openai-test-key',
 };
 
 describe('environment configuration', () => {
-  it('validates and defaults the API port', () => {
+  it('validates and defaults the API port and model', () => {
     expect(validateEnvironment(validEnvironment)).toEqual({
       ...validEnvironment,
       API_PORT: 3000,
+      OPENAI_MODEL: 'gpt-5.6-luna',
     });
   });
 

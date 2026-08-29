@@ -13,8 +13,11 @@ import {
 } from '@nestjs/common';
 import {
   createRecipeRequestSchema,
+  extractRecipeRequestSchema,
   updateRecipeRequestSchema,
   type CreateRecipeRequest,
+  type ExtractRecipeDraft,
+  type ExtractRecipeRequest,
   type RecipeResponse,
   type RecipeCollectionResponse,
   type UpdateRecipeRequest,
@@ -22,12 +25,32 @@ import {
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ActiveAccessGuard } from '../auth/active-access.guard';
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard';
+import { RecipeExtractionService } from '../ai/recipe-extraction.service';
+import { IngredientCatalogResolver } from './ingredient-catalog.resolver';
 import { RecipesService } from './recipes.service';
 
 @Controller('api/v1/recipes')
 @UseGuards(AuthGuard, ActiveAccessGuard)
 export class RecipesController {
-  constructor(private readonly recipesService: RecipesService) {}
+  constructor(
+    private readonly recipesService: RecipesService,
+    private readonly recipeExtractionService: RecipeExtractionService,
+    private readonly ingredientCatalogResolver: IngredientCatalogResolver,
+  ) {}
+
+  @Post('extract')
+  @HttpCode(HttpStatus.OK)
+  async extract(
+    @Req() request: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(extractRecipeRequestSchema))
+    input: ExtractRecipeRequest,
+  ): Promise<ExtractRecipeDraft> {
+    const draft = await this.recipeExtractionService.extract(input);
+    return this.ingredientCatalogResolver.resolveDraft(
+      request.supabaseAuthId!,
+      draft,
+    );
+  }
 
   @Get()
   list(
