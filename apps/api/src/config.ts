@@ -7,6 +7,7 @@ const environmentSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3000),
   OPENAI_API_KEY: z.string().min(1),
   OPENAI_MODEL: z.string().min(1).default('gpt-5.6-luna'),
+  OPENAI_MATCH_MODEL: z.string().min(1).default('gpt-4o-mini'),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

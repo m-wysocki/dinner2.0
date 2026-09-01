@@ -316,29 +316,23 @@ describe('recipe contracts', () => {
     ).toBe(false);
   });
 
-  it('rejects empty preparation steps and accepts ordered text', () => {
-    expect(
-      createRecipeRequestSchema.safeParse({
-        title: 'Zupa',
-        servingCount: 4,
-        preparationSteps: [{ text: ' ', position: 0 }],
-      }).success,
-    ).toBe(false);
+  it('accepts and trims optional source text for provenance', () => {
     expect(
       createRecipeRequestSchema.parse({
         title: 'Zupa',
         servingCount: 4,
-        preparationSteps: [{ text: 'Gotuj', position: 0 }],
-      }).preparationSteps,
-    ).toEqual([{ text: 'Gotuj', position: 0 }]);
+        sourceText: '  Składniki: pomidor.  ',
+      }),
+    ).toEqual({
+      title: 'Zupa',
+      servingCount: 4,
+      sourceText: 'Składniki: pomidor.',
+    });
     expect(
       createRecipeRequestSchema.safeParse({
         title: 'Zupa',
         servingCount: 4,
-        preparationSteps: [
-          { text: 'Gotuj', position: 0 },
-          { text: 'Podaj', position: 0 },
-        ],
+        sourceText: 'x'.repeat(20001),
       }).success,
     ).toBe(false);
   });
@@ -423,14 +417,13 @@ describe('update recipe request contract', () => {
     title: 'Zupa',
     servingCount: 4,
     ingredients: [],
-    preparationSteps: [],
   };
 
   it('accepts a full recipe update', () => {
     expect(updateRecipeRequestSchema.parse(valid)).toEqual(valid);
   });
 
-  it('requires ingredients and preparation steps to be present', () => {
+  it('requires ingredients to be present', () => {
     expect(
       updateRecipeRequestSchema.safeParse({
         title: 'Zupa',
@@ -552,7 +545,6 @@ describe('recipe extraction draft contract', () => {
     description: 'Kremowa zupa pomidorowa.',
     servingCount: 4,
     ingredients: [matchedIngredient, proposedIngredient],
-    preparationSteps: [{ text: 'Gotuj', position: 0 }],
   };
 
   it('accepts a validated draft', () => {
@@ -580,7 +572,6 @@ describe('recipe extraction draft contract', () => {
           position: 1,
         },
       ],
-      preparationSteps: [{ text: 'Gotuj', position: 0 }],
     };
     expect(rawExtractedRecipeDraftSchema.parse(rawDraft)).toEqual(rawDraft);
   });
@@ -699,7 +690,7 @@ describe('recipe extraction draft contract', () => {
     }
   });
 
-  it('rejects non-consecutive ingredient or step positions', () => {
+  it('rejects non-consecutive ingredient positions', () => {
     expect(
       extractRecipeDraftSchema.safeParse({
         ...validDraft,
@@ -723,12 +714,6 @@ describe('recipe extraction draft contract', () => {
             position: 0,
           },
         ],
-      }).success,
-    ).toBe(false);
-    expect(
-      extractRecipeDraftSchema.safeParse({
-        ...validDraft,
-        preparationSteps: [{ text: 'Gotuj', position: 1 }],
       }).success,
     ).toBe(false);
   });

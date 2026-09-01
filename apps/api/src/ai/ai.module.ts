@@ -11,6 +11,6 @@ import { RecipeExtractionService } from './recipe-extraction.service';
       useClass: OpenAiRecipeExtractionProvider,
     },
   ],
-  exports: [RecipeExtractionService],
+  exports: [RecipeExtractionService, RecipeExtractionProvider],
 })
 export class AiModule {}

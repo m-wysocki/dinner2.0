@@ -13,14 +13,20 @@ export interface ExtractedIngredient {
   note: string | null;
 }
 
-export interface ExtractedPreparationStep {
-  text: string;
-}
-
 export interface ExtractedRecipe {
   description: string;
   ingredients: ExtractedIngredient[];
-  preparationSteps: ExtractedPreparationStep[];
+}
+
+export interface IngredientMatchInput {
+  names: string[];
+  slugs: string[];
+}
+
+export interface IngredientMatch {
+  name: string;
+  slug: string | null;
+  bestCandidate: string | null;
 }
 
 @Injectable()
@@ -28,4 +34,7 @@ export abstract class RecipeExtractionProvider {
   abstract extractRecipe(
     input: RecipeExtractionInput,
   ): Promise<ExtractedRecipe>;
+  abstract matchIngredients(
+    input: IngredientMatchInput,
+  ): Promise<IngredientMatch[]>;
 }

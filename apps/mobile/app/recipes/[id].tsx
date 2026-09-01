@@ -95,18 +95,6 @@ export default function RecipeDetails() {
         <Text style={styles.muted}>{t('details.noIngredients')}</Text>
       )}
 
-      <Text style={styles.heading}>{t('details.preparation')}</Text>
-      {recipe.preparationSteps?.length ? (
-        recipe.preparationSteps.map((step, index) => (
-          <View key={step.id} style={styles.step}>
-            <Text style={styles.stepNumber}>{index + 1}.</Text>
-            <Text style={styles.item}>{step.text}</Text>
-          </View>
-        ))
-      ) : (
-        <Text style={styles.muted}>{t('details.noSteps')}</Text>
-      )}
-
       {deleteMutation.isError && (
         <Text style={styles.deleteError}>
           {t('details.deleteFailed')} {deleteMutation.error.message}
@@ -180,8 +168,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   item: { color: '#25352d', flex: 1, fontSize: 16, lineHeight: 24 },
-  step: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  stepNumber: { color: '#28734a', fontSize: 16, fontWeight: '700' },
   muted: { color: '#68736d' },
   error: { color: '#a43b32', fontSize: 17, fontWeight: '600' },
   button: {

@@ -12,7 +12,6 @@ describe('RecipesService', () => {
         servingCount: 4,
         createdAt: new Date('2026-08-29T12:00:00.000Z'),
         updatedAt: new Date('2026-08-29T12:00:00.000Z'),
-        preparationSteps: [],
       },
     ]);
     const service = new RecipesService({
@@ -31,7 +30,6 @@ describe('RecipesService', () => {
       where: { ownerId: 'owner-id' },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 100,
-      include: { preparationSteps: { orderBy: { position: 'asc' } } },
     });
   });
 
@@ -44,7 +42,6 @@ describe('RecipesService', () => {
       servingCount: 4,
       createdAt: new Date('2026-08-28T12:00:00.000Z'),
       updatedAt: new Date('2026-08-28T12:00:00.000Z'),
-      preparationSteps: [],
       ingredients: [],
     });
     const transaction = vi.fn((callback) => callback({ recipe: { create } }));
@@ -57,6 +54,7 @@ describe('RecipesService', () => {
       service.create('supabase-user-id', {
         title: 'Zupa',
         servingCount: 4,
+        sourceText: 'Składniki: pomidor.',
       }),
     ).resolves.toMatchObject({ title: 'Zupa', servingCount: 4 });
     expect(findUnique).toHaveBeenCalledWith({
@@ -70,14 +68,14 @@ describe('RecipesService', () => {
         title: 'Zupa',
         description: null,
         servingCount: 4,
+        sourceText: 'Składniki: pomidor.',
         ingredients: { create: [] },
-        preparationSteps: { create: [] },
       }),
-      include: { ingredients: true, preparationSteps: true },
+      include: { ingredients: true },
     });
   });
 
-  it('creates ordered preparation steps in the same transaction', async () => {
+  it('stores no source text when a recipe is created without it', async () => {
     const create = vi.fn().mockResolvedValue({
       id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
       title: 'Zupa',
@@ -85,45 +83,21 @@ describe('RecipesService', () => {
       servingCount: 4,
       createdAt: new Date('2026-08-28T12:00:00.000Z'),
       updatedAt: new Date('2026-08-28T12:00:00.000Z'),
-      preparationSteps: [
-        {
-          id: '5d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-          text: 'Pokrój warzywa',
-          position: 0,
-        },
-      ],
       ingredients: [],
     });
-    const transaction = vi.fn((callback) =>
-      callback({
-        recipe: { create },
-        ingredientCatalogEntry: {
-          findFirst: vi.fn().mockResolvedValue({ id: 'catalog-entry' }),
-        },
-      }),
-    );
+    const transaction = vi.fn((callback) => callback({ recipe: { create } }));
     const service = new RecipesService({
       user: { findUnique: vi.fn().mockResolvedValue({ id: 'owner-id' }) },
       $transaction: transaction,
     } as never);
 
-    await expect(
-      service.create('supabase-user-id', {
-        title: 'Zupa',
-        servingCount: 4,
-        preparationSteps: [{ text: 'Pokrój warzywa', position: 0 }],
-      }),
-    ).resolves.toMatchObject({
-      preparationSteps: [{ text: 'Pokrój warzywa', position: 0 }],
+    await service.create('supabase-user-id', {
+      title: 'Zupa',
+      servingCount: 4,
     });
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          ingredients: { create: [] },
-          preparationSteps: {
-            create: [{ text: 'Pokrój warzywa', position: 0 }],
-          },
-        }),
+        data: expect.objectContaining({ sourceText: null }),
       }),
     );
   });
@@ -148,13 +122,6 @@ describe('RecipesService', () => {
           position: 0,
         },
       ],
-      preparationSteps: [
-        {
-          id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-          text: 'Pokrój',
-          position: 0,
-        },
-      ],
     });
     const service = new RecipesService({
       user: { findUnique },
@@ -166,7 +133,6 @@ describe('RecipesService', () => {
     ).resolves.toMatchObject({
       title: 'Zupa',
       ingredients: [{ name: 'Pomidor', quantity: '2', unit: 'PCS' }],
-      preparationSteps: [{ text: 'Pokrój', position: 0 }],
     });
     expect(findFirst).toHaveBeenCalledWith({
       where: {
@@ -175,7 +141,6 @@ describe('RecipesService', () => {
       },
       include: {
         ingredients: { orderBy: { position: 'asc' } },
-        preparationSteps: { orderBy: { position: 'asc' } },
       },
     });
   });
@@ -230,13 +195,6 @@ describe('RecipesService', () => {
           position: 0,
         },
       ],
-      preparationSteps: [
-        {
-          id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-          text: 'Gotuj dłużej',
-          position: 0,
-        },
-      ],
     });
     const findFirst = vi.fn().mockResolvedValue({ id: 'recipe-id' });
     const transaction = vi.fn((callback) =>
@@ -268,14 +226,12 @@ describe('RecipesService', () => {
               position: 0,
             },
           ],
-          preparationSteps: [{ text: 'Gotuj dłużej', position: 0 }],
         },
       ),
     ).resolves.toMatchObject({
       title: 'Zupa ulepszona',
       servingCount: 6,
       ingredients: [{ name: 'Pomidor', quantity: '3' }],
-      preparationSteps: [{ text: 'Gotuj dłużej' }],
     });
     expect(findFirst).toHaveBeenCalledWith({
       where: {
@@ -304,12 +260,8 @@ describe('RecipesService', () => {
             },
           ],
         },
-        preparationSteps: {
-          deleteMany: {},
-          create: [{ text: 'Gotuj dłużej', position: 0 }],
-        },
       },
-      include: { ingredients: true, preparationSteps: true },
+      include: { ingredients: true },
     });
   });
 
@@ -332,7 +284,6 @@ describe('RecipesService', () => {
         title: 'Zupa',
         servingCount: 4,
         ingredients: [],
-        preparationSteps: [],
       }),
     ).rejects.toMatchObject({
       code: 'RECIPE_NOT_FOUND',

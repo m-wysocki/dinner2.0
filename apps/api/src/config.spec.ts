@@ -9,11 +9,12 @@ const validEnvironment = {
 };
 
 describe('environment configuration', () => {
-  it('validates and defaults the API port and model', () => {
+  it('validates and defaults the API port and models', () => {
     expect(validateEnvironment(validEnvironment)).toEqual({
       ...validEnvironment,
       API_PORT: 3000,
       OPENAI_MODEL: 'gpt-5.6-luna',
+      OPENAI_MATCH_MODEL: 'gpt-4o-mini',
     });
   });
 

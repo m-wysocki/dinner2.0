@@ -43,12 +43,12 @@ model Recipe {
   title        String
   description  String?
   servingCount Int
+  sourceText   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   owner            User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ingredients      RecipeIngredient[]
-  preparationSteps PreparationStep[]
 
   @@index([ownerId, createdAt])
 }
@@ -69,17 +69,6 @@ model RecipeIngredient {
 
   @@unique([recipeId, position])
   @@index([catalogEntryId])
-}
-
-model PreparationStep {
-  id       String @id @default(uuid())
-  recipeId String
-  text     String
-  position Int
-
-  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-
-  @@unique([recipeId, position])
 }
 
 model IngredientCatalogEntry {

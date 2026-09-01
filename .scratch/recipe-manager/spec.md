@@ -8,7 +8,7 @@ The project currently exists as a broad product idea without an executable found
 
 ## Solution
 
-Build a mobile-first recipe manager with a React Native/Expo client and an independent NestJS REST API. The first vertical slice lets an email-authenticated and administrator-activated user create recipes by pasting a title and recipe text, review the AI-extracted structure, and list, view, edit, and delete private recipes with structured ingredients and preparation steps.
+Build a mobile-first recipe manager with a React Native/Expo client and an independent NestJS REST API. The first vertical slice lets an email-authenticated and administrator-activated user create recipes by pasting a title and recipe text, review the AI-extracted structure, and list, view, edit, and delete private recipes with structured ingredients and a single description that covers the full preparation.
 
 The application supports Polish and English interface languages from the beginning, with Polish as the default. Supabase provides hosted PostgreSQL and authentication infrastructure. The mobile client communicates with application data only through the NestJS API.
 
@@ -29,9 +29,9 @@ The application supports Polish and English interface languages from the beginni
 13. As a user creating a recipe, I want to choose a canonical ingredient identity, so that equivalent ingredients can later be merged in shopping lists.
 14. As a user creating a recipe, I want to create a custom ingredient when the catalog has no suitable match, so that I am not blocked by the catalog.
 15. As a user creating a recipe, I want to edit an automatically suggested ingredient identity before saving, so that the stored identity is accurate.
-16. As a user creating a recipe, I want to add, remove, and reorder preparation steps, so that the recipe accurately represents the cooking process.
+16. As a user creating a recipe, I want the description to capture the complete preparation in a single readable text, so that the cooking method is part of the recipe without being split into separate steps.
 17. As a user, I want invalid or incomplete recipe data to be identified before saving, so that the database contains only valid recipes.
-18. As a user, I want a recipe and all its ingredients and steps to save atomically, so that I never see a partially saved recipe.
+18. As a user, I want a recipe and all its ingredients to save atomically, so that I never see a partially saved recipe.
 19. As an authenticated user, I want to see my recipe collection sorted from newest to oldest, so that recent recipes are easy to find.
 20. As a user with no recipes, I want a useful empty state with a create action, so that I know how to begin.
 21. As an authenticated user, I want to view recipe details, so that I can use a saved recipe while cooking.
@@ -43,11 +43,11 @@ The application supports Polish and English interface languages from the beginni
 27. As a user, I want to switch the interface language, so that I can use the application in English when needed.
 28. As a user, I want recipe content to remain in the language in which I entered it, so that my manually written content is not unexpectedly changed.
 29. As a user creating a recipe, I want to paste a complete recipe as text with only a title and serving count, so that I can save a structured recipe with minimal effort.
-30. As a user creating a recipe, I want the AI to extract ingredients, quantities, units, and preparation steps from my pasted text into the application's structure.
+30. As a user creating a recipe, I want the AI to extract ingredients, quantities, units, and a single clean description covering the preparation from my pasted text into the application's structure.
 31. As a user creating a recipe, I want to review and correct the extracted recipe before it is saved, so that AI errors never reach my collection unreviewed.
 32. As a user creating a recipe, I want unmatched ingredients to appear as proposed custom identities that I can accept or remap to the catalog, so that the stored identity is accurate.
 33. As a user, I want extraction to fail loudly without saving anything when the AI output cannot be validated, so that the database contains only valid recipes.
-34. As a user, I want my pasted recipe text retained with the recipe but not displayed as recipe content, so that I keep the original without clutter.
+34. As a user, I want my pasted recipe text shown in the review step for comparison, and retained with the recipe afterwards, so that I can verify the extraction against the original.
 35. As a user, I want the extracted content to remain in the language I pasted it in, so that my recipe is never translated.
 
 ## Implementation Decisions
@@ -78,9 +78,8 @@ The application supports Polish and English interface languages from the beginni
 ### Domain and data model
 
 - A `User` owns private recipes and custom ingredient identities.
-- A `Recipe` contains an owner, title, optional description, serving count, timestamps, and ordered child records.
+- A `Recipe` contains an owner, title, optional description, serving count, timestamps, and ordered child ingredients. The description carries the full preparation method in plain text.
 - A `RecipeIngredient` belongs to one recipe and stores a canonical ingredient reference, name snapshot, optional decimal quantity, canonical unit, optional note, and order.
-- A `PreparationStep` belongs to one recipe and stores text and order.
 - An `IngredientCatalogEntry` represents a canonical ingredient identity with localized Polish and English display names, an active state, and whether it is a system or custom entry.
 - System catalog entries are shared; custom entries are owned by one user.
 - A saved recipe ingredient must have a user-confirmed canonical ingredient identity.
@@ -90,7 +89,7 @@ The application supports Polish and English interface languages from the beginni
 - IDs for application entities use UUIDs.
 - Used catalog entries are not physically deleted; future administration may deactivate or merge them.
 - Recipe deletion is permanent in the first vertical slice.
-- Recipe creation and updates persist the recipe, ingredients, and steps atomically.
+- Recipe creation and updates persist the recipe and its ingredients atomically.
 
 ### API shape
 
@@ -113,13 +112,13 @@ All recipe endpoints require authentication and enforce ownership in the backend
 - Recipe creation collects a title, recipe source text, and serving count; the structured form is used only when editing an existing recipe.
 - `POST /api/v1/recipes/extract` returns a validated, non-persisted draft; saving happens only through `POST /api/v1/recipes` after user review.
 - The AI call is isolated behind a provider abstraction in the API; OpenAI is the first provider and the API key never reaches the client.
-- The AI extracts ingredient names, quantities, units, and preparation steps; the server resolves canonical identities deterministically against the catalog using both Polish and English display names.
+- The AI extracts ingredient names, quantities, units, and a single clean description that includes the full preparation; the name excludes size and quality descriptors (moved to the ingredient note), and approximate or range amounts such as "do 300 g" still yield a numeric quantity; the server resolves canonical identities deterministically against the catalog using both Polish and English display names.
 - Ingredient units map to canonical units when possible; unrecognized units use `OTHER` and preserve the original text in the ingredient note.
-- Unmatched ingredients are presented in review as proposed custom identities for the user to accept or remap; custom entries are created only when the user confirms them.
-- The AI also produces a clean description from the source text; extraction output is validated with Zod before it is returned.
+- Unmatched ingredients are presented in review as proposed custom identities; every ingredient in review offers both actions — saving it as a new custom identity or remapping it to an existing catalog entry — and custom entries are created only when the user confirms them.
+- The description produced by the AI covers the complete preparation in the language of the source text, never as separated numbered steps; extraction output is validated with Zod before it is returned.
 - Extraction keeps the language of the pasted text; content is never translated.
 - Failed or invalid extraction returns a loud, retryable error and never persists anything.
-- The recipe source text is stored with the recipe for provenance and is not displayed as recipe content.
+- The recipe source text is stored with the recipe for provenance and is shown during review for comparison; it is not displayed as recipe content on the details screen.
 
 ### Mobile navigation
 
@@ -151,7 +150,7 @@ The primary test seam is the REST API boundary: HTTP request, JWT authentication
 0. Create the GitHub repository, initialize Git, and configure a safe `.gitignore`.
 1. Repository foundation, workspace tooling, TypeScript, linting, formatting, environment validation, Supabase connection, and CI.
 2. Authentication integration, application user record, email confirmation, pending/active access checks, session persistence, and authenticated mobile shell.
-3. Recipe, recipe ingredient, preparation step, and ingredient catalog schema with seed data.
+3. Recipe, recipe ingredient, and ingredient catalog schema with seed data.
 4. Recipe API with ownership checks and integration tests.
 5. Mobile recipe list, empty state, create form, details, edit, and delete flows.
 6. Ingredient identity selection/custom creation, quantity and unit editing, and validation.

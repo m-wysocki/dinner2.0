@@ -21,7 +21,6 @@ describe('RecipeExtractionService', () => {
         { name: 'Mąka', quantity: '200', unit: 'g', note: null },
         { name: 'Śmietana', quantity: null, unit: 'szklanka', note: null },
       ],
-      preparationSteps: [{ text: 'Gotuj pomidory' }],
     });
     const service = createService({ extractRecipe });
 
@@ -46,7 +45,6 @@ describe('RecipeExtractionService', () => {
           position: 2,
         },
       ],
-      preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
     });
     expect(extractRecipe).toHaveBeenCalledWith({
       title: 'Zupa pomidorowa',
@@ -62,7 +60,6 @@ describe('RecipeExtractionService', () => {
       ingredients: [
         { name: 'Pomidor', quantity: '2', unit: 'PCS', note: 'dojrzały' },
       ],
-      preparationSteps: [],
     });
     const service = createService({ extractRecipe });
 
@@ -87,7 +84,6 @@ describe('RecipeExtractionService', () => {
       ingredients: [
         { name: 'Pomidor', quantity: 'abc', unit: 'PCS', note: null },
       ],
-      preparationSteps: [],
     });
     const service = createService({ extractRecipe });
 
@@ -101,7 +97,6 @@ describe('RecipeExtractionService', () => {
     const extractRecipe = vi.fn().mockResolvedValue({
       description: ' ',
       ingredients: [],
-      preparationSteps: [],
     });
     const service = createService({ extractRecipe });
 

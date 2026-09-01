@@ -72,22 +72,37 @@ const pl = {
   'confirm.invalidLink': 'Link potwierdzający jest nieprawidłowy.',
 
   'create.title': 'Nowy przepis',
+  'create.sourceTextLabel': 'Treść przepisu',
+  'create.sourceTextPlaceholder':
+    'Wklej pełną treść przepisu, np. z notatki albo innej strony',
+  'create.servingCount': 'Liczba porcji',
+  'create.servingCountPlaceholder': 'Np. 4',
+  'create.extract': 'Wyodrębnij przepis',
+  'create.extracting': 'Wyodrębnianie przepisu...',
+  'create.extractFailed':
+    'Nie udało się wyodrębnić przepisu. Spróbuj ponownie.',
+  'create.inputRequired': 'Podaj tytuł, treść przepisu i liczbę porcji.',
   'create.savedTitle': 'Przepis zapisany',
   'create.savedMessage':
     'Przepis na {servings} został dodany do Twojej kolekcji.',
   'create.submit': 'Zapisz przepis',
+
+  'review.title': 'Przejrzyj przepis',
+  'review.originalRecipe': 'Oryginalny przepis',
+  'review.originalHint':
+    'Twój wklejony tekst dla porównania. Popraw wyodrębnione dane poniżej.',
+  'review.proposalText':
+    'Nieznany składnik „{name}”. Dodaj jako nowy własny składnik albo wybierz istniejący z katalogu.',
 
   'details.notFound': 'Nie znaleziono przepisu.',
   'details.loadFailed': 'Nie udało się pobrać przepisu.',
   'details.edit': 'Edytuj',
   'details.ingredients': 'Składniki',
   'details.noIngredients': 'Brak składników.',
-  'details.preparation': 'Przygotowanie',
-  'details.noSteps': 'Brak kroków przygotowania.',
   'details.deleteFailed': 'Nie udało się usunąć przepisu.',
   'details.deleteQuestion': 'Usunąć przepis?',
   'details.deleteWarning':
-    'Przepis zostanie trwale usunięty wraz ze składnikami i krokami.',
+    'Przepis zostanie trwale usunięty wraz ze składnikami.',
   'details.deleting': 'Usuwanie...',
   'details.delete': 'Usuń',
   'details.deleteRecipe': 'Usuń przepis',
@@ -112,19 +127,14 @@ const pl = {
   'form.moveDown': 'W dół',
   'form.removeIngredient': 'Usuń składnik',
   'form.addIngredient': 'Dodaj składnik',
+  'form.saveAsNewIngredient': 'Dodaj jako nowy składnik',
   'form.customIngredientA11y': 'Nazwa własnego składnika',
   'form.customIngredientPlaceholder': 'Nowy własny składnik',
   'form.createCustomIngredient': 'Utwórz własny składnik',
-  'form.preparation': 'Przygotowanie',
-  'form.stepA11y': 'Krok przygotowania {number}',
-  'form.stepPlaceholder': 'Opisz krok przygotowania',
-  'form.removeStep': 'Usuń krok',
-  'form.addStep': 'Dodaj krok',
   'form.errorIdentity':
     'Wybierz kanoniczny składnik z katalogu dla każdej pozycji.',
   'form.errorQuantity':
     'Podaj ilość jako liczbę, maksymalnie z sześcioma miejscami po przecinku, albo zostaw ją pustą.',
-  'form.errorStep': 'Każdy krok przygotowania musi zawierać treść.',
   'form.errorBasics': 'Podaj tytuł i prawidłową liczbę porcji.',
   'form.saveFailed': 'Nie udało się zapisać przepisu.',
   'form.addIngredientFailed': 'Nie udało się dodać składnika.',
@@ -218,22 +228,37 @@ const en: Record<TranslationKey, string> = {
   'confirm.invalidLink': 'The confirmation link is invalid.',
 
   'create.title': 'New recipe',
+  'create.sourceTextLabel': 'Recipe text',
+  'create.sourceTextPlaceholder':
+    'Paste the full recipe text, e.g. from a note or another page',
+  'create.servingCount': 'Number of servings',
+  'create.servingCountPlaceholder': 'e.g. 4',
+  'create.extract': 'Extract recipe',
+  'create.extracting': 'Extracting recipe...',
+  'create.extractFailed': 'Could not extract the recipe. Try again.',
+  'create.inputRequired':
+    'Enter a title, the recipe text, and the number of servings.',
   'create.savedTitle': 'Recipe saved',
   'create.savedMessage':
     'The recipe for {servings} was added to your collection.',
   'create.submit': 'Save recipe',
+
+  'review.title': 'Review the recipe',
+  'review.originalRecipe': 'Original recipe',
+  'review.originalHint':
+    'The recipe text you pasted, for comparison. Correct the extracted data below.',
+  'review.proposalText':
+    'Unknown ingredient "{name}". Add it as a new custom ingredient or choose an existing one from the catalog.',
 
   'details.notFound': 'Recipe not found.',
   'details.loadFailed': 'Could not load the recipe.',
   'details.edit': 'Edit',
   'details.ingredients': 'Ingredients',
   'details.noIngredients': 'No ingredients.',
-  'details.preparation': 'Preparation',
-  'details.noSteps': 'No preparation steps.',
   'details.deleteFailed': 'Could not delete the recipe.',
   'details.deleteQuestion': 'Delete recipe?',
   'details.deleteWarning':
-    'The recipe will be permanently deleted along with its ingredients and steps.',
+    'The recipe will be permanently deleted along with its ingredients.',
   'details.deleting': 'Deleting...',
   'details.delete': 'Delete',
   'details.deleteRecipe': 'Delete recipe',
@@ -258,19 +283,14 @@ const en: Record<TranslationKey, string> = {
   'form.moveDown': 'Move down',
   'form.removeIngredient': 'Remove ingredient',
   'form.addIngredient': 'Add ingredient',
+  'form.saveAsNewIngredient': 'Add as new ingredient',
   'form.customIngredientA11y': 'Custom ingredient name',
   'form.customIngredientPlaceholder': 'New custom ingredient',
   'form.createCustomIngredient': 'Create custom ingredient',
-  'form.preparation': 'Preparation',
-  'form.stepA11y': 'Preparation step {number}',
-  'form.stepPlaceholder': 'Describe the preparation step',
-  'form.removeStep': 'Remove step',
-  'form.addStep': 'Add step',
   'form.errorIdentity':
     'Choose a canonical ingredient from the catalog for every entry.',
   'form.errorQuantity':
     'Enter the quantity as a number, up to six decimal places, or leave it empty.',
-  'form.errorStep': 'Every preparation step must have text.',
   'form.errorBasics': 'Enter a title and a valid number of servings.',
   'form.saveFailed': 'Could not save the recipe.',
   'form.addIngredientFailed': 'Could not add the ingredient.',

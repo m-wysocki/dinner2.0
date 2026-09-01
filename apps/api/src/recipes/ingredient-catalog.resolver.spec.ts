@@ -3,10 +3,12 @@ import {
   IngredientCatalogResolver,
   normalizeIngredientName,
 } from './ingredient-catalog.resolver';
+import type { RecipeExtractionProvider } from '../ai/recipe-extraction.provider';
 import type { RawExtractRecipeDraft } from '@dinner/shared';
 
 interface FakeCatalogEntry {
   id: string;
+  slug: string;
   namePl: string;
   nameEn: string;
   isSystem: boolean;
@@ -20,10 +22,15 @@ function entry(
   namePl: string,
   nameEn: string,
   createdAt: string,
-  options: { isSystem?: boolean; ownerId?: string | null } = {},
+  options: {
+    isSystem?: boolean;
+    ownerId?: string | null;
+    slug?: string;
+  } = {},
 ): FakeCatalogEntry {
   return {
     id,
+    slug: options.slug ?? id,
     namePl,
     nameEn,
     isSystem: options.isSystem ?? true,
@@ -33,7 +40,11 @@ function entry(
   };
 }
 
-function createResolver(entries: FakeCatalogEntry[], ownerId = 'owner-a') {
+function createResolver(
+  entries: FakeCatalogEntry[],
+  ownerId = 'owner-a',
+  provider: { matchIngredients?: unknown } = {},
+) {
   const findMany = vi.fn(
     async ({ where }: { where: { isActive?: boolean; OR?: unknown[] } }) =>
       entries.filter((candidate) => {
@@ -49,7 +60,13 @@ function createResolver(entries: FakeCatalogEntry[], ownerId = 'owner-a') {
     },
     ingredientCatalogEntry: { findMany },
   };
-  const resolver = new IngredientCatalogResolver(prisma as never);
+  const resolver = new IngredientCatalogResolver(
+    prisma as never,
+    {
+      matchIngredients:
+        provider.matchIngredients ?? vi.fn().mockResolvedValue([]),
+    } as unknown as RecipeExtractionProvider,
+  );
   return { resolver, findMany };
 }
 
@@ -372,7 +389,6 @@ describe('IngredientCatalogResolver', () => {
           position: 1,
         },
       ],
-      preparationSteps: [{ text: 'Gotuj', position: 0 }],
     } as RawExtractRecipeDraft;
 
     await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
@@ -382,6 +398,7 @@ describe('IngredientCatalogResolver', () => {
           name: 'Mąka',
           catalogEntryId: 'f9905d8b-55b4-409a-908e-c55b69bd392d',
           customProposal: null,
+          bestCandidate: null,
           quantity: '200',
           unit: 'G',
           note: null,
@@ -391,6 +408,7 @@ describe('IngredientCatalogResolver', () => {
           name: 'Szafran',
           catalogEntryId: null,
           customProposal: { namePl: 'Szafran', nameEn: 'Szafran' },
+          bestCandidate: null,
           quantity: null,
           unit: 'OTHER',
           note: null,
@@ -398,5 +416,267 @@ describe('IngredientCatalogResolver', () => {
         },
       ],
     });
+  });
+
+  it('sends only unmatched names to the AI provider and applies a matched slug', async () => {
+    const matchIngredients = vi
+      .fn()
+      .mockResolvedValue([
+        { name: 'Marcheweczka', slug: 'carrot', bestCandidate: null },
+      ]);
+    const { resolver } = createResolver(
+      [
+        entry(
+          '11111111-1111-4111-8111-111111111111',
+          'Mąka',
+          'Flour',
+          '2026-01-01',
+          {
+            slug: 'flour',
+          },
+        ),
+        entry(
+          '22222222-2222-4222-8222-222222222222',
+          'Marchewka',
+          'Carrot',
+          '2026-01-01',
+          {
+            slug: 'carrot',
+          },
+        ),
+      ],
+      'owner-a',
+      { matchIngredients },
+    );
+    const draft = {
+      title: 'Zupa',
+      description: 'Kremowa zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Mąka',
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Marcheweczka',
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 1,
+        },
+      ],
+    } as RawExtractRecipeDraft;
+
+    await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
+      ...draft,
+      ingredients: [
+        {
+          name: 'Mąka',
+          catalogEntryId: '11111111-1111-4111-8111-111111111111',
+          customProposal: null,
+          bestCandidate: null,
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Marcheweczka',
+          catalogEntryId: '22222222-2222-4222-8222-222222222222',
+          customProposal: null,
+          bestCandidate: null,
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 1,
+        },
+      ],
+    });
+    expect(matchIngredients).toHaveBeenCalledWith({
+      names: ['Marcheweczka'],
+      slugs: expect.arrayContaining(['flour', 'carrot']),
+    });
+  });
+
+  it('keeps a proposal with bestCandidate when the AI is unsure', async () => {
+    const matchIngredients = vi
+      .fn()
+      .mockResolvedValue([
+        { name: 'Marcheweczka', slug: null, bestCandidate: 'carrot' },
+      ]);
+    const { resolver } = createResolver(
+      [
+        entry('carrot-entry', 'Marchewka', 'Carrot', '2026-01-01', {
+          slug: 'carrot',
+        }),
+      ],
+      'owner-a',
+      { matchIngredients },
+    );
+    const draft = {
+      title: 'Zupa',
+      description: 'Kremowa zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Marcheweczka',
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+      ],
+    } as RawExtractRecipeDraft;
+
+    await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
+      ...draft,
+      ingredients: [
+        {
+          name: 'Marcheweczka',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Marcheweczka', nameEn: 'Marcheweczka' },
+          bestCandidate: 'carrot',
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+      ],
+    });
+  });
+
+  it('rejects slugs not present in the catalog', async () => {
+    const matchIngredients = vi
+      .fn()
+      .mockResolvedValue([
+        { name: 'Szafran', slug: 'hallucinated-slug', bestCandidate: null },
+      ]);
+    const { resolver } = createResolver(
+      [entry('flour-entry', 'Mąka', 'Flour', '2026-01-01', { slug: 'flour' })],
+      'owner-a',
+      { matchIngredients },
+    );
+    const draft = {
+      title: 'Zupa',
+      description: 'Zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Szafran',
+          quantity: null,
+          unit: 'OTHER',
+          note: null,
+          position: 0,
+        },
+      ],
+    } as RawExtractRecipeDraft;
+
+    await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
+      ...draft,
+      ingredients: [
+        {
+          name: 'Szafran',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Szafran', nameEn: 'Szafran' },
+          bestCandidate: null,
+          quantity: null,
+          unit: 'OTHER',
+          note: null,
+          position: 0,
+        },
+      ],
+    });
+  });
+
+  it('falls back to plain proposals when the AI provider fails', async () => {
+    const matchIngredients = vi
+      .fn()
+      .mockRejectedValue(new Error('provider down'));
+    const { resolver } = createResolver(
+      [entry('flour-entry', 'Mąka', 'Flour', '2026-01-01', { slug: 'flour' })],
+      'owner-a',
+      { matchIngredients },
+    );
+    const draft = {
+      title: 'Zupa',
+      description: 'Zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Marcheweczka',
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+      ],
+    } as RawExtractRecipeDraft;
+
+    await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
+      ...draft,
+      ingredients: [
+        {
+          name: 'Marcheweczka',
+          catalogEntryId: null,
+          customProposal: { namePl: 'Marcheweczka', nameEn: 'Marcheweczka' },
+          bestCandidate: null,
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 0,
+        },
+      ],
+    });
+  });
+
+  it('skips the AI provider entirely when nothing is left unmatched', async () => {
+    const matchIngredients = vi.fn();
+    const { resolver } = createResolver(
+      [
+        entry(
+          '11111111-1111-4111-8111-111111111111',
+          'Mąka',
+          'Flour',
+          '2026-01-01',
+          { slug: 'flour' },
+        ),
+      ],
+      'owner-a',
+      { matchIngredients },
+    );
+    const draft = {
+      title: 'Zupa',
+      description: 'Zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Mąka',
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 0,
+        },
+      ],
+    } as RawExtractRecipeDraft;
+
+    await expect(resolver.resolveDraft('auth-user-a', draft)).resolves.toEqual({
+      ...draft,
+      ingredients: [
+        {
+          name: 'Mąka',
+          catalogEntryId: '11111111-1111-4111-8111-111111111111',
+          customProposal: null,
+          bestCandidate: null,
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 0,
+        },
+      ],
+    });
+    expect(matchIngredients).not.toHaveBeenCalled();
   });
 });

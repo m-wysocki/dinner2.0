@@ -68,7 +68,6 @@ export default function EditRecipe() {
             unit: ingredient.unit,
             note: ingredient.note ?? '',
           })),
-          preparationSteps: recipe.preparationSteps.map((step) => step.text),
         }}
         submitLabel={t('edit.submit')}
         onSubmit={async (input) => {
@@ -77,7 +76,6 @@ export default function EditRecipe() {
             description: input.description,
             servingCount: input.servingCount,
             ingredients: input.ingredients ?? [],
-            preparationSteps: input.preparationSteps ?? [],
           });
           queryClient.invalidateQueries({ queryKey: ['recipe', recipe.id] });
           queryClient.invalidateQueries({ queryKey: ['recipes'] });

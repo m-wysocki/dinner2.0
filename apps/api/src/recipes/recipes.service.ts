@@ -30,7 +30,6 @@ export class RecipesService {
       where: { ownerId: owner.id },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: RECIPE_COLLECTION_LIMIT,
-      include: { preparationSteps: { orderBy: { position: 'asc' } } },
     });
 
     return recipes.map((recipe) =>
@@ -41,11 +40,6 @@ export class RecipesService {
         servingCount: recipe.servingCount,
         createdAt: recipe.createdAt.toISOString(),
         updatedAt: recipe.updatedAt.toISOString(),
-        preparationSteps: recipe.preparationSteps.map((step) => ({
-          id: step.id,
-          text: step.text,
-          position: step.position,
-        })),
       }),
     );
   }
@@ -63,7 +57,6 @@ export class RecipesService {
       where: { id: recipeId, ownerId: owner.id },
       include: {
         ingredients: { orderBy: { position: 'asc' } },
-        preparationSteps: { orderBy: { position: 'asc' } },
       },
     });
 
@@ -85,11 +78,6 @@ export class RecipesService {
       ),
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
-      preparationSteps: recipe.preparationSteps.map((step) => ({
-        id: step.id,
-        text: step.text,
-        position: step.position,
-      })),
     });
   }
 
@@ -109,21 +97,15 @@ export class RecipesService {
           title: input.title,
           description: input.description || null,
           servingCount: input.servingCount,
+          sourceText: input.sourceText || null,
           ingredients: {
             create: (input.ingredients ?? []).map((ingredient) =>
               this.toIngredientCreate(ingredient),
             ),
           },
-          preparationSteps: {
-            create: (input.preparationSteps ?? []).map((step) => ({
-              text: step.text,
-              position: step.position,
-            })),
-          },
         },
         include: {
           ingredients: true,
-          preparationSteps: true,
         },
       });
     });
@@ -138,11 +120,6 @@ export class RecipesService {
       ingredients: recipe.ingredients.map((ingredient) =>
         this.toIngredientResponse(ingredient),
       ),
-      preparationSteps: (recipe.preparationSteps ?? []).map((step) => ({
-        id: step.id,
-        text: step.text,
-        position: step.position,
-      })),
     });
   }
 
@@ -187,17 +164,9 @@ export class RecipesService {
               this.toIngredientCreate(ingredient),
             ),
           },
-          preparationSteps: {
-            deleteMany: {},
-            create: input.preparationSteps.map((step) => ({
-              text: step.text,
-              position: step.position,
-            })),
-          },
         },
         include: {
           ingredients: true,
-          preparationSteps: true,
         },
       });
     });
@@ -212,11 +181,6 @@ export class RecipesService {
       ),
       createdAt: recipe.createdAt.toISOString(),
       updatedAt: recipe.updatedAt.toISOString(),
-      preparationSteps: recipe.preparationSteps.map((step) => ({
-        id: step.id,
-        text: step.text,
-        position: step.position,
-      })),
     });
   }
 

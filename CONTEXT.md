@@ -15,7 +15,7 @@ _Avoid_: Cookbook, catalog
 ## Recipes
 
 **Recipe**:
-A structured cooking instruction owned by a user, containing its descriptive information, ingredients, and preparation steps.
+A structured cooking instruction owned by a user, containing its descriptive information and ingredients.
 _Avoid_: Dish, meal
 
 **Ingredient**:
@@ -26,10 +26,6 @@ _Avoid_: Ingredient string, item
 The language-independent unit identity used for an ingredient quantity, regardless of how that unit is displayed to the user.
 _Avoid_: Unit label, localized unit
 
-**Preparation step**:
-One ordered instruction describing part of a recipe's preparation.
-_Avoid_: Instruction, recipe step text
-
 **Manual recipe creation**:
 The workflow in which a user enters recipe information directly instead of importing it from another source.
 _Avoid_: Recipe import, recipe scan
@@ -39,7 +35,7 @@ The workflow in which a user pastes a complete recipe as text and an AI service 
 _Avoid_: AI import, automated recipe entry
 
 **Recipe source text**:
-The unprocessed text a user pastes when creating a recipe through AI-assisted creation; it is retained with the recipe for provenance but is not displayed as recipe content.
+The unprocessed text a user pastes when creating a recipe through AI-assisted creation; it is retained with the recipe for provenance and is shown during review, but is not displayed as recipe content.
 _Avoid_: Description, raw description, paste field
 
 **Serving count**:

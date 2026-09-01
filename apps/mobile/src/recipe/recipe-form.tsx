@@ -2,6 +2,8 @@ import {
   createRecipeRequestSchema,
   type CanonicalUnit,
   type CreateRecipeRequest,
+  type CustomIngredientProposal,
+  type ExtractRecipeDraft,
   type IngredientCatalogEntry,
 } from '@dinner/shared';
 import { useEffect, useState } from 'react';
@@ -27,8 +29,26 @@ export interface RecipeFormValues {
     quantity: string;
     unit: CanonicalUnit;
     note: string;
+    customProposal?: CustomIngredientProposal | null;
   }>;
-  preparationSteps: string[];
+}
+
+export function recipeFormValuesFromDraft(
+  draft: ExtractRecipeDraft,
+): RecipeFormValues {
+  return {
+    title: draft.title,
+    description: draft.description,
+    servingCount: String(draft.servingCount),
+    ingredients: draft.ingredients.map((ingredient) => ({
+      catalogEntryId: ingredient.catalogEntryId ?? undefined,
+      name: ingredient.name,
+      quantity: ingredient.quantity ?? '',
+      unit: ingredient.unit,
+      note: ingredient.note ?? '',
+      customProposal: ingredient.customProposal,
+    })),
+  };
 }
 
 interface RecipeFormProps {
@@ -60,9 +80,6 @@ export function RecipeForm({
   const [description, setDescription] = useState(initialValues.description);
   const [servingCount, setServingCount] = useState(initialValues.servingCount);
   const [ingredients, setIngredients] = useState(initialValues.ingredients);
-  const [preparationSteps, setPreparationSteps] = useState(
-    initialValues.preparationSteps,
-  );
   const [catalog, setCatalog] = useState<IngredientCatalogEntry[]>([]);
   const [customName, setCustomName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -87,10 +104,6 @@ export function RecipeForm({
         note: ingredient.note.trim() || undefined,
         position,
       })),
-      preparationSteps: preparationSteps.map((text, position) => ({
-        text,
-        position,
-      })),
     });
 
     if (!parsed.success) {
@@ -100,17 +113,12 @@ export function RecipeForm({
       const hasInvalidQuantity = parsed.error.issues.some(
         (issue) => issue.path.at(-1) === 'quantity',
       );
-      const hasInvalidStep = parsed.error.issues.some(
-        (issue) => issue.path[0] === 'preparationSteps',
-      );
       setError(
         hasMissingIdentity
           ? t('form.errorIdentity')
           : hasInvalidQuantity
             ? t('form.errorQuantity')
-            : hasInvalidStep
-              ? t('form.errorStep')
-              : t('form.errorBasics'),
+            : t('form.errorBasics'),
       );
       return;
     }
@@ -136,6 +144,30 @@ export function RecipeForm({
       });
       setCatalog((current) => [...current, entry]);
       setCustomName('');
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : t('form.addIngredientFailed'),
+      );
+    }
+  }
+
+  async function saveAsNew(index: number) {
+    const name = ingredients[index].name.trim();
+    if (!name) {
+      return;
+    }
+    try {
+      const entry = await apiClient.createCustomIngredient({ name });
+      setCatalog((current) => [...current, entry]);
+      setIngredients((current) =>
+        current.map((item, itemIndex) =>
+          itemIndex === index
+            ? { ...item, catalogEntryId: entry.id, customProposal: null }
+            : item,
+        ),
+      );
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -184,7 +216,19 @@ export function RecipeForm({
             onChangeText={(name) =>
               setIngredients((current) =>
                 current.map((item, itemIndex) =>
-                  itemIndex === index ? { ...item, name } : item,
+                  itemIndex === index
+                    ? {
+                        ...item,
+                        name,
+                        customProposal: item.customProposal
+                          ? {
+                              ...item.customProposal,
+                              namePl: name,
+                              nameEn: name,
+                            }
+                          : item.customProposal,
+                      }
+                    : item,
                 ),
               )
             }
@@ -222,6 +266,15 @@ export function RecipeForm({
             style={styles.input}
             value={ingredient.note}
           />
+          {!ingredient.catalogEntryId && ingredient.customProposal && (
+            <View style={styles.proposal}>
+              <Text style={styles.proposalText}>
+                {t('review.proposalText', {
+                  name: ingredient.customProposal.namePl,
+                })}
+              </Text>
+            </View>
+          )}
           <View style={styles.catalog}>
             {UNITS.map((unit) => (
               <Pressable
@@ -251,7 +304,11 @@ export function RecipeForm({
                   setIngredients((current) =>
                     current.map((item, itemIndex) =>
                       itemIndex === index
-                        ? { ...item, catalogEntryId: entry.id }
+                        ? {
+                            ...item,
+                            catalogEntryId: entry.id,
+                            customProposal: null,
+                          }
                         : item,
                     ),
                   )
@@ -266,7 +323,7 @@ export function RecipeForm({
               </Pressable>
             ))}
           </View>
-          <View style={styles.stepActions}>
+          <View style={styles.ingredientActions}>
             <Pressable
               disabled={index === 0}
               onPress={() =>
@@ -298,6 +355,12 @@ export function RecipeForm({
               style={styles.action}
             >
               <Text>{t('form.moveDown')}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => void saveAsNew(index)}
+              style={styles.action}
+            >
+              <Text>{t('form.saveAsNewIngredient')}</Text>
             </Pressable>
             <Pressable
               onPress={() =>
@@ -335,75 +398,6 @@ export function RecipeForm({
         style={styles.secondaryButton}
       >
         <Text>{t('form.createCustomIngredient')}</Text>
-      </Pressable>
-      <Text style={styles.sectionTitle}>{t('form.preparation')}</Text>
-      {preparationSteps.map((step, index) => (
-        <View key={index} style={styles.step}>
-          <TextInput
-            accessibilityLabel={t('form.stepA11y', { number: index + 1 })}
-            multiline
-            onChangeText={(text) =>
-              setPreparationSteps((current) =>
-                current.map((item, itemIndex) =>
-                  itemIndex === index ? text : item,
-                ),
-              )
-            }
-            placeholder={t('form.stepPlaceholder')}
-            style={[styles.input, styles.description]}
-            value={step}
-          />
-          <View style={styles.stepActions}>
-            <Pressable
-              disabled={index === 0}
-              onPress={() =>
-                setPreparationSteps((current) => {
-                  const next = [...current];
-                  [next[index - 1], next[index]] = [
-                    next[index],
-                    next[index - 1],
-                  ];
-                  return next;
-                })
-              }
-              style={styles.action}
-            >
-              <Text>{t('form.moveUp')}</Text>
-            </Pressable>
-            <Pressable
-              disabled={index === preparationSteps.length - 1}
-              onPress={() =>
-                setPreparationSteps((current) => {
-                  const next = [...current];
-                  [next[index], next[index + 1]] = [
-                    next[index + 1],
-                    next[index],
-                  ];
-                  return next;
-                })
-              }
-              style={styles.action}
-            >
-              <Text>{t('form.moveDown')}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() =>
-                setPreparationSteps((current) =>
-                  current.filter((_, itemIndex) => itemIndex !== index),
-                )
-              }
-              style={styles.action}
-            >
-              <Text>{t('form.removeStep')}</Text>
-            </Pressable>
-          </View>
-        </View>
-      ))}
-      <Pressable
-        onPress={() => setPreparationSteps((current) => [...current, ''])}
-        style={styles.secondaryButton}
-      >
-        <Text>{t('form.addStep')}</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
       <Pressable
@@ -454,8 +448,16 @@ const styles = StyleSheet.create({
   catalog: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   catalogEntry: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 6 },
   selected: { backgroundColor: '#b7d7bf', borderRadius: 6, padding: 6 },
-  step: { marginTop: 8 },
-  stepActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
+  proposal: {
+    backgroundColor: '#fdf3e3',
+    borderColor: '#e0c98a',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 8,
+    padding: 10,
+  },
+  proposalText: { color: '#6b5a2e', fontSize: 14, lineHeight: 20 },
+  ingredientActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
   action: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 8 },
   secondaryButton: {
     alignItems: 'center',

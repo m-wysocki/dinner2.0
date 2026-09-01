@@ -49,13 +49,6 @@ function recipeDetails(): RecipeDetailsResponse {
         position: 0,
       },
     ],
-    preparationSteps: [
-      {
-        id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-        text: 'Pokrój',
-        position: 0,
-      },
-    ],
   };
 }
 
@@ -125,9 +118,6 @@ describe('EditRecipe screen', () => {
               quantity: '2',
               position: 0,
             }),
-          ]),
-          preparationSteps: expect.arrayContaining([
-            expect.objectContaining({ text: 'Pokrój', position: 0 }),
           ]),
         }),
       ),

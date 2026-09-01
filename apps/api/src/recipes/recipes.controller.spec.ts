@@ -60,7 +60,6 @@ describe('RecipesController', () => {
           title: 'Zupa ulepszona',
           servingCount: 6,
           ingredients: [],
-          preparationSteps: [],
         },
       ),
     ).resolves.toEqual({ id: 'recipe-id' });
@@ -68,7 +67,6 @@ describe('RecipesController', () => {
       title: 'Zupa ulepszona',
       servingCount: 6,
       ingredients: [],
-      preparationSteps: [],
     });
   });
 
@@ -91,14 +89,12 @@ describe('RecipesController', () => {
       description: 'Zupa.',
       servingCount: 4,
       ingredients: [],
-      preparationSteps: [],
     });
     const resolveDraft = vi.fn().mockResolvedValue({
       title: 'Zupa',
       description: 'Zupa.',
       servingCount: 4,
       ingredients: [],
-      preparationSteps: [],
     });
     const controller = new RecipesController(
       { list: vi.fn() } as never,
@@ -120,7 +116,6 @@ describe('RecipesController', () => {
       description: 'Zupa.',
       servingCount: 4,
       ingredients: [],
-      preparationSteps: [],
     });
     expect(extract).toHaveBeenCalledWith({
       title: 'Zupa',
@@ -132,7 +127,6 @@ describe('RecipesController', () => {
       description: 'Zupa.',
       servingCount: 4,
       ingredients: [],
-      preparationSteps: [],
     });
   });
 });

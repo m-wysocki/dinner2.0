@@ -1,13 +1,20 @@
 import { type RecipeResponse } from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { apiClient } from '../src/api/client';
-import { getAuthenticatedState } from '../src/auth/session';
-import { formatServings, useI18n } from '../src/i18n/i18n';
-import { RecipeForm } from '../src/recipe/recipe-form';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { apiClient } from '../../src/api/client';
+import { getAuthenticatedState } from '../../src/auth/session';
+import { formatServings, useI18n } from '../../src/i18n/i18n';
+import {
+  clearCreateDraft,
+  getCreateDraft,
+} from '../../src/recipe/create-draft';
+import {
+  RecipeForm,
+  recipeFormValuesFromDraft,
+} from '../../src/recipe/recipe-form';
 
-export default function CreateRecipe() {
+export default function CreateReview() {
   const { t, language } = useI18n();
   const state = getAuthenticatedState();
   const [savedRecipe, setSavedRecipe] = useState<RecipeResponse | null>(null);
@@ -20,9 +27,15 @@ export default function CreateRecipe() {
     return <Redirect href="/user" />;
   }
 
+  const stored = getCreateDraft();
+
+  if (!stored) {
+    return <Redirect href="/create-recipe" />;
+  }
+
   if (savedRecipe) {
     return (
-      <View style={styles.container}>
+      <View style={styles.savedContainer}>
         <Text style={styles.title}>{t('create.savedTitle')}</Text>
         <Text style={styles.savedTitle}>{savedRecipe.title}</Text>
         <Text style={styles.savedMessage}>
@@ -43,27 +56,24 @@ export default function CreateRecipe() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('create.title')}</Text>
+      <Text style={styles.title}>{t('review.title')}</Text>
+      <ScrollView style={styles.originalScroll}>
+        <View style={styles.originalPanel}>
+          <Text style={styles.originalLabel}>{t('review.originalRecipe')}</Text>
+          <Text style={styles.originalHint}>{t('review.originalHint')}</Text>
+          <Text style={styles.originalText}>{stored.sourceText}</Text>
+        </View>
+      </ScrollView>
       <RecipeForm
-        initialValues={{
-          title: '',
-          description: '',
-          servingCount: '',
-          ingredients: [],
-          preparationSteps: [],
-        }}
+        initialValues={recipeFormValuesFromDraft(stored.draft)}
         submitLabel={t('create.submit')}
         onSubmit={async (input) => {
-          const body =
-            (input.ingredients?.length ?? 0) === 0 &&
-            (input.preparationSteps?.length ?? 0) === 0
-              ? {
-                  title: input.title,
-                  description: input.description,
-                  servingCount: input.servingCount,
-                }
-              : input;
-          setSavedRecipe(await apiClient.createRecipe(body));
+          const saved = await apiClient.createRecipe({
+            ...input,
+            sourceText: stored.sourceText,
+          });
+          clearCreateDraft();
+          setSavedRecipe(saved);
         }}
         onCancel={() => router.back()}
       />
@@ -73,6 +83,7 @@ export default function CreateRecipe() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fffaf3' },
+  savedContainer: { flex: 1, backgroundColor: '#fffaf3', padding: 24 },
   title: {
     color: '#25352d',
     fontSize: 30,
@@ -91,6 +102,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     marginTop: 20,
+  },
+  originalScroll: {
+    flexGrow: 0,
+    maxHeight: 260,
+    paddingHorizontal: 24,
+  },
+  originalPanel: {
+    backgroundColor: '#fdf6e9',
+    borderColor: '#e6d5a8',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 14,
+  },
+  originalLabel: {
+    color: '#6b5a2e',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  originalHint: {
+    color: '#8a7a4d',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  originalText: {
+    color: '#4c463a',
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 8,
   },
   button: {
     alignItems: 'center',
