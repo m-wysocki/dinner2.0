@@ -45,3 +45,8 @@
 - `translations.test.ts` gained an explicit interpolation assertion for
   `review.proposalText` in both languages; key parity stays compile-time
   (`Record<TranslationKey, string>`) and test-enforced.
+- Post-review cleanup: the `useI18n` test mock now lives in
+  `apps/mobile/test/i18n-mock.ts` (shared by the create and review screen
+  tests; the language screen keeps its own variant because it asserts on a
+  shared `setLanguage` mock), and recipe-form gained a `localizedName` helper
+  used by both the proposal panel and the catalog chips.

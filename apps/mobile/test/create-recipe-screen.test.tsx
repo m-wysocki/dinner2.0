@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import type { ExtractRecipeDraft } from '@dinner/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateRecipe from '../app/create-recipe/index';
-import { translate } from '../src/i18n/translations';
+import { mockI18n } from './i18n-mock';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/auth/session', () => ({ getAuthenticatedState: vi.fn() }));
@@ -28,16 +28,7 @@ vi.mock('../src/i18n/i18n', async (importOriginal) => {
 
 import { ApiError, apiClient } from '../src/api/client';
 import { getAuthenticatedState } from '../src/auth/session';
-import { useI18n } from '../src/i18n/i18n';
 import { router } from './expo-router-mock';
-
-function mockI18n(language: 'pl' | 'en') {
-  vi.mocked(useI18n).mockReturnValue({
-    language,
-    setLanguage: vi.fn(),
-    t: (key, params) => translate(key, params, language),
-  });
-}
 
 function draft(): ExtractRecipeDraft {
   return {

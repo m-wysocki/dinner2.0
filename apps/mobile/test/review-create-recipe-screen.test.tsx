@@ -33,18 +33,9 @@ vi.mock('../src/i18n/i18n', async (importOriginal) => {
 
 import { apiClient } from '../src/api/client';
 import { getAuthenticatedState } from '../src/auth/session';
-import { useI18n } from '../src/i18n/i18n';
-import { translate } from '../src/i18n/translations';
 import { clearCreateDraft, getCreateDraft } from '../src/recipe/create-draft';
 import { router } from './expo-router-mock';
-
-function mockI18n(language: 'pl' | 'en') {
-  vi.mocked(useI18n).mockReturnValue({
-    language,
-    setLanguage: vi.fn(),
-    t: (key, params) => translate(key, params, language),
-  });
-}
+import { mockI18n } from './i18n-mock';
 
 const MATCHED_ENTRY_ID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 const TOMATO_ENTRY_ID = '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a';

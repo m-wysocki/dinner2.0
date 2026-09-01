@@ -5,6 +5,7 @@ import {
   type CustomIngredientProposal,
   type ExtractRecipeDraft,
   type IngredientCatalogEntry,
+  type InterfaceLanguage,
 } from '@dinner/shared';
 import { useEffect, useState } from 'react';
 import {
@@ -68,6 +69,14 @@ const UNITS: CanonicalUnit[] = [
   'TBSP',
   'OTHER',
 ];
+
+function localizedName(
+  namePl: string,
+  nameEn: string,
+  language: InterfaceLanguage,
+): string {
+  return language === 'en' ? nameEn : namePl;
+}
 
 export function RecipeForm({
   initialValues,
@@ -273,10 +282,11 @@ export function RecipeForm({
               </Text>
               <Text style={styles.proposalText}>
                 {t('review.proposalText', {
-                  name:
-                    language === 'en'
-                      ? ingredient.customProposal.nameEn
-                      : ingredient.customProposal.namePl,
+                  name: localizedName(
+                    ingredient.customProposal.namePl,
+                    ingredient.customProposal.nameEn,
+                    language,
+                  ),
                 })}
               </Text>
             </View>
@@ -325,7 +335,9 @@ export function RecipeForm({
                     : styles.catalogEntry
                 }
               >
-                <Text>{language === 'en' ? entry.nameEn : entry.namePl}</Text>
+                <Text>
+                  {localizedName(entry.namePl, entry.nameEn, language)}
+                </Text>
               </Pressable>
             ))}
           </View>
