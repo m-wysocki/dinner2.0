@@ -74,11 +74,11 @@ const pl = {
   'create.title': 'Nowy przepis',
   'create.sourceTextLabel': 'Treść przepisu',
   'create.sourceTextPlaceholder':
-    'Wklej pełną treść przepisu, np. z notatki albo innej strony',
+    'Wklej pełny przepis ze składnikami i krokami przygotowania',
   'create.servingCount': 'Liczba porcji',
   'create.servingCountPlaceholder': 'Np. 4',
   'create.extract': 'Wyodrębnij przepis',
-  'create.extracting': 'Wyodrębnianie przepisu...',
+  'create.extracting': 'AI przetwarza przepis...',
   'create.extractFailed':
     'Nie udało się wyodrębnić przepisu. Spróbuj ponownie.',
   'create.inputRequired': 'Podaj tytuł, treść przepisu i liczbę porcji.',
@@ -91,6 +91,7 @@ const pl = {
   'review.originalRecipe': 'Oryginalny przepis',
   'review.originalHint':
     'Twój wklejony tekst dla porównania. Popraw wyodrębnione dane poniżej.',
+  'review.proposalLabel': 'Nowy składnik',
   'review.proposalText':
     'Nieznany składnik „{name}”. Dodaj jako nowy własny składnik albo wybierz istniejący z katalogu.',
 
@@ -230,11 +231,11 @@ const en: Record<TranslationKey, string> = {
   'create.title': 'New recipe',
   'create.sourceTextLabel': 'Recipe text',
   'create.sourceTextPlaceholder':
-    'Paste the full recipe text, e.g. from a note or another page',
+    'Paste the full recipe with ingredients and preparation steps',
   'create.servingCount': 'Number of servings',
   'create.servingCountPlaceholder': 'e.g. 4',
   'create.extract': 'Extract recipe',
-  'create.extracting': 'Extracting recipe...',
+  'create.extracting': 'AI is processing the recipe...',
   'create.extractFailed': 'Could not extract the recipe. Try again.',
   'create.inputRequired':
     'Enter a title, the recipe text, and the number of servings.',
@@ -247,6 +248,7 @@ const en: Record<TranslationKey, string> = {
   'review.originalRecipe': 'Original recipe',
   'review.originalHint':
     'The recipe text you pasted, for comparison. Correct the extracted data below.',
+  'review.proposalLabel': 'New ingredient',
   'review.proposalText':
     'Unknown ingredient "{name}". Add it as a new custom ingredient or choose an existing one from the catalog.',
 

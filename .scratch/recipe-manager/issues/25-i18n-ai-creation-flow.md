@@ -4,7 +4,7 @@
 
 **Blocked by:** 24: Mobile create-to-review flow
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## What to do
 
@@ -19,6 +19,29 @@
 
 ## Definition of done
 
-- [ ] All new create/review/failure strings exist in PL and EN with key parity.
-- [ ] Extraction loading and retry states are localized.
-- [ ] i18n unit tests pass (key parity, interpolation); workspace typecheck, lint, and format pass.
+- [x] All new create/review/failure strings exist in PL and EN with key parity.
+- [x] Extraction loading and retry states are localized.
+- [x] i18n unit tests pass (key parity, interpolation); workspace typecheck, lint, and format pass.
+
+## Comments
+
+- Ticket 24 had already routed the create/review screens through `t()`, so the
+  remaining work was copy and coverage: the source-text placeholder now asks
+  for the full recipe with ingredients and preparation steps, the extraction
+  loading state reads "AI przetwarza przepis..." / "AI is processing the
+  recipe...", and the proposal panel gained a dedicated badge label
+  `review.proposalLabel` ("Nowy składnik" / "New ingredient") above the
+  existing interpolated `review.proposalText`.
+- Fixed an English-interface bug from ticket 24: the proposal panel always
+  interpolated `customProposal.namePl`; it now picks `nameEn` when the
+  interface language is English, matching the catalog chips.
+- Both languages are now covered by screen tests, not just the dictionaries:
+  the create screen test renders an English session and asserts labels, the
+  hint placeholder, the AI loading state, and the localized failure/retry
+  path; the review screen test verifies the English proposal badge, the
+  English proposal name, remap to an English catalog chip, and the localized
+  saved message. The PL loading state is asserted via a deferred extraction
+  promise.
+- `translations.test.ts` gained an explicit interpolation assertion for
+  `review.proposalText` in both languages; key parity stays compile-time
+  (`Record<TranslationKey, string>`) and test-enforced.

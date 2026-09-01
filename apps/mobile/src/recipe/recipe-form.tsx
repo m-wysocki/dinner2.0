@@ -268,9 +268,15 @@ export function RecipeForm({
           />
           {!ingredient.catalogEntryId && ingredient.customProposal && (
             <View style={styles.proposal}>
+              <Text style={styles.proposalLabel}>
+                {t('review.proposalLabel')}
+              </Text>
               <Text style={styles.proposalText}>
                 {t('review.proposalText', {
-                  name: ingredient.customProposal.namePl,
+                  name:
+                    language === 'en'
+                      ? ingredient.customProposal.nameEn
+                      : ingredient.customProposal.namePl,
                 })}
               </Text>
             </View>
@@ -456,7 +462,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 10,
   },
-  proposalText: { color: '#6b5a2e', fontSize: 14, lineHeight: 20 },
+  proposalText: {
+    color: '#6b5a2e',
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  proposalLabel: { color: '#6b5a2e', fontSize: 13, fontWeight: '700' },
   ingredientActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
   action: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 8 },
   secondaryButton: {

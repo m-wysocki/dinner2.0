@@ -24,6 +24,15 @@ describe('translations', () => {
       'The API returned an error (503).',
     );
   });
+
+  it('interpolates the proposed custom ingredient name in both languages', () => {
+    expect(translate('review.proposalText', { name: 'Szafran' }, 'pl')).toBe(
+      'Nieznany składnik „Szafran”. Dodaj jako nowy własny składnik albo wybierz istniejący z katalogu.',
+    );
+    expect(translate('review.proposalText', { name: 'Saffron' }, 'en')).toBe(
+      'Unknown ingredient "Saffron". Add it as a new custom ingredient or choose an existing one from the catalog.',
+    );
+  });
 });
 
 describe('formatServings', () => {

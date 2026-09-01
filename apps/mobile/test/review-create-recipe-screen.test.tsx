@@ -26,11 +26,25 @@ vi.mock('../src/recipe/create-draft', () => ({
   getCreateDraft: vi.fn(),
   clearCreateDraft: vi.fn(),
 }));
+vi.mock('../src/i18n/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/i18n/i18n')>();
+  return { ...actual, useI18n: vi.fn() };
+});
 
 import { apiClient } from '../src/api/client';
 import { getAuthenticatedState } from '../src/auth/session';
+import { useI18n } from '../src/i18n/i18n';
+import { translate } from '../src/i18n/translations';
 import { clearCreateDraft, getCreateDraft } from '../src/recipe/create-draft';
 import { router } from './expo-router-mock';
+
+function mockI18n(language: 'pl' | 'en') {
+  vi.mocked(useI18n).mockReturnValue({
+    language,
+    setLanguage: vi.fn(),
+    t: (key, params) => translate(key, params, language),
+  });
+}
 
 const MATCHED_ENTRY_ID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 const TOMATO_ENTRY_ID = '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a';
@@ -123,6 +137,7 @@ beforeEach(() => {
   });
   vi.mocked(clearCreateDraft).mockClear();
   router.back.mockClear();
+  mockI18n('pl');
 });
 
 describe('CreateReview screen', () => {
@@ -171,6 +186,7 @@ describe('CreateReview screen', () => {
     render(<CreateReview />);
 
     expect(screen.getByText(/Nieznany składnik „Szafran”/)).toBeInTheDocument();
+    expect(screen.getByText('Nowy składnik')).toBeInTheDocument();
 
     await user.click(screen.getByText('Dodaj jako nowy składnik'));
 
@@ -260,5 +276,62 @@ describe('CreateReview screen', () => {
     render(<CreateReview />);
 
     expect(screen.queryByText('Przejrzyj przepis')).not.toBeInTheDocument();
+  });
+
+  it('localizes the review step and resolves the proposal in English', async () => {
+    mockI18n('en');
+    vi.mocked(getCreateDraft).mockReturnValue({
+      draft: {
+        title: 'Soup',
+        description: 'Saffron soup.',
+        servingCount: 4,
+        ingredients: [
+          {
+            name: 'Saffron',
+            catalogEntryId: null,
+            customProposal: { namePl: 'Szafran', nameEn: 'Saffron' },
+            quantity: null,
+            unit: 'OTHER',
+            note: null,
+            position: 0,
+          },
+        ],
+      },
+      sourceText: 'Ingredients: saffron.',
+    });
+    const user = userEvent.setup();
+    render(<CreateReview />);
+
+    expect(screen.getByText('Review the recipe')).toBeInTheDocument();
+    expect(screen.getByText('Original recipe')).toBeInTheDocument();
+    expect(screen.getByText('New ingredient')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Unknown ingredient "Saffron"/),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Tomato')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Tomato'));
+
+    expect(
+      screen.queryByText(/Unknown ingredient "Saffron"/),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('Save recipe'));
+
+    await waitFor(() =>
+      expect(apiClient.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ingredients: [
+            expect.objectContaining({ catalogEntryId: TOMATO_ENTRY_ID }),
+          ],
+        }),
+      ),
+    );
+    expect(await screen.findByText('Recipe saved')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'The recipe for 4 servings was added to your collection.',
+      ),
+    ).toBeInTheDocument();
   });
 });
