@@ -1,7 +1,7 @@
 import { type RecipeResponse } from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
 import { formatServings, useI18n } from '../../src/i18n/i18n';
@@ -57,6 +57,13 @@ export default function CreateReview() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('review.title')}</Text>
+      <ScrollView style={styles.originalScroll}>
+        <View style={styles.originalPanel}>
+          <Text style={styles.originalLabel}>{t('review.originalRecipe')}</Text>
+          <Text style={styles.originalHint}>{t('review.originalHint')}</Text>
+          <Text style={styles.originalText}>{stored.sourceText}</Text>
+        </View>
+      </ScrollView>
       <RecipeForm
         initialValues={recipeFormValuesFromDraft(stored.draft)}
         submitLabel={t('create.submit')}
@@ -95,6 +102,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     marginTop: 20,
+  },
+  originalScroll: {
+    flexGrow: 0,
+    maxHeight: 260,
+    paddingHorizontal: 24,
+  },
+  originalPanel: {
+    backgroundColor: '#fdf6e9',
+    borderColor: '#e6d5a8',
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 14,
+  },
+  originalLabel: {
+    color: '#6b5a2e',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  originalHint: {
+    color: '#8a7a4d',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  originalText: {
+    color: '#4c463a',
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 8,
   },
   button: {
     alignItems: 'center',

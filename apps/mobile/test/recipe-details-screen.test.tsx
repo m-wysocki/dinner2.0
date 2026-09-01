@@ -45,13 +45,6 @@ function recipeDetails(): RecipeDetailsResponse {
         position: 0,
       },
     ],
-    preparationSteps: [
-      {
-        id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-        text: 'Pokrój',
-        position: 0,
-      },
-    ],
   };
 }
 
@@ -83,7 +76,6 @@ describe('RecipeDetails screen', () => {
     expect(screen.getByText('Domowa')).toBeInTheDocument();
     expect(screen.getByText('4 porcje')).toBeInTheDocument();
     expect(screen.getByText(/Pomidor/)).toBeInTheDocument();
-    expect(screen.getByText('Pokrój')).toBeInTheDocument();
   });
 
   it('asks for confirmation and deletes the recipe on success', async () => {
@@ -94,9 +86,7 @@ describe('RecipeDetails screen', () => {
 
     expect(screen.getByText('Usunąć przepis?')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Przepis zostanie trwale usunięty wraz ze składnikami i krokami.',
-      ),
+      screen.getByText('Przepis zostanie trwale usunięty wraz ze składnikami.'),
     ).toBeInTheDocument();
 
     await user.click(screen.getByText('Usuń'));

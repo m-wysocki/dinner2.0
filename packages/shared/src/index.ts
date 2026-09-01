@@ -70,27 +70,8 @@ export const loginResponseSchema = authSessionSchema.extend({
 });
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
-export const preparationStepRequestSchema = z.object({
-  text: z.string().trim().min(1).max(5000),
-  position: z.number().int().min(0),
-});
-export type PreparationStepRequest = z.infer<
-  typeof preparationStepRequestSchema
->;
-
 const hasConsecutivePositions = (items: Array<{ position: number }>): boolean =>
   items.every((item, index) => item.position === index);
-
-const preparationStepsSchema = z
-  .array(preparationStepRequestSchema)
-  .superRefine((steps, context) => {
-    if (!hasConsecutivePositions(steps)) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Preparation steps must have consecutive positions',
-      });
-    }
-  });
 
 export const apiErrorCodeSchema = z.enum([
   'VALIDATION_ERROR',
@@ -192,7 +173,6 @@ export const createRecipeRequestSchema = z.object({
   servingCount: z.number().int().min(1).max(1000),
   sourceText: z.string().trim().max(20000).optional(),
   ingredients: recipeIngredientsSchema.optional(),
-  preparationSteps: preparationStepsSchema.optional(),
 });
 export type CreateRecipeRequest = z.infer<typeof createRecipeRequestSchema>;
 
@@ -201,7 +181,6 @@ export const updateRecipeRequestSchema = z.object({
   description: z.string().trim().max(5000).optional(),
   servingCount: z.number().int().min(1).max(1000),
   ingredients: recipeIngredientsSchema,
-  preparationSteps: preparationStepsSchema,
 });
 export type UpdateRecipeRequest = z.infer<typeof updateRecipeRequestSchema>;
 
@@ -213,23 +192,11 @@ export const recipeResponseSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   ingredients: z.array(recipeIngredientResponseSchema).optional(),
-  preparationSteps: z
-    .array(
-      preparationStepRequestSchema.extend({
-        id: z.string().uuid(),
-      }),
-    )
-    .optional(),
 });
 export type RecipeResponse = z.infer<typeof recipeResponseSchema>;
 
 export const recipeDetailsResponseSchema = recipeResponseSchema.extend({
   ingredients: z.array(recipeIngredientResponseSchema),
-  preparationSteps: z.array(
-    preparationStepRequestSchema.extend({
-      id: z.string().uuid(),
-    }),
-  ),
 });
 export type RecipeDetailsResponse = z.infer<typeof recipeDetailsResponseSchema>;
 
@@ -269,6 +236,7 @@ export const extractedRecipeIngredientSchema =
     .extend({
       catalogEntryId: z.string().uuid().nullable(),
       customProposal: customIngredientProposalSchema.nullable(),
+      bestCandidate: z.string().trim().max(200).nullable().optional(),
     })
     .superRefine((ingredient, context) => {
       const matched = ingredient.catalogEntryId !== null;
@@ -279,6 +247,18 @@ export const extractedRecipeIngredientSchema =
           path: ['catalogEntryId'],
           message:
             'An extracted ingredient must carry exactly one of catalogEntryId or customProposal',
+        });
+      }
+      if (
+        ingredient.catalogEntryId !== null &&
+        ingredient.bestCandidate !== null &&
+        ingredient.bestCandidate !== undefined
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['bestCandidate'],
+          message:
+            'bestCandidate must be null when the ingredient is matched to a catalog entry',
         });
       }
     });
@@ -303,7 +283,6 @@ export const rawExtractedRecipeDraftSchema = z.object({
   description: z.string().trim().min(1).max(5000),
   servingCount: z.number().int().min(1).max(1000),
   ingredients: positionedItemsSchema(rawExtractedRecipeIngredientSchema),
-  preparationSteps: preparationStepsSchema,
 });
 export type RawExtractRecipeDraft = z.infer<
   typeof rawExtractedRecipeDraftSchema
@@ -314,6 +293,5 @@ export const extractRecipeDraftSchema = z.object({
   description: z.string().trim().min(1).max(5000),
   servingCount: z.number().int().min(1).max(1000),
   ingredients: positionedItemsSchema(extractedRecipeIngredientSchema),
-  preparationSteps: preparationStepsSchema,
 });
 export type ExtractRecipeDraft = z.infer<typeof extractRecipeDraftSchema>;

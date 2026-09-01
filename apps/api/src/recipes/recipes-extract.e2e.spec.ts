@@ -33,6 +33,7 @@ const recipeDeleteMany = vi.fn();
 const catalogFindMany = vi.fn();
 const catalogCreate = vi.fn();
 const extractRecipe = vi.fn();
+const matchIngredients = vi.fn();
 const $transaction = vi.fn();
 
 function installMocks() {
@@ -69,6 +70,7 @@ function installMocks() {
   catalogFindMany.mockImplementation(async () => [
     {
       id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      slug: 'tomato',
       namePl: 'Pomidor',
       nameEn: 'Tomato',
       isSystem: true,
@@ -76,6 +78,7 @@ function installMocks() {
     },
     {
       id: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+      slug: 'flour',
       namePl: 'Mąka',
       nameEn: 'Flour',
       isSystem: true,
@@ -126,6 +129,7 @@ describe('recipe extraction endpoint (HTTP)', () => {
       .overrideProvider(RecipeExtractionProvider)
       .useValue({
         extractRecipe,
+        matchIngredients,
       } as unknown as RecipeExtractionProvider)
       .compile();
 
@@ -143,6 +147,7 @@ describe('recipe extraction endpoint (HTTP)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     installMocks();
+    matchIngredients.mockResolvedValue([]);
   });
 
   it('returns a validated draft and never persists anything', async () => {
@@ -152,7 +157,6 @@ describe('recipe extraction endpoint (HTTP)', () => {
         { name: 'Pomidor', quantity: '2', unit: 'PCS', note: null },
         { name: 'Mąka', quantity: '200', unit: 'g', note: null },
       ],
-      preparationSteps: [{ text: 'Gotuj pomidory' }],
     });
 
     const response = await postExtract({
@@ -171,6 +175,7 @@ describe('recipe extraction endpoint (HTTP)', () => {
           name: 'Pomidor',
           catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
           customProposal: null,
+          bestCandidate: null,
           quantity: '2',
           unit: 'PCS',
           note: null,
@@ -180,13 +185,13 @@ describe('recipe extraction endpoint (HTTP)', () => {
           name: 'Mąka',
           catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
           customProposal: null,
+          bestCandidate: null,
           quantity: '200',
           unit: 'G',
           note: null,
           position: 1,
         },
       ],
-      preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
     });
     expect(recipeCreate).not.toHaveBeenCalled();
     expect(catalogCreate).not.toHaveBeenCalled();
@@ -199,7 +204,6 @@ describe('recipe extraction endpoint (HTTP)', () => {
       ingredients: [
         { name: 'Mąka', quantity: null, unit: 'szklanka', note: null },
       ],
-      preparationSteps: [],
     });
 
     const response = await postExtract({
@@ -231,7 +235,6 @@ describe('recipe extraction endpoint (HTTP)', () => {
         { name: 'Szafran', quantity: null, unit: 'OTHER', note: null },
         { name: 'Pomidor', quantity: '2', unit: 'PCS', note: null },
       ],
-      preparationSteps: [],
     });
 
     const response = await postExtract({
@@ -250,6 +253,7 @@ describe('recipe extraction endpoint (HTTP)', () => {
           name: 'Flour',
           catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
           customProposal: null,
+          bestCandidate: null,
           quantity: '200',
           unit: 'G',
           note: null,
@@ -259,6 +263,7 @@ describe('recipe extraction endpoint (HTTP)', () => {
           name: 'Szafran',
           catalogEntryId: null,
           customProposal: { namePl: 'Szafran', nameEn: 'Szafran' },
+          bestCandidate: null,
           quantity: null,
           unit: 'OTHER',
           note: null,
@@ -268,13 +273,13 @@ describe('recipe extraction endpoint (HTTP)', () => {
           name: 'Pomidor',
           catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
           customProposal: null,
+          bestCandidate: null,
           quantity: '2',
           unit: 'PCS',
           note: null,
           position: 2,
         },
       ],
-      preparationSteps: [],
     });
     expect(recipeCreate).not.toHaveBeenCalled();
     expect(catalogCreate).not.toHaveBeenCalled();
@@ -287,7 +292,6 @@ describe('recipe extraction endpoint (HTTP)', () => {
       ingredients: [
         { name: 'Pomidor', quantity: 'abc', unit: 'PCS', note: null },
       ],
-      preparationSteps: [],
     });
 
     const response = await postExtract({
@@ -358,5 +362,134 @@ describe('recipe extraction endpoint (HTTP)', () => {
 
     expect(response.status).toBe(401);
     expect(extractRecipe).not.toHaveBeenCalled();
+  });
+
+  it('applies an AI match for a name the deterministic matcher missed', async () => {
+    extractRecipe.mockResolvedValue({
+      description: 'Zupa.',
+      ingredients: [
+        { name: 'Mąka', quantity: '200', unit: 'G', note: null },
+        { name: 'Pomidorek', quantity: '2', unit: 'PCS', note: null },
+      ],
+    });
+    matchIngredients.mockResolvedValue([
+      { name: 'Pomidorek', slug: 'tomato', bestCandidate: null },
+    ]);
+
+    const response = await postExtract({
+      title: 'Zupa',
+      sourceText: 'Mąka, pomidorek.',
+      servingCount: 4,
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      title: 'Zupa',
+      description: 'Zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Mąka',
+          catalogEntryId: '6d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
+          customProposal: null,
+          bestCandidate: null,
+          quantity: '200',
+          unit: 'G',
+          note: null,
+          position: 0,
+        },
+        {
+          name: 'Pomidorek',
+          catalogEntryId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          customProposal: null,
+          bestCandidate: null,
+          quantity: '2',
+          unit: 'PCS',
+          note: null,
+          position: 1,
+        },
+      ],
+    });
+    expect(matchIngredients).toHaveBeenCalledWith({
+      names: ['Pomidorek'],
+      slugs: expect.arrayContaining(['tomato', 'flour']),
+    });
+  });
+
+  it('keeps a proposal with a bestCandidate when the AI is unsure', async () => {
+    extractRecipe.mockResolvedValue({
+      description: 'Zupa.',
+      ingredients: [
+        {
+          name: 'Nieznany składnik',
+          quantity: null,
+          unit: 'OTHER',
+          note: null,
+        },
+      ],
+    });
+    matchIngredients.mockResolvedValue([
+      { name: 'Nieznany składnik', slug: null, bestCandidate: 'flour' },
+    ]);
+
+    const response = await postExtract({
+      title: 'Zupa',
+      sourceText: 'Nieznany składnik.',
+      servingCount: 4,
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      title: 'Zupa',
+      description: 'Zupa.',
+      servingCount: 4,
+      ingredients: [
+        {
+          name: 'Nieznany składnik',
+          catalogEntryId: null,
+          customProposal: {
+            namePl: 'Nieznany składnik',
+            nameEn: 'Nieznany składnik',
+          },
+          bestCandidate: 'flour',
+          quantity: null,
+          unit: 'OTHER',
+          note: null,
+          position: 0,
+        },
+      ],
+    });
+  });
+
+  it('falls back to plain proposals when the AI matching pass fails', async () => {
+    extractRecipe.mockResolvedValue({
+      description: 'Zupa.',
+      ingredients: [
+        { name: 'Pomidorek', quantity: '2', unit: 'PCS', note: null },
+      ],
+    });
+    matchIngredients.mockRejectedValue(new Error('matcher boom'));
+
+    const response = await postExtract({
+      title: 'Zupa',
+      sourceText: 'Pomidorek.',
+      servingCount: 4,
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.ingredients).toEqual([
+      {
+        name: 'Pomidorek',
+        catalogEntryId: null,
+        customProposal: { namePl: 'Pomidorek', nameEn: 'Pomidorek' },
+        bestCandidate: null,
+        quantity: '2',
+        unit: 'PCS',
+        note: null,
+        position: 0,
+      },
+    ]);
+    expect(JSON.stringify(body)).not.toContain('matcher boom');
   });
 });

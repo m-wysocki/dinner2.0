@@ -41,7 +41,6 @@ function draft(): ExtractRecipeDraft {
         position: 0,
       },
     ],
-    preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
   };
 }
 

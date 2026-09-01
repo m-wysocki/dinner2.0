@@ -328,7 +328,6 @@ describe('apiClient.extractRecipe', () => {
           position: 1,
         },
       ],
-      preparationSteps: [{ text: 'Gotuj', position: 0 }],
     };
     vi.stubGlobal(
       'fetch',

@@ -7,7 +7,9 @@ const configService = {
       ? 'test-openai-key'
       : key === 'OPENAI_MODEL'
         ? 'my-configured-model'
-        : undefined,
+        : key === 'OPENAI_MATCH_MODEL'
+          ? 'my-matching-model'
+          : undefined,
 } as never;
 
 const provider = new OpenAiRecipeExtractionProvider(configService);
@@ -31,6 +33,7 @@ const fetchMock = vi.fn();
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  fetchMock.mockClear();
 });
 
 describe('OpenAiRecipeExtractionProvider', () => {
@@ -41,7 +44,6 @@ describe('OpenAiRecipeExtractionProvider', () => {
         ingredients: [
           { name: 'Pomidor', quantity: '2', unit: 'PCS', note: null },
         ],
-        preparationSteps: [{ text: 'Gotuj pomidory' }],
       }),
     );
     vi.stubGlobal('fetch', fetchMock);
@@ -51,7 +53,6 @@ describe('OpenAiRecipeExtractionProvider', () => {
       ingredients: [
         { name: 'Pomidor', quantity: '2', unit: 'PCS', note: null },
       ],
-      preparationSteps: [{ text: 'Gotuj pomidory' }],
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -97,6 +98,23 @@ describe('OpenAiRecipeExtractionProvider', () => {
     expect(userMessage.content).toContain('Składniki: 2 pomidory, 200 g mąki.');
   });
 
+  it('instructs the model to keep the name clean and to extract approximate amounts', async () => {
+    fetchMock.mockResolvedValueOnce(okResponse({}));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await provider.extractRecipe(input).catch(() => undefined);
+
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse((init as { body: string }).body);
+    const systemMessage = body.messages.find(
+      (message: { role: string }) => message.role === 'system',
+    );
+    expect(systemMessage.content).toContain(
+      'The name is the ingredient itself, not its modifiers',
+    );
+    expect(systemMessage.content).toContain('"do 300 g" → quantity "300"');
+  });
+
   it('throws without leaking the API key when the provider responds with an error', async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 401 } as Response);
     vi.stubGlobal('fetch', fetchMock);
@@ -130,6 +148,61 @@ describe('OpenAiRecipeExtractionProvider', () => {
 
     await expect(provider.extractRecipe(input)).rejects.toThrow(
       'EXTRACTION_PROVIDER_EMPTY_RESPONSE',
+    );
+  });
+
+  it('matches ingredients against the slug list using the matching model', async () => {
+    fetchMock.mockResolvedValueOnce(
+      okResponse({
+        matches: [
+          { name: 'Marcheweczka', slug: 'carrot', bestCandidate: null },
+          { name: 'Szafran', slug: null, bestCandidate: 'saffron' },
+        ],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      provider.matchIngredients({
+        names: ['Marcheweczka', 'Szafran'],
+        slugs: ['carrot', 'saffron', 'flour'],
+      }),
+    ).resolves.toEqual([
+      { name: 'Marcheweczka', slug: 'carrot', bestCandidate: null },
+      { name: 'Szafran', slug: null, bestCandidate: 'saffron' },
+    ]);
+
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse((init as { body: string }).body);
+    expect(body.model).toBe('my-matching-model');
+    expect(
+      body.messages.find((m: { role: string }) => m.role === 'system').content,
+    ).toContain('identity matching, not translation');
+    const userMessage = body.messages.find(
+      (m: { role: string }) => m.role === 'user',
+    );
+    expect(userMessage.content).toContain('Marcheweczka');
+    expect(userMessage.content).toContain('carrot, saffron, flour');
+  });
+
+  it('returns an empty match list when the provider returns no matches', async () => {
+    fetchMock.mockResolvedValueOnce(okResponse({ matches: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      provider.matchIngredients({ names: ['Szafran'], slugs: ['flour'] }),
+    ).resolves.toEqual([]);
+  });
+
+  it('throws without leaking the API key when the matching provider responds with an error', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 500 } as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      provider.matchIngredients({ names: ['Szafran'], slugs: ['flour'] }),
+    ).rejects.toThrow('MATCHING_PROVIDER_REQUEST_FAILED');
+    expect(String(fetchMock.mock.results[0].value)).not.toContain(
+      'test-openai-key',
     );
   });
 });

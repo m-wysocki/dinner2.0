@@ -31,7 +31,6 @@ export interface RecipeFormValues {
     note: string;
     customProposal?: CustomIngredientProposal | null;
   }>;
-  preparationSteps: string[];
 }
 
 export function recipeFormValuesFromDraft(
@@ -49,7 +48,6 @@ export function recipeFormValuesFromDraft(
       note: ingredient.note ?? '',
       customProposal: ingredient.customProposal,
     })),
-    preparationSteps: draft.preparationSteps.map((step) => step.text),
   };
 }
 
@@ -82,9 +80,6 @@ export function RecipeForm({
   const [description, setDescription] = useState(initialValues.description);
   const [servingCount, setServingCount] = useState(initialValues.servingCount);
   const [ingredients, setIngredients] = useState(initialValues.ingredients);
-  const [preparationSteps, setPreparationSteps] = useState(
-    initialValues.preparationSteps,
-  );
   const [catalog, setCatalog] = useState<IngredientCatalogEntry[]>([]);
   const [customName, setCustomName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -109,10 +104,6 @@ export function RecipeForm({
         note: ingredient.note.trim() || undefined,
         position,
       })),
-      preparationSteps: preparationSteps.map((text, position) => ({
-        text,
-        position,
-      })),
     });
 
     if (!parsed.success) {
@@ -122,17 +113,12 @@ export function RecipeForm({
       const hasInvalidQuantity = parsed.error.issues.some(
         (issue) => issue.path.at(-1) === 'quantity',
       );
-      const hasInvalidStep = parsed.error.issues.some(
-        (issue) => issue.path[0] === 'preparationSteps',
-      );
       setError(
         hasMissingIdentity
           ? t('form.errorIdentity')
           : hasInvalidQuantity
             ? t('form.errorQuantity')
-            : hasInvalidStep
-              ? t('form.errorStep')
-              : t('form.errorBasics'),
+            : t('form.errorBasics'),
       );
       return;
     }
@@ -167,15 +153,13 @@ export function RecipeForm({
     }
   }
 
-  async function acceptProposal(index: number) {
-    const ingredient = ingredients[index];
-    if (!ingredient.customProposal) {
+  async function saveAsNew(index: number) {
+    const name = ingredients[index].name.trim();
+    if (!name) {
       return;
     }
     try {
-      const entry = await apiClient.createCustomIngredient({
-        name: ingredient.customProposal.namePl,
-      });
+      const entry = await apiClient.createCustomIngredient({ name });
       setCatalog((current) => [...current, entry]);
       setIngredients((current) =>
         current.map((item, itemIndex) =>
@@ -289,14 +273,6 @@ export function RecipeForm({
                   name: ingredient.customProposal.namePl,
                 })}
               </Text>
-              <Pressable
-                onPress={() => void acceptProposal(index)}
-                style={styles.proposalButton}
-              >
-                <Text style={styles.proposalButtonText}>
-                  {t('review.acceptProposal')}
-                </Text>
-              </Pressable>
             </View>
           )}
           <View style={styles.catalog}>
@@ -347,7 +323,7 @@ export function RecipeForm({
               </Pressable>
             ))}
           </View>
-          <View style={styles.stepActions}>
+          <View style={styles.ingredientActions}>
             <Pressable
               disabled={index === 0}
               onPress={() =>
@@ -379,6 +355,12 @@ export function RecipeForm({
               style={styles.action}
             >
               <Text>{t('form.moveDown')}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => void saveAsNew(index)}
+              style={styles.action}
+            >
+              <Text>{t('form.saveAsNewIngredient')}</Text>
             </Pressable>
             <Pressable
               onPress={() =>
@@ -416,75 +398,6 @@ export function RecipeForm({
         style={styles.secondaryButton}
       >
         <Text>{t('form.createCustomIngredient')}</Text>
-      </Pressable>
-      <Text style={styles.sectionTitle}>{t('form.preparation')}</Text>
-      {preparationSteps.map((step, index) => (
-        <View key={index} style={styles.step}>
-          <TextInput
-            accessibilityLabel={t('form.stepA11y', { number: index + 1 })}
-            multiline
-            onChangeText={(text) =>
-              setPreparationSteps((current) =>
-                current.map((item, itemIndex) =>
-                  itemIndex === index ? text : item,
-                ),
-              )
-            }
-            placeholder={t('form.stepPlaceholder')}
-            style={[styles.input, styles.description]}
-            value={step}
-          />
-          <View style={styles.stepActions}>
-            <Pressable
-              disabled={index === 0}
-              onPress={() =>
-                setPreparationSteps((current) => {
-                  const next = [...current];
-                  [next[index - 1], next[index]] = [
-                    next[index],
-                    next[index - 1],
-                  ];
-                  return next;
-                })
-              }
-              style={styles.action}
-            >
-              <Text>{t('form.moveUp')}</Text>
-            </Pressable>
-            <Pressable
-              disabled={index === preparationSteps.length - 1}
-              onPress={() =>
-                setPreparationSteps((current) => {
-                  const next = [...current];
-                  [next[index], next[index + 1]] = [
-                    next[index + 1],
-                    next[index],
-                  ];
-                  return next;
-                })
-              }
-              style={styles.action}
-            >
-              <Text>{t('form.moveDown')}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() =>
-                setPreparationSteps((current) =>
-                  current.filter((_, itemIndex) => itemIndex !== index),
-                )
-              }
-              style={styles.action}
-            >
-              <Text>{t('form.removeStep')}</Text>
-            </Pressable>
-          </View>
-        </View>
-      ))}
-      <Pressable
-        onPress={() => setPreparationSteps((current) => [...current, ''])}
-        style={styles.secondaryButton}
-      >
-        <Text>{t('form.addStep')}</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
       <Pressable
@@ -544,15 +457,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   proposalText: { color: '#6b5a2e', fontSize: 14, lineHeight: 20 },
-  proposalButton: {
-    backgroundColor: '#25352d',
-    borderRadius: 6,
-    marginTop: 8,
-    padding: 8,
-  },
-  proposalButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  step: { marginTop: 8 },
-  stepActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
+  ingredientActions: { flexDirection: 'row', gap: 6, marginTop: 6 },
   action: { backgroundColor: '#eef1ed', borderRadius: 6, padding: 8 },
   secondaryButton: {
     alignItems: 'center',

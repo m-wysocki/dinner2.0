@@ -44,19 +44,11 @@ export class RecipeExtractionService {
       };
     });
 
-    const preparationSteps = extracted.preparationSteps.map(
-      (step, position) => ({
-        text: step.text,
-        position,
-      }),
-    );
-
     const result = rawExtractedRecipeDraftSchema.safeParse({
       title: input.title,
       servingCount: input.servingCount,
       description: extracted.description,
       ingredients,
-      preparationSteps,
     });
 
     if (!result.success) {

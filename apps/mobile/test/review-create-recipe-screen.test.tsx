@@ -52,7 +52,6 @@ function draft(): ExtractRecipeDraft {
         position: 0,
       },
     ],
-    preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
   };
 }
 
@@ -72,7 +71,6 @@ function draftWithProposal(): ExtractRecipeDraft {
         position: 0,
       },
     ],
-    preparationSteps: [],
   };
 }
 
@@ -120,7 +118,6 @@ beforeEach(() => {
     description: 'Kremowa zupa pomidorowa.',
     servingCount: 4,
     ingredients: [],
-    preparationSteps: [],
     createdAt: '2026-08-28T12:00:00.000Z',
     updatedAt: '2026-08-28T12:00:00.000Z',
   });
@@ -129,15 +126,16 @@ beforeEach(() => {
 });
 
 describe('CreateReview screen', () => {
-  it('lets the user correct the draft and saves through the recipe endpoint', async () => {
+  it('shows the original pasted recipe and lets the user correct the draft', async () => {
     const user = userEvent.setup();
     render(<CreateReview />);
 
     expect(screen.getByText('Przejrzyj przepis')).toBeInTheDocument();
+    expect(screen.getByText('Oryginalny przepis')).toBeInTheDocument();
+    expect(
+      screen.getByText('Składniki: 2 pomidory. Gotuj.'),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Nazwa składnika 1')).toHaveValue('Pomidor');
-    expect(screen.getByLabelText('Krok przygotowania 1')).toHaveValue(
-      'Gotuj pomidory',
-    );
 
     await user.click(screen.getByText('Zapisz przepis'));
 
@@ -156,7 +154,6 @@ describe('CreateReview screen', () => {
             position: 0,
           },
         ],
-        preparationSteps: [{ text: 'Gotuj pomidory', position: 0 }],
         sourceText: 'Składniki: 2 pomidory. Gotuj.',
       }),
     );
@@ -175,14 +172,16 @@ describe('CreateReview screen', () => {
 
     expect(screen.getByText(/Nieznany składnik „Szafran”/)).toBeInTheDocument();
 
-    await user.click(screen.getByText('Zaakceptuj propozycję'));
+    await user.click(screen.getByText('Dodaj jako nowy składnik'));
 
     await waitFor(() =>
       expect(apiClient.createCustomIngredient).toHaveBeenCalledWith({
         name: 'Szafran',
       }),
     );
-    expect(screen.queryByText('Zaakceptuj propozycję')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Nieznany składnik „Szafran”/),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByText('Zapisz przepis'));
 
@@ -207,7 +206,9 @@ describe('CreateReview screen', () => {
 
     await user.click(await screen.findByText('Pomidor'));
 
-    expect(screen.queryByText('Zaakceptuj propozycję')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Nieznany składnik „Szafran”/),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByText('Zapisz przepis'));
 
@@ -216,6 +217,38 @@ describe('CreateReview screen', () => {
         expect.objectContaining({
           ingredients: [
             expect.objectContaining({ catalogEntryId: TOMATO_ENTRY_ID }),
+          ],
+        }),
+      ),
+    );
+  });
+
+  it('saves a matched ingredient as a new custom identity', async () => {
+    const user = userEvent.setup();
+    render(<CreateReview />);
+
+    const nameInput = screen.getByLabelText('Nazwa składnika 1');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Mąka pszenna');
+
+    await user.click(screen.getByText('Dodaj jako nowy składnik'));
+
+    await waitFor(() =>
+      expect(apiClient.createCustomIngredient).toHaveBeenCalledWith({
+        name: 'Mąka pszenna',
+      }),
+    );
+
+    await user.click(screen.getByText('Zapisz przepis'));
+
+    await waitFor(() =>
+      expect(apiClient.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ingredients: [
+            expect.objectContaining({
+              name: 'Mąka pszenna',
+              catalogEntryId: SAFFRON_ENTRY_ID,
+            }),
           ],
         }),
       ),

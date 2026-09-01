@@ -43,12 +43,6 @@ interface FakeIngredient {
   position: number;
 }
 
-interface FakeStep {
-  id: string;
-  text: string;
-  position: number;
-}
-
 interface FakeRecipe {
   id: string;
   ownerId: string;
@@ -58,7 +52,6 @@ interface FakeRecipe {
   createdAt: Date;
   updatedAt: Date;
   ingredients: FakeIngredient[];
-  preparationSteps: FakeStep[];
 }
 
 interface FakeCatalogEntry {
@@ -100,13 +93,6 @@ function resetState() {
           quantity: { toString: () => '2' },
           unit: 'PCS',
           note: null,
-          position: 0,
-        },
-      ],
-      preparationSteps: [
-        {
-          id: '7d7c3f9b-3d8b-4cf6-9f41-5dfb2b2f9b2a',
-          text: 'Pokrój pomidory',
           position: 0,
         },
       ],
@@ -183,22 +169,13 @@ function installMocks() {
       recipes
         .filter((recipe) => recipe.ownerId === where.ownerId)
         .map(
-          ({
+          ({ id, title, description, servingCount, createdAt, updatedAt }) => ({
             id,
             title,
             description,
             servingCount,
             createdAt,
             updatedAt,
-            preparationSteps,
-          }) => ({
-            id,
-            title,
-            description,
-            servingCount,
-            createdAt,
-            updatedAt,
-            preparationSteps,
           }),
         ),
   );
@@ -211,7 +188,6 @@ function installMocks() {
         description: string | null;
         servingCount: number;
         ingredients?: { create?: Array<Record<string, unknown>> };
-        preparationSteps?: { create?: Array<Record<string, unknown>> };
       };
       const recipe: FakeRecipe = {
         id: randomUUID(),
@@ -232,11 +208,6 @@ function installMocks() {
           note: (ingredient.note as string | null | undefined) ?? null,
           position: Number(ingredient.position),
         })),
-        preparationSteps: (data.preparationSteps?.create ?? []).map((step) => ({
-          id: randomUUID(),
-          text: String(step.text),
-          position: Number(step.position),
-        })),
       };
       recipes.push(recipe);
       if (failNextCreate) {
@@ -254,7 +225,6 @@ function installMocks() {
         description: string | null;
         servingCount: number;
         ingredients: { create?: Array<Record<string, unknown>> };
-        preparationSteps: { create?: Array<Record<string, unknown>> };
       };
       const existing = recipes[index];
       const updated: FakeRecipe = {
@@ -273,11 +243,6 @@ function installMocks() {
           unit: String(ingredient.unit),
           note: (ingredient.note as string | null | undefined) ?? null,
           position: Number(ingredient.position),
-        })),
-        preparationSteps: (data.preparationSteps.create ?? []).map((step) => ({
-          id: randomUUID(),
-          text: String(step.text),
-          position: Number(step.position),
         })),
       };
       recipes[index] = updated;
@@ -416,7 +381,6 @@ describe('recipes API (HTTP)', () => {
         id: RECIPE_A_ID,
         title: 'Zupa pomidorowa',
         ingredients: [{ name: 'Pomidor', quantity: '2' }],
-        preparationSteps: [{ text: 'Pokrój pomidory' }],
       });
     });
 
@@ -454,7 +418,6 @@ describe('recipes API (HTTP)', () => {
           title: 'Podmieniony',
           servingCount: 2,
           ingredients: [],
-          preparationSteps: [],
         }),
       });
 
@@ -624,28 +587,6 @@ describe('recipes API (HTTP)', () => {
       );
     });
 
-    it('rejects an empty preparation step', async () => {
-      await expectValidationError(
-        await postRecipe({
-          title: 'Zupa',
-          servingCount: 4,
-          preparationSteps: [{ text: ' ', position: 0 }],
-        }),
-        'preparationSteps.0.text',
-      );
-    });
-
-    it('rejects preparation steps with non-consecutive positions', async () => {
-      await expectValidationError(
-        await postRecipe({
-          title: 'Zupa',
-          servingCount: 4,
-          preparationSteps: [{ text: 'Gotuj', position: 1 }],
-        }),
-        'preparationSteps',
-      );
-    });
-
     it('rejects invalid update input before touching the recipe', async () => {
       const response = await fetch(`${baseUrl}/recipes/${RECIPE_A_ID}`, {
         method: 'PATCH',
@@ -657,7 +598,6 @@ describe('recipes API (HTTP)', () => {
           title: 'Zupa',
           servingCount: 0,
           ingredients: [],
-          preparationSteps: [],
         }),
       });
 
@@ -680,14 +620,12 @@ describe('recipes API (HTTP)', () => {
             position: 0,
           },
         ],
-        preparationSteps: [{ text: 'Wymieszaj', position: 0 }],
       });
 
       expect(response.status).toBe(201);
       await expect(response.json()).resolves.toMatchObject({
         title: 'Naleśniki',
         ingredients: [{ name: 'Mąka', quantity: '200' }],
-        preparationSteps: [{ text: 'Wymieszaj' }],
       });
       expect($transaction).toHaveBeenCalled();
     });
@@ -727,7 +665,6 @@ describe('recipes API (HTTP)', () => {
             position: 0,
           },
         ],
-        preparationSteps: [{ text: 'Wymieszaj', position: 0 }],
       });
 
       expect(response.status).toBe(500);
