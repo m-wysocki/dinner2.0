@@ -91,7 +91,9 @@ export default function Confirm() {
           </Text>
           <Link href="/" asChild>
             <Button className="mt-6">
-              <Text>{t('app.backToHome')}</Text>
+              <Text className="text-base font-semibold">
+                {t('app.backToHome')}
+              </Text>
             </Button>
           </Link>
         </>
@@ -104,7 +106,9 @@ export default function Confirm() {
           </Text>
           <Link href="/" asChild>
             <Button className="mt-6">
-              <Text>{t('app.backToHome')}</Text>
+              <Text className="text-base font-semibold">
+                {t('app.backToHome')}
+              </Text>
             </Button>
           </Link>
         </>

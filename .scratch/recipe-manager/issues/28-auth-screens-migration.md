@@ -37,3 +37,11 @@
   Vitest externalizes it. Fixed by inlining the package in `vitest.config.ts`
   (`test.server.deps.inline`) rather than stubbing it, so the real theme
   objects stay in the graph. Existing auth tests needed no behavioral edits.
+- Code review findings: (1) fixed — Button labels inherited the primitive's
+  `text-sm font-medium` instead of the original 16px/600; now pinned with
+  `text-base font-semibold`. (2) accepted — placeholder color now comes from
+  the Input primitive's tokens (darker on web, lighter on native) rather than
+  the old `#9aa39e` literal, and disabled opacity is 0.5 vs 0.6; both are
+  primitive-level design-system behavior, not per-screen choices. (3) accepted
+  — screens keep small per-screen duplication; they remain structurally
+  identical until a later ticket argues for a shared auth shell.

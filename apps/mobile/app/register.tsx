@@ -56,7 +56,9 @@ export default function Register() {
         </Text>
         <Link href="/" asChild>
           <Button>
-            <Text>{t('app.backToHome')}</Text>
+            <Text className="text-base font-semibold">
+              {t('app.backToHome')}
+            </Text>
           </Button>
         </Link>
       </View>
@@ -116,7 +118,7 @@ export default function Register() {
               color={THEME[colorScheme ?? 'light'].primaryForeground}
             />
           ) : (
-            <Text>{t('register.submit')}</Text>
+            <Text className="text-base font-semibold">{t('register.submit')}</Text>
           )}
         </Button>
 

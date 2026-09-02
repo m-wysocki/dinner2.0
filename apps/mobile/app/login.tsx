@@ -97,7 +97,7 @@ export default function Login() {
               color={THEME[colorScheme ?? 'light'].primaryForeground}
             />
           ) : (
-            <Text>{t('login.submit')}</Text>
+            <Text className="text-base font-semibold">{t('login.submit')}</Text>
           )}
         </Button>
 
