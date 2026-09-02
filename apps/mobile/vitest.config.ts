@@ -12,6 +12,21 @@ export default defineConfig({
       // so tests must exercise that same renderer instead of a react-native mock.
       // The bare 'react-native' specifier is remapped; subpath imports are untouched.
       { find: /^react-native$/, replacement: 'react-native-web' },
+      // @rn-primitives/* ship untranspiled JSX in their dists (Metro-only);
+      // remap to the thin stub so Node can parse the import graph.
+      {
+        find: /^@rn-primitives\/slot$/,
+        replacement: new URL(
+          './test/mocks/rn-primitives-slot.js',
+          import.meta.url,
+        ).pathname,
+      },
+      // Design-system imports (reusables components) resolve the same `@/*`
+      // alias that tsconfig defines for the app root.
+      {
+        find: /^@\/(.*)$/,
+        replacement: `${new URL('.', import.meta.url).pathname}$1`,
+      },
       // expo-secure-store is a native module with no DOM/web entry usable in jsdom;
       // keep a thin in-memory substitute so the web session path can import it.
       {
