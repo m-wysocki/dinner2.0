@@ -3,12 +3,14 @@ import { Link, Redirect } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
-  StyleSheet,
-  Text,
+  useColorScheme,
   View,
 } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
+import { cn } from '@/lib/utils';
 import { apiClient } from '../src/api/client';
 import {
   getAuthenticatedState,
@@ -26,6 +28,7 @@ const OPTIONS: Array<{
 
 export default function Language() {
   const { t, language, setLanguage } = useI18n();
+  const colorScheme = useColorScheme();
   const state = getAuthenticatedState();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,85 +62,58 @@ export default function Language() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{t('language.title')}</Text>
-      <Text style={styles.message}>{t('language.message')}</Text>
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="grow p-6"
+    >
+      <Text className="text-[30px] font-bold text-foreground">
+        {t('language.title')}
+      </Text>
+      <Text className="mt-3 text-base leading-6 text-muted-foreground">
+        {t('language.message')}
+      </Text>
 
       {OPTIONS.map((option) => {
         const selected = option.value === language;
         return (
-          <Pressable
+          <Button
             key={option.value}
-            style={[styles.option, selected && styles.optionSelected]}
+            variant="outline"
+            className={cn(
+              'mt-3 w-full justify-between border-border bg-card px-4 py-4',
+              selected && 'border-brand bg-accent',
+            )}
             onPress={() => void select(option.value)}
             disabled={saving}
           >
-            <Text style={styles.optionText}>{t(option.labelKey)}</Text>
+            <Text className="text-[17px] font-semibold text-foreground">
+              {t(option.labelKey)}
+            </Text>
             {selected && (
-              <Text style={styles.optionCurrent}>{t('language.current')}</Text>
+              <Text className="text-sm font-semibold text-brand">
+                {t('language.current')}
+              </Text>
             )}
-          </Pressable>
+          </Button>
         );
       })}
 
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <Text className="mt-4 text-center text-[15px] font-semibold text-destructive">
+          {error}
+        </Text>
+      )}
       {saving && (
-        <View style={styles.saving}>
-          <ActivityIndicator color="#28734a" />
+        <View className="mt-4 items-center">
+          <ActivityIndicator color={THEME[colorScheme ?? 'light'].brand} />
         </View>
       )}
 
-      <Link href="/user" style={styles.button}>
-        <Text style={styles.buttonText}>{t('app.back')}</Text>
+      <Link href="/user" asChild>
+        <Button className="mt-8 w-full">
+          <Text className="text-base font-semibold">{t('app.back')}</Text>
+        </Button>
       </Link>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    backgroundColor: '#fffaf3',
-  },
-  title: { color: '#25352d', fontSize: 30, fontWeight: '700' },
-  message: {
-    color: '#68736d',
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 12,
-  },
-  option: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderColor: '#d9ded8',
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    padding: 16,
-  },
-  optionSelected: {
-    backgroundColor: '#eef6f0',
-    borderColor: '#28734a',
-  },
-  optionText: { color: '#25352d', fontSize: 17, fontWeight: '600' },
-  optionCurrent: { color: '#28734a', fontSize: 14, fontWeight: '600' },
-  saving: { alignItems: 'center', marginTop: 16 },
-  error: {
-    color: '#a43b32',
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 32,
-    paddingVertical: 14,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

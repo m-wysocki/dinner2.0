@@ -1,10 +1,12 @@
 import { Link, Redirect, router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useI18n } from '../src/i18n/i18n';
+import { ScrollView } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
 import {
   clearAuthenticatedState,
   getAuthenticatedState,
 } from '../src/auth/session';
+import { useI18n } from '../src/i18n/i18n';
 
 export default function User() {
   const { t } = useI18n();
@@ -15,61 +17,54 @@ export default function User() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.email}>{state.user.email}</Text>
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="grow justify-center p-6"
+    >
+      <Text className="mt-2 text-base text-muted-foreground">
+        {state.user.email}
+      </Text>
       {state.user.accessStatus === 'PENDING' ? (
         <>
-          <Text style={styles.title}>{t('user.titlePending')}</Text>
-          <Text style={styles.message}>{t('user.messagePending')}</Text>
+          <Text className="text-[28px] font-bold text-foreground">
+            {t('user.titlePending')}
+          </Text>
+          <Text className="mt-6 text-base leading-6 text-muted-foreground">
+            {t('user.messagePending')}
+          </Text>
         </>
       ) : (
         <>
-          <Text style={styles.title}>{t('user.titleActive')}</Text>
-          <Text style={styles.message}>{t('user.messageActive')}</Text>
+          <Text className="text-[28px] font-bold text-foreground">
+            {t('user.titleActive')}
+          </Text>
+          <Text className="mt-6 text-base leading-6 text-muted-foreground">
+            {t('user.messageActive')}
+          </Text>
         </>
       )}
-      <Link href="/" style={styles.button}>
-        <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
+      <Link href="/" asChild>
+        <Button className="mt-8 w-full">
+          <Text className="text-base font-semibold">{t('app.backToHome')}</Text>
+        </Button>
       </Link>
-      <Link href="/language" style={styles.button}>
-        <Text style={styles.buttonText}>{t('user.language')}</Text>
+      <Link href="/language" asChild>
+        <Button className="mt-8 w-full">
+          <Text className="text-base font-semibold">{t('user.language')}</Text>
+        </Button>
       </Link>
-      <Pressable
-        style={styles.logoutButton}
+      <Button
+        variant="ghost"
+        className="mt-5 w-full"
         onPress={() => {
           clearAuthenticatedState();
           router.replace('/login');
         }}
       >
-        <Text style={styles.logoutText}>{t('app.logout')}</Text>
-      </Pressable>
+        <Text className="text-base font-semibold text-destructive">
+          {t('app.logout')}
+        </Text>
+      </Button>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#fffaf3',
-  },
-  title: { color: '#25352d', fontSize: 28, fontWeight: '700' },
-  email: { color: '#68736d', fontSize: 16, marginTop: 8 },
-  message: {
-    color: '#68736d',
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 24,
-  },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 32,
-    paddingVertical: 14,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  logoutButton: { alignItems: 'center', marginTop: 20, paddingVertical: 14 },
-  logoutText: { color: '#a43b32', fontSize: 16, fontWeight: '600' },
-});
