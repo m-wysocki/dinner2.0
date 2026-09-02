@@ -1,5 +1,5 @@
 import { Children, cloneElement, createElement, isValidElement } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { vi } from 'vitest';
 
@@ -58,8 +58,15 @@ export function Link({
   if (asChild) {
     const child = Children.only(children);
     if (isValidElement(child)) {
-      return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
-        onPress: handlePress,
+      const childElement = child as ReactElement<Record<string, unknown>>;
+      const childOnPress = childElement.props.onPress as
+        | (() => void)
+        | undefined;
+      return cloneElement(childElement, {
+        onPress: () => {
+          childOnPress?.();
+          handlePress();
+        },
       });
     }
   }

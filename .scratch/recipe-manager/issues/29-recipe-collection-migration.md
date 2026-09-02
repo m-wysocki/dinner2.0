@@ -8,7 +8,7 @@
 
 ## Definition of done
 
-- [ ] Collection screen uses reusables Card, Text, Button (and other primitives where they fit); StyleSheet styling removed.
-- [ ] Recipe rows navigate to recipe details as before.
-- [ ] Existing collection screen tests pass (updated to the new markup where needed).
-- [ ] `apps/mobile` typecheck, lint, and tests pass.
+- [x] Collection screen uses reusables Card, Text, Button (and other primitives where they fit); StyleSheet styling removed.
+- [x] Recipe rows navigate to recipe details as before.
+- [x] Existing collection screen tests pass (updated to the new markup where needed).
+- [x] `apps/mobile` typecheck, lint, and tests pass.
