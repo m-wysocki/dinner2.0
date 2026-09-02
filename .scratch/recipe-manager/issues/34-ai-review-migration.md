@@ -4,14 +4,14 @@
 
 **Blocked by:** 33: Recipe editing screen migration
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
-- [ ] No StyleSheet usage remains on the review screen; all fragments use className styling with theme tokens.
-- [ ] The screen shares the migrated recipe form primitives where forms appear.
-- [ ] Existing review screen tests pass (updated to the new markup where needed).
-- [ ] `apps/mobile` typecheck, lint, and tests pass.
+- [x] No StyleSheet usage remains on the review screen; all fragments use className styling with theme tokens.
+- [x] The screen shares the migrated recipe form primitives where forms appear.
+- [x] Existing review screen tests pass (updated to the new markup where needed).
+- [x] `apps/mobile` typecheck, lint, and tests pass.
 
 ## Comments
 
