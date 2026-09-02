@@ -4,14 +4,14 @@
 
 **Blocked by:** 30: Recipe details screen migration
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
-- [ ] User and language screens use reusables primitives; StyleSheet styling removed.
-- [ ] Language selection still switches between Polish and English with immediate effect.
-- [ ] Existing user and language screen tests pass (updated to the new markup where needed).
-- [ ] `apps/mobile` typecheck, lint, and tests pass.
+- [x] User and language screens use reusables primitives; StyleSheet styling removed.
+- [x] Language selection still switches between Polish and English with immediate effect.
+- [x] Existing user and language screen tests pass (updated to the new markup where needed).
+- [x] `apps/mobile` typecheck, lint, and tests pass.
 
 ## Comments
 
