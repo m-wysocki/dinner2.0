@@ -3,13 +3,15 @@ import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
+  useColorScheme,
   View,
 } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
 import { ApiError, apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
 import { useI18n } from '../../src/i18n/i18n';
@@ -17,6 +19,7 @@ import { setCreateDraft } from '../../src/recipe/create-draft';
 
 export default function CreateRecipe() {
   const { t } = useI18n();
+  const colorScheme = useColorScheme();
   const state = getAuthenticatedState();
   const [title, setTitle] = useState('');
   const [sourceText, setSourceText] = useState('');
@@ -64,114 +67,96 @@ export default function CreateRecipe() {
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{t('create.title')}</Text>
-      <Text style={styles.label}>{t('form.title')}</Text>
-      <TextInput
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="grow p-6"
+    >
+      <Text className="mb-2 text-[30px] font-bold text-foreground">
+        {t('create.title')}
+      </Text>
+      <Label className="mb-2 mt-4 text-[15px] font-semibold">
+        {t('form.title')}
+      </Label>
+      <Input
         accessibilityLabel={t('form.title')}
         autoCapitalize="sentences"
+        className="rounded-lg bg-card p-3"
         onChangeText={setTitle}
         placeholder={t('form.titlePlaceholder')}
-        style={styles.input}
         value={title}
       />
-      <Text style={styles.label}>{t('create.sourceTextLabel')}</Text>
-      <TextInput
+      <Label className="mb-2 mt-4 text-[15px] font-semibold">
+        {t('create.sourceTextLabel')}
+      </Label>
+      <Input
         accessibilityLabel={t('create.sourceTextLabel')}
         autoCapitalize="sentences"
+        className="h-auto min-h-[180px] rounded-lg bg-card p-3"
         maxLength={20000}
         multiline
         onChangeText={setSourceText}
         placeholder={t('create.sourceTextPlaceholder')}
-        style={[styles.input, styles.sourceText]}
+        textAlignVertical="top"
         value={sourceText}
       />
-      <Text style={styles.label}>{t('create.servingCount')}</Text>
-      <TextInput
+      <Label className="mb-2 mt-4 text-[15px] font-semibold">
+        {t('create.servingCount')}
+      </Label>
+      <Input
         accessibilityLabel={t('create.servingCount')}
+        className="rounded-lg bg-card p-3"
         keyboardType="number-pad"
         onChangeText={setServingCount}
         placeholder={t('create.servingCountPlaceholder')}
-        style={styles.input}
         value={servingCount}
       />
       {error && (
-        <View style={styles.errorPanel}>
-          <Text style={styles.error}>{error}</Text>
-          <Pressable disabled={isExtracting} onPress={() => void extract()}>
-            <Text style={styles.retry}>{t('app.retry')}</Text>
-          </Pressable>
+        <View className="mt-5">
+          <Text className="text-base font-semibold text-destructive">
+            {error}
+          </Text>
+          <Button
+            variant="link"
+            className="mt-3 self-start"
+            disabled={isExtracting}
+            onPress={() => void extract()}
+          >
+            <Text className="text-[15px] font-bold text-destructive underline">
+              {t('app.retry')}
+            </Text>
+          </Button>
         </View>
       )}
-      <Pressable
+      <Button
+        className="mt-6 py-3.5"
         disabled={isExtracting}
         onPress={() => void extract()}
-        style={styles.button}
       >
         {isExtracting ? (
-          <View style={styles.extracting}>
-            <ActivityIndicator color="#fff" />
-            <Text style={styles.buttonText}>{t('create.extracting')}</Text>
+          <View className="flex-row items-center gap-2">
+            <ActivityIndicator
+              color={THEME[colorScheme ?? 'light'].primaryForeground}
+            />
+            <Text className="text-base font-semibold">
+              {t('create.extracting')}
+            </Text>
           </View>
         ) : (
-          <Text style={styles.buttonText}>{t('create.extract')}</Text>
+          <Text className="text-base font-semibold">
+            {t('create.extract')}
+          </Text>
         )}
-      </Pressable>
-      <Pressable
+      </Button>
+      <Button
+        variant="ghost"
+        className="mt-3"
         disabled={isExtracting}
         onPress={() => router.back()}
-        style={styles.cancel}
       >
-        <Text style={styles.cancelText}>{t('app.cancel')}</Text>
-      </Pressable>
+        <Text className="font-semibold text-muted-foreground">
+          {t('app.cancel')}
+        </Text>
+      </Button>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: '#fffaf3' },
-  container: { flexGrow: 1, padding: 24 },
-  title: {
-    color: '#25352d',
-    fontSize: 30,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  label: {
-    color: '#25352d',
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderColor: '#d9ded8',
-    borderRadius: 8,
-    borderWidth: 1,
-    color: '#25352d',
-    fontSize: 16,
-    padding: 12,
-  },
-  sourceText: { minHeight: 180, textAlignVertical: 'top' },
-  errorPanel: { marginTop: 20 },
-  error: { color: '#a43b32', fontSize: 16, fontWeight: '600' },
-  retry: {
-    color: '#a43b32',
-    fontSize: 15,
-    fontWeight: '700',
-    marginTop: 12,
-    textDecorationLine: 'underline',
-  },
-  extracting: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 24,
-    paddingVertical: 14,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  cancel: { alignItems: 'center', marginTop: 12, padding: 12 },
-  cancelText: { color: '#68736d', fontWeight: '600' },
-});
