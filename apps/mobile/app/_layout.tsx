@@ -14,7 +14,7 @@ import {
   restoreAuthenticatedState,
   setAuthenticatedState,
 } from '../src/auth/session';
-import { NAV_THEME } from '@/lib/theme';
+import { NAV_THEME, THEME } from '@/lib/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,10 +27,11 @@ const queryClient = new QueryClient({
 
 function LoadingScreen() {
   const { t } = useI18n();
+  const { colorScheme } = useColorScheme();
 
   return (
     <View className="flex-1 items-center justify-center bg-background p-6">
-      <ActivityIndicator color="hsl(147, 48%, 30%)" />
+      <ActivityIndicator color={THEME[colorScheme ?? 'light'].brand} />
       <Text className="mt-3 text-muted-foreground">{t('app.loading')}</Text>
     </View>
   );
