@@ -1,14 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Text } from '@/components/ui/text';
 import { ApiError, apiClient } from '../../src/api/client';
 import { formatServings, unitLabel, useI18n } from '../../src/i18n/i18n';
 
@@ -32,7 +29,11 @@ export default function RecipeDetails() {
   });
 
   if (recipeQuery.isPending) {
-    return <ActivityIndicator style={styles.centered} />;
+    return (
+      <View className="flex-1 items-center justify-center bg-background p-6">
+        <ActivityIndicator />
+      </View>
+    );
   }
 
   if (recipeQuery.isError || !recipeQuery.data) {
@@ -40,179 +41,130 @@ export default function RecipeDetails() {
       recipeQuery.error instanceof ApiError &&
       recipeQuery.error.code === 'RECIPE_NOT_FOUND';
     return (
-      <View style={styles.centered}>
-        <Text style={styles.error}>
+      <View className="flex-1 items-center justify-center bg-background p-6">
+        <Text className="text-[17px] font-semibold text-destructive">
           {isNotFound ? t('details.notFound') : t('details.loadFailed')}
         </Text>
-        <Pressable style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>{t('app.back')}</Text>
-        </Pressable>
+        <Button className="mt-5" onPress={() => router.back()}>
+          <Text className="text-base font-semibold">{t('app.back')}</Text>
+        </Button>
       </View>
     );
   }
 
   const recipe = recipeQuery.data;
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="min-h-full p-6"
+    >
       <Pressable onPress={() => router.back()}>
-        <Text style={styles.back}>{t('app.back')}</Text>
+        <Text className="text-base text-muted-foreground">{t('app.back')}</Text>
       </Pressable>
-      <View style={styles.header}>
-        <Text style={styles.title}>{recipe.title}</Text>
-        <Pressable
-          style={styles.editButton}
+      <View className="mt-6 flex-row items-center gap-3">
+        <Text className="flex-1 text-[32px] font-bold text-foreground">
+          {recipe.title}
+        </Text>
+        <Button
+          variant="secondary"
+          size="sm"
           onPress={() => router.push(`/edit-recipe/${recipe.id}`)}
         >
-          <Text style={styles.editButtonText}>{t('details.edit')}</Text>
-        </Pressable>
+          <Text className="text-sm font-semibold">{t('details.edit')}</Text>
+        </Button>
       </View>
       {recipe.description && (
-        <Text style={styles.description}>{recipe.description}</Text>
+        <Text className="mt-3 text-base text-muted-foreground">
+          {recipe.description}
+        </Text>
       )}
-      <Text style={styles.servings}>
+      <Text className="mt-3 font-semibold text-brand">
         {formatServings(recipe.servingCount, language)}
       </Text>
 
-      <Text style={styles.heading}>{t('details.ingredients')}</Text>
-      {recipe.ingredients?.length ? (
-        recipe.ingredients.map((ingredient) => {
-          const label = [
-            ingredient.quantity !== null ? String(ingredient.quantity) : null,
-            unitLabel(ingredient.unit, language) || null,
-            ingredient.name,
-          ]
-            .filter((part): part is string => part !== null)
-            .join(' ');
+      <Separator className="mt-7" />
 
-          return (
-            <Text key={ingredient.id} style={styles.item}>
-              {label}
-              {ingredient.note ? ` (${ingredient.note})` : ''}
-            </Text>
-          );
-        })
-      ) : (
-        <Text style={styles.muted}>{t('details.noIngredients')}</Text>
-      )}
+      <Text className="mt-7 text-[22px] font-bold text-foreground">
+        {t('details.ingredients')}
+      </Text>
+      <View className="mt-3">
+        {recipe.ingredients?.length ? (
+          recipe.ingredients.map((ingredient) => {
+            const label = [
+              ingredient.quantity !== null ? String(ingredient.quantity) : null,
+              unitLabel(ingredient.unit, language) || null,
+              ingredient.name,
+            ]
+              .filter((part): part is string => part !== null)
+              .join(' ');
+
+            return (
+              <Text
+                key={ingredient.id}
+                className="text-base leading-6 text-foreground"
+              >
+                {label}
+                {ingredient.note ? ` (${ingredient.note})` : ''}
+              </Text>
+            );
+          })
+        ) : (
+          <Text className="text-muted-foreground">
+            {t('details.noIngredients')}
+          </Text>
+        )}
+      </View>
 
       {deleteMutation.isError && (
-        <Text style={styles.deleteError}>
+        <Text className="mt-7 text-[15px] text-destructive">
           {t('details.deleteFailed')} {deleteMutation.error.message}
         </Text>
       )}
       {confirmingDelete ? (
-        <View style={styles.confirmPanel}>
-          <Text style={styles.confirmTitle}>{t('details.deleteQuestion')}</Text>
-          <Text style={styles.muted}>{t('details.deleteWarning')}</Text>
-          <View style={styles.confirmActions}>
-            <Pressable
-              style={styles.cancelButton}
+        <Card className="mt-7 rounded-lg py-4">
+          <Text className="text-[17px] font-bold text-foreground">
+            {t('details.deleteQuestion')}
+          </Text>
+          <Text className="text-muted-foreground">
+            {t('details.deleteWarning')}
+          </Text>
+          <View className="mt-4 flex-row gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
               onPress={() => setConfirmingDelete(false)}
               disabled={deleteMutation.isPending}
             >
-              <Text style={styles.cancelButtonText}>{t('app.cancel')}</Text>
-            </Pressable>
-            <Pressable
-              style={styles.deleteConfirmButton}
+              <Text className="text-base font-semibold text-muted-foreground">
+                {t('app.cancel')}
+              </Text>
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
               onPress={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              <Text style={styles.deleteConfirmButtonText}>
+              <Text className="text-base font-semibold">
                 {deleteMutation.isPending
                   ? t('details.deleting')
                   : t('details.delete')}
               </Text>
-            </Pressable>
+            </Button>
           </View>
-        </View>
+        </Card>
       ) : (
-        <Pressable
-          style={styles.deleteButton}
+        <Button
+          variant="outline"
+          className="mt-7 border-destructive"
           onPress={() => setConfirmingDelete(true)}
           disabled={deleteMutation.isPending}
         >
-          <Text style={styles.deleteButtonText}>
+          <Text className="text-base font-semibold text-destructive">
             {t('details.deleteRecipe')}
           </Text>
-        </Pressable>
+        </Button>
       )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#fffaf3', minHeight: '100%' },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  back: { color: '#68736d', fontSize: 16, marginBottom: 24 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { color: '#25352d', flex: 1, fontSize: 32, fontWeight: '700' },
-  editButton: {
-    backgroundColor: '#eef1ed',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  editButtonText: { color: '#25352d', fontWeight: '600' },
-  description: { color: '#68736d', fontSize: 16, marginTop: 12 },
-  servings: { color: '#28734a', fontWeight: '600', marginTop: 12 },
-  heading: {
-    color: '#25352d',
-    fontSize: 22,
-    fontWeight: '700',
-    marginTop: 28,
-    marginBottom: 12,
-  },
-  item: { color: '#25352d', flex: 1, fontSize: 16, lineHeight: 24 },
-  muted: { color: '#68736d' },
-  error: { color: '#a43b32', fontSize: 17, fontWeight: '600' },
-  button: {
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-  },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  deleteError: { color: '#a43b32', fontSize: 15, marginTop: 28 },
-  confirmPanel: {
-    backgroundColor: '#fff',
-    borderColor: '#d9ded8',
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 28,
-    padding: 16,
-  },
-  confirmTitle: { color: '#25352d', fontSize: 17, fontWeight: '700' },
-  confirmActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  cancelButton: {
-    alignItems: 'center',
-    borderColor: '#d9ded8',
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
-    paddingVertical: 12,
-  },
-  cancelButtonText: { color: '#68736d', fontSize: 16, fontWeight: '600' },
-  deleteConfirmButton: {
-    alignItems: 'center',
-    backgroundColor: '#a43b32',
-    borderRadius: 8,
-    flex: 1,
-    paddingVertical: 12,
-  },
-  deleteConfirmButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  deleteButton: {
-    alignItems: 'center',
-    borderColor: '#a43b32',
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 28,
-    paddingVertical: 12,
-  },
-  deleteButtonText: { color: '#a43b32', fontSize: 16, fontWeight: '600' },
-});

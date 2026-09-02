@@ -21,6 +21,13 @@ export default defineConfig({
           import.meta.url,
         ).pathname,
       },
+      {
+        find: /^@rn-primitives\/separator$/,
+        replacement: new URL(
+          './test/mocks/rn-primitives-separator.js',
+          import.meta.url,
+        ).pathname,
+      },
       // Design-system imports (reusables components) resolve the same `@/*`
       // alias that tsconfig defines for the app root.
       {
