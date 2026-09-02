@@ -4,14 +4,14 @@
 
 **Blocked by:** 31: User and language screens migration
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
-- [ ] The shared recipe form component uses reusables Input, Label, Text, Button; StyleSheet styling removed.
-- [ ] The create screen renders the migrated form; draft state and AI-assisted entry redirect unaffected.
-- [ ] Existing create screen tests pass (updated to the new markup where needed).
-- [ ] `apps/mobile` typecheck, lint, and tests pass.
+- [x] The shared recipe form component uses reusables Input, Label, Text, Button; StyleSheet styling removed.
+- [x] The create screen renders the migrated form; draft state and AI-assisted entry redirect unaffected.
+- [x] Existing create screen tests pass (updated to the new markup where needed).
+- [x] `apps/mobile` typecheck, lint, and tests pass.
 
 ## Comments
 
