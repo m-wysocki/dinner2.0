@@ -121,7 +121,7 @@ export default function RecipeDetails() {
         </Text>
       )}
       {confirmingDelete ? (
-        <Card className="mt-7 rounded-lg py-4">
+        <Card className="mt-7 gap-4 rounded-lg px-4 py-4">
           <Text className="text-[17px] font-bold text-foreground">
             {t('details.deleteQuestion')}
           </Text>
