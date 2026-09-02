@@ -1,7 +1,9 @@
 import { type RecipeResponse } from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Text as ButtonText } from '@/components/ui/text';
 import { apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
 import { formatServings, useI18n } from '../../src/i18n/i18n';
@@ -35,10 +37,14 @@ export default function CreateReview() {
 
   if (savedRecipe) {
     return (
-      <View style={styles.savedContainer}>
-        <Text style={styles.title}>{t('create.savedTitle')}</Text>
-        <Text style={styles.savedTitle}>{savedRecipe.title}</Text>
-        <Text style={styles.savedMessage}>
+      <View className="flex-1 bg-background p-6">
+        <Text className="pt-10 text-3xl font-bold text-foreground">
+          {t('create.savedTitle')}
+        </Text>
+        <Text className="mt-2 text-[22px] font-semibold text-foreground">
+          {savedRecipe.title}
+        </Text>
+        <Text className="mt-5 text-base leading-6 text-muted-foreground">
           {t('create.savedMessage', {
             servings: formatServings(
               savedRecipe.servingCount,
@@ -47,21 +53,29 @@ export default function CreateReview() {
             ),
           })}
         </Text>
-        <Pressable onPress={() => router.replace('/')} style={styles.button}>
-          <Text style={styles.buttonText}>{t('app.backToHomeScreen')}</Text>
-        </Pressable>
+        <Button onPress={() => router.replace('/')} className="mt-6">
+          <ButtonText>{t('app.backToHomeScreen')}</ButtonText>
+        </Button>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{t('review.title')}</Text>
-      <ScrollView style={styles.originalScroll}>
-        <View style={styles.originalPanel}>
-          <Text style={styles.originalLabel}>{t('review.originalRecipe')}</Text>
-          <Text style={styles.originalHint}>{t('review.originalHint')}</Text>
-          <Text style={styles.originalText}>{stored.sourceText}</Text>
+    <View className="flex-1 bg-background">
+      <Text className="px-6 pt-10 text-3xl font-bold text-foreground">
+        {t('review.title')}
+      </Text>
+      <ScrollView className="max-h-[260px] grow-0 px-6">
+        <View className="mt-4 rounded-lg border border-panel-border bg-secondary p-3.5">
+          <Text className="text-[15px] font-bold text-panel-label">
+            {t('review.originalRecipe')}
+          </Text>
+          <Text className="mt-1 text-[13px] text-panel-hint">
+            {t('review.originalHint')}
+          </Text>
+          <Text className="mt-2 text-[15px] leading-[22px] text-secondary-foreground">
+            {stored.sourceText}
+          </Text>
         </View>
       </ScrollView>
       <RecipeForm
@@ -80,64 +94,3 @@ export default function CreateReview() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fffaf3' },
-  savedContainer: { flex: 1, backgroundColor: '#fffaf3', padding: 24 },
-  title: {
-    color: '#25352d',
-    fontSize: 30,
-    fontWeight: '700',
-    paddingHorizontal: 24,
-    paddingTop: 40,
-  },
-  savedTitle: {
-    color: '#25352d',
-    fontSize: 22,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  savedMessage: {
-    color: '#68736d',
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 20,
-  },
-  originalScroll: {
-    flexGrow: 0,
-    maxHeight: 260,
-    paddingHorizontal: 24,
-  },
-  originalPanel: {
-    backgroundColor: '#fdf6e9',
-    borderColor: '#e6d5a8',
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 16,
-    padding: 14,
-  },
-  originalLabel: {
-    color: '#6b5a2e',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  originalHint: {
-    color: '#8a7a4d',
-    fontSize: 13,
-    marginTop: 4,
-  },
-  originalText: {
-    color: '#4c463a',
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-  },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 24,
-    paddingVertical: 14,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
