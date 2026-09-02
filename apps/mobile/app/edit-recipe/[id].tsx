@@ -1,12 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, Redirect } from 'expo-router';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
 import { apiClient, ApiError } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
 import { useI18n } from '../../src/i18n/i18n';
@@ -33,7 +29,11 @@ export default function EditRecipe() {
   });
 
   if (recipeQuery.isPending) {
-    return <ActivityIndicator style={styles.centered} />;
+    return (
+      <View className="flex-1 items-center justify-center bg-background p-6">
+        <ActivityIndicator />
+      </View>
+    );
   }
 
   if (recipeQuery.isError || !recipeQuery.data) {
@@ -41,21 +41,23 @@ export default function EditRecipe() {
       recipeQuery.error instanceof ApiError &&
       recipeQuery.error.code === 'RECIPE_NOT_FOUND';
     return (
-      <View style={styles.centered}>
-        <Text style={styles.error}>
+      <View className="flex-1 items-center justify-center bg-background p-6">
+        <Text className="text-[17px] font-semibold text-destructive">
           {isNotFound ? t('details.notFound') : t('details.loadFailed')}
         </Text>
-        <Pressable style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>{t('app.back')}</Text>
-        </Pressable>
+        <Button className="mt-5" onPress={() => router.back()}>
+          <Text className="text-base font-semibold">{t('app.back')}</Text>
+        </Button>
       </View>
     );
   }
 
   const recipe = recipeQuery.data;
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{t('edit.title')}</Text>
+    <View className="flex-1 bg-background">
+      <Text className="px-6 pt-10 text-[30px] font-bold text-foreground">
+        {t('edit.title')}
+      </Text>
       <RecipeForm
         initialValues={{
           title: recipe.title,
@@ -86,29 +88,3 @@ export default function EditRecipe() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fffaf3' },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  title: {
-    color: '#25352d',
-    fontSize: 30,
-    fontWeight: '700',
-    paddingHorizontal: 24,
-    paddingTop: 40,
-  },
-  error: { color: '#a43b32', fontSize: 17, fontWeight: '600' },
-  button: {
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-  },
-  buttonText: { color: '#fff', fontWeight: '600' },
-});
