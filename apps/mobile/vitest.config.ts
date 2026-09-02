@@ -42,5 +42,14 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./test/setup.ts'],
+    server: {
+      deps: {
+        // @react-navigation/native ships extensionless ESM in lib/module that
+        // Node's loader rejects when externalized; lib/theme.ts (pulled in by
+        // className-migrated screens for spinner colors) imports its themes,
+        // so let Vite transform the package instead.
+        inline: ['@react-navigation/native'],
+      },
+    },
   },
 });

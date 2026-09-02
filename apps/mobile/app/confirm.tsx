@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
 import { Link } from 'expo-router';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, useColorScheme, View } from 'react-native';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
 import { confirmEmailViaLink } from '../src/auth/confirm';
 import { useI18n } from '../src/i18n/i18n';
 
@@ -18,6 +15,7 @@ type ConfirmState =
 
 export default function Confirm() {
   const { t } = useI18n();
+  const colorScheme = useColorScheme();
   const [state, setState] = useState<ConfirmState>({ kind: 'pending' });
 
   useEffect(() => {
@@ -67,72 +65,50 @@ export default function Confirm() {
   }, [t]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{t('confirm.title')}</Text>
+    <ScrollView
+      contentContainerClassName="grow justify-center bg-background p-6"
+    >
+      <Text className="text-[28px] font-bold text-foreground">
+        {t('confirm.title')}
+      </Text>
 
       {state.kind === 'pending' && (
-        <View style={styles.status}>
-          <ActivityIndicator />
-          <Text style={styles.message}>{t('confirm.checking')}</Text>
+        <View className="mt-8 items-center">
+          <ActivityIndicator color={THEME[colorScheme ?? 'light'].brand} />
+          <Text className="mt-3 text-base text-muted-foreground">
+            {t('confirm.checking')}
+          </Text>
         </View>
       )}
 
       {state.kind === 'success' && (
         <>
-          <Text style={styles.success}>{t('confirm.success')}</Text>
-          <Text style={styles.message}>{t('confirm.successMessage')}</Text>
-          <Link href="/" style={styles.button}>
-            <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
+          <Text className="mt-6 text-lg font-bold text-brand">
+            {t('confirm.success')}
+          </Text>
+          <Text className="mt-3 text-base leading-6 text-muted-foreground">
+            {t('confirm.successMessage')}
+          </Text>
+          <Link href="/" asChild>
+            <Button className="mt-6">
+              <Text>{t('app.backToHome')}</Text>
+            </Button>
           </Link>
         </>
       )}
 
       {state.kind === 'failure' && (
         <>
-          <Text style={styles.error}>{state.message}</Text>
-          <Link href="/" style={styles.button}>
-            <Text style={styles.buttonText}>{t('app.backToHome')}</Text>
+          <Text className="mt-6 text-base font-semibold leading-6 text-destructive">
+            {state.message}
+          </Text>
+          <Link href="/" asChild>
+            <Button className="mt-6">
+              <Text>{t('app.backToHome')}</Text>
+            </Button>
           </Link>
         </>
       )}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#fffaf3',
-  },
-  title: { color: '#25352d', fontSize: 28, fontWeight: '700' },
-  status: { alignItems: 'center', marginTop: 32 },
-  success: {
-    color: '#28734a',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 24,
-  },
-  error: {
-    color: '#a43b32',
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 24,
-    marginTop: 24,
-  },
-  message: {
-    color: '#68736d',
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 12,
-  },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#25352d',
-    borderRadius: 8,
-    marginTop: 24,
-    paddingVertical: 14,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
