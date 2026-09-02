@@ -4,7 +4,7 @@
 
 **Blocked by:** 28: Auth screens migration (login, register, confirm)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
