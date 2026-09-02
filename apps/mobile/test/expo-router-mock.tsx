@@ -1,5 +1,5 @@
-import { createElement } from 'react';
-import type { ReactNode } from 'react';
+import { Children, cloneElement, createElement, isValidElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { vi } from 'vitest';
 
@@ -36,24 +36,42 @@ export function Redirect({ href }: { href: string }) {
 type RouterLinkProps = {
   href: string;
   onPress?: () => void;
+  asChild?: boolean;
   children?: ReactNode;
 } & Record<string, unknown>;
 
-export function Link({ href, onPress, children, ...rest }: RouterLinkProps) {
-  return createElement(
-    Pressable,
-    {
-      ...rest,
-      onPress: () => {
-        if (onPress) {
-          onPress();
-        } else {
-          router.push(href);
-        }
-      },
-    },
-    children,
-  );
+export function Link({
+  href,
+  onPress,
+  asChild,
+  children,
+  ...rest
+}: RouterLinkProps) {
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push(href);
+    }
+  };
+
+  if (asChild) {
+    const child = Children.only(children);
+    if (isValidElement(child)) {
+      const childElement = child as ReactElement<Record<string, unknown>>;
+      const childOnPress = childElement.props.onPress as
+        | (() => void)
+        | undefined;
+      return cloneElement(childElement, {
+        onPress: () => {
+          childOnPress?.();
+          handlePress();
+        },
+      });
+    }
+  }
+
+  return createElement(Pressable, { ...rest, onPress: handlePress }, children);
 }
 
 export function Stack({ children }: { children?: ReactNode }) {
