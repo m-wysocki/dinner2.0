@@ -4,11 +4,11 @@
 
 **Blocked by:** 32: Manual recipe creation migration (shared form + create screen)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
-- [ ] Edit screen chrome (navigation, save/delete actions) uses reusables primitives; StyleSheet styling removed.
-- [ ] Editing flows through the shared form migrated in ticket 32 without regression.
-- [ ] Existing edit screen tests pass (updated to the new markup where needed).
-- [ ] `apps/mobile` typecheck, lint, and tests pass.
+- [x] Edit screen chrome (navigation, save/delete actions) uses reusables primitives; StyleSheet styling removed.
+- [x] Editing flows through the shared form migrated in ticket 32 without regression.
+- [x] Existing edit screen tests pass (updated to the new markup where needed).
+- [x] `apps/mobile` typecheck, lint, and tests pass.
