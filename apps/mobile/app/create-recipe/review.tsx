@@ -1,9 +1,9 @@
 import { type RecipeResponse } from '@dinner/shared';
 import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Button } from '@/components/ui/button';
-import { Text as ButtonText } from '@/components/ui/text';
+import { Text } from '@/components/ui/text';
 import { apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
 import { formatServings, useI18n } from '../../src/i18n/i18n';
@@ -54,7 +54,7 @@ export default function CreateReview() {
           })}
         </Text>
         <Button onPress={() => router.replace('/')} className="mt-6">
-          <ButtonText>{t('app.backToHomeScreen')}</ButtonText>
+          <Text>{t('app.backToHomeScreen')}</Text>
         </Button>
       </View>
     );
