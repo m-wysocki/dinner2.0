@@ -9,7 +9,10 @@ import { getAuthenticatedState } from '../src/auth/session';
 import { router, setLocalParams } from './expo-router-mock';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
-vi.mock('../src/auth/session', () => ({ getAuthenticatedState: vi.fn() }));
+vi.mock('../src/auth/session', () => ({
+  getAuthenticatedState: vi.fn(),
+  subscribeToSession: vi.fn(() => () => undefined),
+}));
 vi.mock('../src/api/client', () => ({
   ApiError: class ApiError extends Error {
     status = 0;

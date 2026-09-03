@@ -5,7 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CreateReview from '../app/create-recipe/review';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
-vi.mock('../src/auth/session', () => ({ getAuthenticatedState: vi.fn() }));
+vi.mock('../src/auth/session', () => ({
+  getAuthenticatedState: vi.fn(),
+  subscribeToSession: vi.fn(() => () => undefined),
+}));
 vi.mock('../src/api/client', () => ({
   ApiError: class ApiError extends Error {
     status = 0;

@@ -10,6 +10,8 @@ const pl = {
   'app.backToHomeScreen': 'Wróć do strony głównej',
   'app.cancel': 'Anuluj',
   'app.logout': 'Wyloguj się',
+  'app.userMenu': 'Menu użytkownika',
+  'app.closeMenu': 'Zamknij menu',
   'app.subtitle': 'Menedżer przepisów',
 
   'nav.collection': 'Kolekcja',
@@ -164,6 +166,8 @@ const en: Record<TranslationKey, string> = {
   'app.backToHomeScreen': 'Back to home',
   'app.cancel': 'Cancel',
   'app.logout': 'Log out',
+  'app.userMenu': 'User menu',
+  'app.closeMenu': 'Close menu',
   'app.subtitle': 'Recipe manager',
 
   'nav.collection': 'Collection',
