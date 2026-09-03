@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { AppShell } from '@/components/app-shell';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
@@ -45,73 +46,77 @@ export default function Login() {
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-background"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerClassName="grow justify-center p-6"
-        keyboardShouldPersistTaps="handled"
+    <AppShell>
+      <KeyboardAvoidingView
+        className="flex-1 bg-background"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text className="text-[28px] font-bold text-foreground">
-          {t('login.title')}
-        </Text>
-        <Text className="mb-6 mt-2 text-base text-muted-foreground">
-          {t('login.subtitle')}
-        </Text>
-
-        <Input
-          className="mb-3"
-          value={email}
-          onChangeText={setEmail}
-          placeholder={t('login.emailPlaceholder')}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          editable={submit.kind !== 'submitting'}
-        />
-
-        <Input
-          className="mb-3"
-          value={password}
-          onChangeText={setPassword}
-          placeholder={t('login.passwordPlaceholder')}
-          secureTextEntry
-          autoCapitalize="none"
-          editable={submit.kind !== 'submitting'}
-        />
-
-        {submit.kind === 'failure' && (
-          <Text className="mb-3 text-center text-[15px] font-semibold text-destructive">
-            {submit.message}
-          </Text>
-        )}
-
-        <Button
-          className="mt-1 w-full"
-          onPress={() => void handleSubmit()}
-          disabled={submit.kind === 'submitting'}
+        <ScrollView
+          contentContainerClassName="grow p-6"
+          keyboardShouldPersistTaps="handled"
         >
-          {submit.kind === 'submitting' ? (
-            <ActivityIndicator
-              color={THEME[colorScheme ?? 'light'].primaryForeground}
-            />
-          ) : (
-            <Text className="text-base font-semibold">{t('login.submit')}</Text>
-          )}
-        </Button>
+          <Text className="text-[28px] font-bold text-foreground">
+            {t('login.title')}
+          </Text>
+          <Text className="mb-6 mt-2 text-base text-muted-foreground">
+            {t('login.subtitle')}
+          </Text>
 
-        <Link href="/register" asChild>
-          <Text className="mt-5 text-center text-[15px] text-muted-foreground">
-            {t('login.noAccount')}
-          </Text>
-        </Link>
-        <Link href="/" asChild>
-          <Text className="mt-5 text-center text-[15px] text-muted-foreground">
-            {t('app.back')}
-          </Text>
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <Input
+            className="mb-3"
+            value={email}
+            onChangeText={setEmail}
+            placeholder={t('login.emailPlaceholder')}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            editable={submit.kind !== 'submitting'}
+          />
+
+          <Input
+            className="mb-3"
+            value={password}
+            onChangeText={setPassword}
+            placeholder={t('login.passwordPlaceholder')}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={submit.kind !== 'submitting'}
+          />
+
+          {submit.kind === 'failure' && (
+            <Text className="mb-3 text-center text-[15px] font-semibold text-destructive">
+              {submit.message}
+            </Text>
+          )}
+
+          <Button
+            className="mt-1 w-full"
+            onPress={() => void handleSubmit()}
+            disabled={submit.kind === 'submitting'}
+          >
+            {submit.kind === 'submitting' ? (
+              <ActivityIndicator
+                color={THEME[colorScheme ?? 'light'].primaryForeground}
+              />
+            ) : (
+              <Text className="text-base font-semibold">
+                {t('login.submit')}
+              </Text>
+            )}
+          </Button>
+
+          <Link href="/register" asChild>
+            <Text className="mt-5 text-center text-[15px] text-muted-foreground">
+              {t('login.noAccount')}
+            </Text>
+          </Link>
+          <Link href="/" asChild>
+            <Text className="mt-5 text-center text-[15px] text-muted-foreground">
+              {t('app.back')}
+            </Text>
+          </Link>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </AppShell>
   );
 }

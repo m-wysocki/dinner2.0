@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { AppShell } from '@/components/app-shell';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
@@ -47,87 +48,93 @@ export default function Register() {
 
   if (submit.kind === 'success') {
     return (
-      <View className="flex-1 justify-center bg-background p-6">
-        <Text className="text-[28px] font-bold text-foreground">
-          {t('register.successTitle')}
-        </Text>
-        <Text className="mb-8 mt-3 text-base leading-6 text-muted-foreground">
-          {t('register.successMessage')}
-        </Text>
-        <Link href="/" asChild>
-          <Button>
-            <Text className="text-base font-semibold">
-              {t('app.backToHome')}
-            </Text>
-          </Button>
-        </Link>
-      </View>
+      <AppShell>
+        <View className="flex-1 bg-background p-6">
+          <Text className="text-[28px] font-bold text-foreground">
+            {t('register.successTitle')}
+          </Text>
+          <Text className="mb-8 mt-3 text-base leading-6 text-muted-foreground">
+            {t('register.successMessage')}
+          </Text>
+          <Link href="/" asChild>
+            <Button>
+              <Text className="text-base font-semibold">
+                {t('app.backToHome')}
+              </Text>
+            </Button>
+          </Link>
+        </View>
+      </AppShell>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-background"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerClassName="grow justify-center p-6"
-        keyboardShouldPersistTaps="handled"
+    <AppShell>
+      <KeyboardAvoidingView
+        className="flex-1 bg-background"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Text className="text-[28px] font-bold text-foreground">
-          {t('register.title')}
-        </Text>
-        <Text className="mb-6 mt-2 text-base text-muted-foreground">
-          {t('register.subtitle')}
-        </Text>
-
-        <Input
-          className="mb-3"
-          value={email}
-          onChangeText={setEmail}
-          placeholder={t('register.emailPlaceholder')}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          editable={submit.kind !== 'submitting'}
-        />
-
-        <Input
-          className="mb-3"
-          value={password}
-          onChangeText={setPassword}
-          placeholder={t('register.passwordPlaceholder')}
-          secureTextEntry
-          autoCapitalize="none"
-          editable={submit.kind !== 'submitting'}
-        />
-
-        {submit.kind === 'failure' && (
-          <Text className="mb-3 text-center text-[15px] font-semibold text-destructive">
-            {submit.message}
-          </Text>
-        )}
-
-        <Button
-          className="mt-1 w-full"
-          onPress={() => void handleSubmit()}
-          disabled={submit.kind === 'submitting'}
+        <ScrollView
+          contentContainerClassName="grow p-6"
+          keyboardShouldPersistTaps="handled"
         >
-          {submit.kind === 'submitting' ? (
-            <ActivityIndicator
-              color={THEME[colorScheme ?? 'light'].primaryForeground}
-            />
-          ) : (
-            <Text className="text-base font-semibold">{t('register.submit')}</Text>
-          )}
-        </Button>
-
-        <Link href="/" asChild>
-          <Text className="mt-5 text-center text-[15px] text-muted-foreground">
-            {t('app.back')}
+          <Text className="text-[28px] font-bold text-foreground">
+            {t('register.title')}
           </Text>
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <Text className="mb-6 mt-2 text-base text-muted-foreground">
+            {t('register.subtitle')}
+          </Text>
+
+          <Input
+            className="mb-3"
+            value={email}
+            onChangeText={setEmail}
+            placeholder={t('register.emailPlaceholder')}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            editable={submit.kind !== 'submitting'}
+          />
+
+          <Input
+            className="mb-3"
+            value={password}
+            onChangeText={setPassword}
+            placeholder={t('register.passwordPlaceholder')}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={submit.kind !== 'submitting'}
+          />
+
+          {submit.kind === 'failure' && (
+            <Text className="mb-3 text-center text-[15px] font-semibold text-destructive">
+              {submit.message}
+            </Text>
+          )}
+
+          <Button
+            className="mt-1 w-full"
+            onPress={() => void handleSubmit()}
+            disabled={submit.kind === 'submitting'}
+          >
+            {submit.kind === 'submitting' ? (
+              <ActivityIndicator
+                color={THEME[colorScheme ?? 'light'].primaryForeground}
+              />
+            ) : (
+              <Text className="text-base font-semibold">
+                {t('register.submit')}
+              </Text>
+            )}
+          </Button>
+
+          <Link href="/" asChild>
+            <Text className="mt-5 text-center text-[15px] text-muted-foreground">
+              {t('app.back')}
+            </Text>
+          </Link>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </AppShell>
   );
 }

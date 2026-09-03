@@ -12,6 +12,10 @@ const pl = {
   'app.logout': 'Wyloguj się',
   'app.subtitle': 'Menedżer przepisów',
 
+  'nav.collection': 'Kolekcja',
+  'nav.addRecipe': 'Dodaj przepis',
+  'nav.user': 'Użytkownik',
+
   'home.connecting': 'Łączenie z API...',
   'home.connectFailed': 'Nie udało się połączyć z API.',
   'home.apiWorking': 'API działa prawidłowo',
@@ -169,6 +173,10 @@ const en: Record<TranslationKey, string> = {
   'app.cancel': 'Cancel',
   'app.logout': 'Log out',
   'app.subtitle': 'Recipe manager',
+
+  'nav.collection': 'Collection',
+  'nav.addRecipe': 'Add recipe',
+  'nav.user': 'User',
 
   'home.connecting': 'Connecting to the API...',
   'home.connectFailed': 'Could not connect to the API.',
