@@ -9,6 +9,8 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
+import { isAccessActive } from '@/src/auth/access';
+import { getAuthenticatedState } from '@/src/auth/session';
 import { useI18n, type TranslationKey } from '@/src/i18n/i18n';
 
 const NAV_ITEMS = [
@@ -87,15 +89,27 @@ function NavItem({
   );
 }
 
+type NavItemConfig = (typeof NAV_ITEMS)[number];
+
+function navItemsForAccess(): readonly NavItemConfig[] {
+  const state = getAuthenticatedState();
+  // Pending-access users only get the Account destination until activation.
+  if (state && !isAccessActive(state)) {
+    return NAV_ITEMS.filter((item) => item.href === '/user');
+  }
+  return NAV_ITEMS;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const pathname = usePathname() ?? '/';
   const insets = useSafeAreaInsets();
+  const navItems = navItemsForAccess();
 
   return (
     <View className="flex-1 bg-background md:flex-row">
       <View className="hidden border-r border-border md:flex md:w-64 md:flex-col md:p-4">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
@@ -132,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="flex-row border-t border-border bg-card md:hidden"
           style={{ paddingBottom: insets.bottom }}
         >
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavItem
               key={item.href}
               href={item.href}

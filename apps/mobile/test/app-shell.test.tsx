@@ -57,6 +57,23 @@ describe('AppShell', () => {
     expect(screen.getByText('Screen content')).toBeInTheDocument();
   });
 
+  it('offers only the account destination while access is pending', async () => {
+    await setAuthenticatedState({
+      ...activeState,
+      user: {
+        ...activeState.user,
+        email: 'pending@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+      },
+    });
+    renderShell('/user');
+
+    expect(screen.getAllByText('Użytkownik')).toHaveLength(3);
+    expect(screen.queryByText('Kolekcja')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dodaj przepis')).not.toBeInTheDocument();
+  });
+
   it('highlights the active destination in the sidebar and the tab bar', () => {
     renderShell('/create-recipe');
 

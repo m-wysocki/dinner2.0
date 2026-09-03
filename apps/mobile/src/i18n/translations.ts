@@ -24,8 +24,6 @@ const pl = {
   'home.emptyTitle': 'Nie masz jeszcze przepisów',
   'home.emptyMessage': 'Dodaj pierwszy przepis do swojej kolekcji.',
   'home.addRecipe': 'Dodaj przepis',
-  'home.accessPending': 'Dostęp oczekuje na aktywację',
-  'home.checkAccount': 'Sprawdź status konta',
 
   'servings.one': 'porcja',
   'servings.few': 'porcje',
@@ -180,8 +178,6 @@ const en: Record<TranslationKey, string> = {
   'home.emptyTitle': 'You have no recipes yet',
   'home.emptyMessage': 'Add your first recipe to your collection.',
   'home.addRecipe': 'Add recipe',
-  'home.accessPending': 'Access is pending activation',
-  'home.checkAccount': 'Check account status',
 
   'servings.one': 'serving',
   'servings.few': 'servings',

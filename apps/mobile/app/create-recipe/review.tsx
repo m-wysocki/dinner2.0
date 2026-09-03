@@ -7,6 +7,7 @@ import { AppShell } from '@/components/app-shell';
 import { Text } from '@/components/ui/text';
 import { apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
+import { isAccessActive } from '../../src/auth/access';
 import { formatServings, useI18n } from '../../src/i18n/i18n';
 import {
   clearCreateDraft,
@@ -26,7 +27,7 @@ export default function CreateReview() {
     return <Redirect href="/login" />;
   }
 
-  if (state.user.accessStatus !== 'ACTIVE' || !state.user.emailConfirmedAt) {
+  if (!isAccessActive(state)) {
     return <Redirect href="/user" />;
   }
 

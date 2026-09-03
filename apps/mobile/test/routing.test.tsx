@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Index from '../app/index';
 import Login from '../app/login';
+import CreateRecipe from '../app/create-recipe/index';
 import { apiClient } from '../src/api/client';
 import { router } from './expo-router-mock';
 import {
@@ -13,7 +14,10 @@ import {
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/api/client', () => ({
-  apiClient: { listRecipes: vi.fn() },
+  ApiError: class ApiError extends Error {
+    code: string | undefined;
+  },
+  apiClient: { listRecipes: vi.fn(), extractRecipe: vi.fn() },
 }));
 
 const listRecipesMock = vi.mocked(apiClient.listRecipes);
@@ -123,9 +127,29 @@ describe('mobile shell routing', () => {
     });
     renderRootScreen();
 
-    expect(
-      screen.getByText('Dostęp oczekuje na aktywację'),
-    ).toBeInTheDocument();
+    expect(router.replace).toHaveBeenCalledWith('/user');
+    expect(screen.queryByText('Twoja kolekcja')).not.toBeInTheDocument();
     expect(screen.queryByText('Jesteś zalogowany')).not.toBeInTheDocument();
+  });
+
+  it('redirects pending-access users from the create-recipe route to the account route', async () => {
+    await setAuthenticatedState({
+      session: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      },
+      user: {
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        email: 'pending@example.com',
+        emailConfirmedAt: null,
+        accessStatus: 'PENDING',
+        interfaceLanguage: 'pl',
+      },
+    });
+    render(<CreateRecipe />);
+
+    expect(router.replace).toHaveBeenCalledWith('/user');
+    expect(screen.queryByText('Nowy przepis')).not.toBeInTheDocument();
   });
 });
