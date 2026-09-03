@@ -9,6 +9,12 @@ import {
 } from 'react';
 import { getAuthenticatedState, subscribeToSession } from '../auth/session';
 import {
+  getLocalLanguagePreference,
+  readStoredLanguagePreference,
+  resolveInterfaceLanguage,
+  writeStoredLanguagePreference,
+} from './language-preference';
+import {
   translate as translateForLanguage,
   type TranslationKey,
   type TranslationParams,
@@ -17,15 +23,22 @@ import {
 export { formatServings, unitLabel } from './translations';
 export type { TranslationKey, TranslationParams } from './translations';
 
-function sessionLanguage(): InterfaceLanguage {
-  return getAuthenticatedState()?.user.interfaceLanguage ?? 'pl';
+function authenticatedLanguage(): InterfaceLanguage | null {
+  return getAuthenticatedState()?.user.interfaceLanguage ?? null;
+}
+
+function resolveCurrentLanguage(): InterfaceLanguage {
+  return resolveInterfaceLanguage(
+    authenticatedLanguage(),
+    getLocalLanguagePreference(),
+  );
 }
 
 export function translate(
   key: TranslationKey,
   params?: TranslationParams,
 ): string {
-  return translateForLanguage(key, params, sessionLanguage());
+  return translateForLanguage(key, params, resolveCurrentLanguage());
 }
 
 export interface I18nValue {
@@ -44,13 +57,34 @@ const I18nContext = createContext<I18nValue>(defaultI18n);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<InterfaceLanguage>(() =>
-    sessionLanguage(),
+    resolveCurrentLanguage(),
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void readStoredLanguagePreference().then((stored) => {
+      if (!cancelled) {
+        setLanguage(resolveInterfaceLanguage(authenticatedLanguage(), stored));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(
     () =>
       subscribeToSession(() => {
-        setLanguage(sessionLanguage());
+        const authenticated = authenticatedLanguage();
+
+        if (authenticated) {
+          // The account language wins over the local choice on login.
+          void writeStoredLanguagePreference(authenticated);
+        }
+
+        setLanguage(resolveCurrentLanguage());
       }),
     [],
   );
@@ -58,7 +92,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18nValue>(
     () => ({
       language,
-      setLanguage,
+      setLanguage: (next) => {
+        setLanguage(next);
+
+        if (!getAuthenticatedState()) {
+          // Logged-out users store their choice on the device only.
+          void writeStoredLanguagePreference(next);
+        }
+      },
       t: (key, params) => translateForLanguage(key, params, language),
     }),
     [language],

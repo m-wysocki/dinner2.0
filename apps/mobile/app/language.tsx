@@ -1,5 +1,5 @@
 import type { InterfaceLanguage } from '@dinner/shared';
-import { Link, Redirect } from 'expo-router';
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -34,10 +34,6 @@ export default function Language() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!state) {
-    return <Redirect href="/login" />;
-  }
-
   const authState = state;
 
   async function select(next: InterfaceLanguage) {
@@ -48,6 +44,13 @@ export default function Language() {
     setSaving(true);
     setError(null);
     setLanguage(next);
+
+    if (!authState) {
+      // Logged out: the choice lives on the device only (persisted by the
+      // I18nProvider), there is no account to save it to.
+      setSaving(false);
+      return;
+    }
 
     try {
       const updated = await apiClient.updateUser({ interfaceLanguage: next });
@@ -111,7 +114,7 @@ export default function Language() {
           </View>
         )}
 
-        <Link href="/user" asChild>
+        <Link href={authState ? '/user' : '/'} asChild>
           <Button className="mt-8 w-full">
             <Text className="text-base font-semibold">{t('app.back')}</Text>
           </Button>

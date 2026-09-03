@@ -51,8 +51,8 @@ beforeEach(() => {
     },
     user: activeUser,
   });
-  vi.mocked(setAuthenticatedState).mockResolvedValue(undefined);
-  vi.mocked(apiClient.updateUser).mockResolvedValue({
+  vi.mocked(setAuthenticatedState).mockClear().mockResolvedValue(undefined);
+  vi.mocked(apiClient.updateUser).mockClear().mockResolvedValue({
     ...activeUser,
     interfaceLanguage: 'en',
   });
@@ -101,11 +101,18 @@ describe('Language screen', () => {
     expect(await screen.findByText('offline')).toBeInTheDocument();
   });
 
-  it('renders nothing without an authenticated session', () => {
+  it('switches locally without an account when logged out', async () => {
     mockI18n('pl');
     vi.mocked(getAuthenticatedState).mockReturnValue(null);
+    const user = userEvent.setup();
     render(<Language />);
 
-    expect(screen.queryByText('Język interfejsu')).not.toBeInTheDocument();
+    expect(screen.getByText('Język interfejsu')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Angielski'));
+
+    expect(setLanguageMock).toHaveBeenCalledWith('en');
+    expect(apiClient.updateUser).not.toHaveBeenCalled();
+    expect(setAuthenticatedState).not.toHaveBeenCalled();
   });
 });
