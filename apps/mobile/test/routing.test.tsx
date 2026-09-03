@@ -13,10 +13,9 @@ import {
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/api/client', () => ({
-  apiClient: { health: vi.fn(), listRecipes: vi.fn() },
+  apiClient: { listRecipes: vi.fn() },
 }));
 
-const healthMock = vi.mocked(apiClient.health);
 const listRecipesMock = vi.mocked(apiClient.listRecipes);
 
 function renderRootScreen() {
@@ -32,10 +31,8 @@ function renderRootScreen() {
 
 beforeEach(() => {
   clearAuthenticatedState();
-  healthMock.mockReset();
   router.push.mockClear();
   router.back.mockClear();
-  healthMock.mockResolvedValue({ status: 'ok', service: 'api' });
   listRecipesMock.mockResolvedValue([]);
 });
 

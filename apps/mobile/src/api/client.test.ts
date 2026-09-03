@@ -1,31 +1,44 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { healthResponseSchema } from '@dinner/shared';
 import { ApiError, apiClient, request } from './client';
 import {
   clearAuthenticatedState,
   setAuthenticatedState,
 } from '../auth/session';
 
-describe('apiClient', () => {
+const statusSchema = {
+  parse: (value: unknown) => {
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      (value as { status?: unknown }).status === 'ok'
+    ) {
+      return value as { status: string };
+    }
+    throw new Error('invalid');
+  },
+};
+
+const passthroughSchema = { parse: (value: unknown) => value };
+
+describe('request', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('returns a validated health response', async () => {
+  it('returns a validated response', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ status: 'ok', service: 'api' }),
+        json: async () => ({ status: 'ok' }),
       }),
     );
 
-    await expect(apiClient.health()).resolves.toEqual({
+    await expect(request('/test', statusSchema)).resolves.toEqual({
       status: 'ok',
-      service: 'api',
     });
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/v1/health', {
+    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/v1/test', {
       method: 'GET',
     });
   });
@@ -40,7 +53,7 @@ describe('apiClient', () => {
       }),
     );
 
-    await expect(apiClient.health()).rejects.toMatchObject({
+    await expect(request('/test', statusSchema)).rejects.toMatchObject({
       name: 'ApiError',
       message: 'API zwróciło nieprawidłową odpowiedź.',
     });
@@ -48,7 +61,9 @@ describe('apiClient', () => {
 
   it('turns network and HTTP failures into ApiError', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
-    await expect(apiClient.health()).rejects.toBeInstanceOf(ApiError);
+    await expect(request('/test', statusSchema)).rejects.toBeInstanceOf(
+      ApiError,
+    );
 
     vi.stubGlobal(
       'fetch',
@@ -58,7 +73,9 @@ describe('apiClient', () => {
         json: async () => ({ error: { code: 'X', message: 'down' } }),
       }),
     );
-    await expect(apiClient.health()).rejects.toMatchObject({ status: 503 });
+    await expect(request('/test', statusSchema)).rejects.toMatchObject({
+      status: 503,
+    });
   });
 });
 
@@ -498,16 +515,19 @@ describe('authenticated requests', () => {
       vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ status: 'ok', service: 'api' }),
+        json: async () => ({}),
       }),
     );
 
-    await request('/health', healthResponseSchema, { authenticated: true });
+    await request('/protected', passthroughSchema, { authenticated: true });
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/v1/health', {
-      method: 'GET',
-      headers: { Authorization: 'Bearer access-token' },
-    });
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/protected',
+      {
+        method: 'GET',
+        headers: { Authorization: 'Bearer access-token' },
+      },
+    );
   });
 
   it('refreshes the current user through the authenticated API', async () => {
@@ -554,7 +574,7 @@ describe('authenticated requests', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(
-      request('/health', healthResponseSchema, { authenticated: true }),
+      request('/protected', passthroughSchema, { authenticated: true }),
     ).rejects.toMatchObject({ status: 401 });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -589,10 +609,10 @@ describe('authenticated requests', () => {
     );
 
     await expect(
-      request('/health', healthResponseSchema, { authenticated: true }),
+      request('/protected', passthroughSchema, { authenticated: true }),
     ).rejects.toMatchObject({ status: 401 });
     await expect(
-      request('/health', healthResponseSchema, { authenticated: true }),
+      request('/protected', passthroughSchema, { authenticated: true }),
     ).rejects.toMatchObject({
       status: 401,
     });

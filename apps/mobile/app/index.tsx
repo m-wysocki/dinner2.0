@@ -18,10 +18,6 @@ export default function Index() {
   const isActiveUser =
     authenticatedState?.user.accessStatus === 'ACTIVE' &&
     Boolean(authenticatedState.user.emailConfirmedAt);
-  const healthQuery = useQuery({
-    queryKey: ['health'],
-    queryFn: () => apiClient.health(),
-  });
   const recipesQuery = useQuery({
     queryKey: ['recipes', authenticatedState?.user.id],
     queryFn: () => apiClient.listRecipes(),
@@ -38,40 +34,6 @@ export default function Index() {
         <Text className="mt-2 text-base text-muted-foreground">
           {t('app.subtitle')}
         </Text>
-
-        {healthQuery.isPending && (
-          <View className="mt-12 items-center">
-            <ActivityIndicator />
-            <Text className="mt-3 text-muted-foreground">
-              {t('home.connecting')}
-            </Text>
-          </View>
-        )}
-
-        {healthQuery.isError && (
-          <View className="mt-12 items-center">
-            <Text className="text-center text-[17px] font-semibold text-destructive">
-              {t('home.connectFailed')}
-            </Text>
-            <Text className="mt-2 text-center text-muted-foreground">
-              {healthQuery.error.message}
-            </Text>
-            <Button className="mt-5" onPress={() => void healthQuery.refetch()}>
-              <Text className="text-base font-semibold">{t('app.retry')}</Text>
-            </Button>
-          </View>
-        )}
-
-        {healthQuery.isSuccess && (
-          <View className="mt-12 items-center">
-            <Text className="text-[17px] font-semibold text-brand">
-              {t('home.apiWorking')}
-            </Text>
-            <Text className="mt-2 text-center text-muted-foreground">
-              {t('home.connected')}
-            </Text>
-          </View>
-        )}
 
         {isActiveUser ? (
           <View className="mt-8 w-full items-center">
