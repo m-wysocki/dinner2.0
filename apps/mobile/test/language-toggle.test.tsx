@@ -1,10 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import Language from '../app/language';
+import { LanguageToggle } from '@/components/language-toggle';
 import { translate } from '../src/i18n/translations';
 
-vi.mock('expo-router', async () => await import('./expo-router-mock'));
 vi.mock('../src/auth/session', () => ({
   getAuthenticatedState: vi.fn(),
   setAuthenticatedState: vi.fn(),
@@ -59,23 +58,27 @@ beforeEach(() => {
   setLanguageMock.mockReset();
 });
 
-describe('Language screen', () => {
-  it('highlights the current interface language', () => {
-    mockI18n('pl');
-    render(<Language />);
-
-    expect(screen.getByText('Język interfejsu')).toBeInTheDocument();
-    expect(screen.getByText('Polski')).toBeInTheDocument();
-    expect(screen.getByText('Angielski')).toBeInTheDocument();
-    expect(screen.getAllByText('Obecny')).toHaveLength(1);
-  });
-
-  it('switches to English and persists the preference', async () => {
+describe('LanguageToggle', () => {
+  it('renders both options and ignores re-selecting the current language', async () => {
     mockI18n('pl');
     const user = userEvent.setup();
-    render(<Language />);
+    render(<LanguageToggle />);
 
-    await user.click(screen.getByText('Angielski'));
+    expect(screen.getByText('PL')).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
+
+    await user.click(screen.getByText('PL'));
+
+    expect(setLanguageMock).not.toHaveBeenCalled();
+    expect(apiClient.updateUser).not.toHaveBeenCalled();
+  });
+
+  it('switches to English and saves it to the account while logged in', async () => {
+    mockI18n('pl');
+    const user = userEvent.setup();
+    render(<LanguageToggle />);
+
+    await user.click(screen.getByText('EN'));
 
     expect(apiClient.updateUser).toHaveBeenCalledWith({
       interfaceLanguage: 'en',
@@ -88,28 +91,25 @@ describe('Language screen', () => {
     expect(setLanguageMock).toHaveBeenCalledWith('en');
   });
 
-  it('reverts the optimistic change and shows the error when saving fails', async () => {
+  it('reverts the optimistic change when saving to the account fails', async () => {
     mockI18n('pl');
     vi.mocked(apiClient.updateUser).mockRejectedValue(new Error('offline'));
     const user = userEvent.setup();
-    render(<Language />);
+    render(<LanguageToggle />);
 
-    await user.click(screen.getByText('Angielski'));
+    await user.click(screen.getByText('EN'));
 
     expect(setLanguageMock).toHaveBeenNthCalledWith(1, 'en');
     expect(setLanguageMock).toHaveBeenNthCalledWith(2, 'pl');
-    expect(await screen.findByText('offline')).toBeInTheDocument();
   });
 
   it('switches locally without an account when logged out', async () => {
     mockI18n('pl');
     vi.mocked(getAuthenticatedState).mockReturnValue(null);
     const user = userEvent.setup();
-    render(<Language />);
+    render(<LanguageToggle />);
 
-    expect(screen.getByText('Język interfejsu')).toBeInTheDocument();
-
-    await user.click(screen.getByText('Angielski'));
+    await user.click(screen.getByText('EN'));
 
     expect(setLanguageMock).toHaveBeenCalledWith('en');
     expect(apiClient.updateUser).not.toHaveBeenCalled();

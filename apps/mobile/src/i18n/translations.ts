@@ -38,14 +38,9 @@ const pl = {
   'user.titleActive': 'Zalogowano',
   'user.messageActive':
     'Jesteś zalogowany i możesz zarządzać swoimi przepisami.',
-  'user.language': 'Język interfejsu',
 
-  'language.title': 'Język interfejsu',
-  'language.message': 'Wybierz język interfejsu aplikacji.',
   'language.polish': 'Polski',
   'language.english': 'Angielski',
-  'language.current': 'Obecny',
-  'language.saveFailed': 'Nie udało się zapisać języka.',
 
   'login.title': 'Logowanie',
   'login.subtitle': 'Wpisz dane konta, aby zarządzać swoimi przepisami.',
@@ -95,6 +90,7 @@ const pl = {
   'review.proposalText':
     'Nieznany składnik „{name}”. Dodaj jako nowy własny składnik albo wybierz istniejący z katalogu.',
 
+  'details.title': 'Przepis',
   'details.notFound': 'Nie znaleziono przepisu.',
   'details.loadFailed': 'Nie udało się pobrać przepisu.',
   'details.edit': 'Edytuj',
@@ -195,14 +191,9 @@ const en: Record<TranslationKey, string> = {
     'Your account has been confirmed, but an administrator has not activated access yet. You will get access to your private recipes once your account is activated.',
   'user.titleActive': 'Logged in',
   'user.messageActive': 'You are logged in and can manage your recipes.',
-  'user.language': 'Interface language',
 
-  'language.title': 'Interface language',
-  'language.message': 'Choose the app interface language.',
   'language.polish': 'Polish',
   'language.english': 'English',
-  'language.current': 'Current',
-  'language.saveFailed': 'Could not save the language.',
 
   'login.title': 'Log in',
   'login.subtitle': 'Enter your account details to manage your recipes.',
@@ -252,6 +243,7 @@ const en: Record<TranslationKey, string> = {
   'review.proposalText':
     'Unknown ingredient "{name}". Add it as a new custom ingredient or choose an existing one from the catalog.',
 
+  'details.title': 'Recipe',
   'details.notFound': 'Recipe not found.',
   'details.loadFailed': 'Could not load the recipe.',
   'details.edit': 'Edit',

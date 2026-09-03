@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/ui/icon';
+import { LanguageToggle } from '@/components/language-toggle';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { useI18n, type TranslationKey } from '@/src/i18n/i18n';
@@ -19,8 +20,31 @@ const NAV_ITEMS = [
   icon: LucideIcon;
 }>;
 
+const SCREEN_TITLES = [
+  { prefix: '/create-recipe/review', titleKey: 'review.title' },
+  { prefix: '/create-recipe', titleKey: 'create.title' },
+  { prefix: '/edit-recipe', titleKey: 'edit.title' },
+  { prefix: '/recipes', titleKey: 'details.title' },
+  { prefix: '/user', titleKey: 'nav.user' },
+  { prefix: '/login', titleKey: 'login.title' },
+  { prefix: '/register', titleKey: 'register.title' },
+  { prefix: '/confirm', titleKey: 'confirm.title' },
+  { prefix: '/', titleKey: 'nav.collection' },
+] as const satisfies ReadonlyArray<{
+  prefix: string;
+  titleKey: TranslationKey;
+}>;
+
 function isActive(pathname: string, href: Href) {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function screenTitleKey(pathname: string): TranslationKey {
+  return (
+    SCREEN_TITLES.find(
+      (entry) => pathname === entry.prefix || pathname.startsWith(entry.prefix),
+    )?.titleKey ?? 'nav.collection'
+  );
 }
 
 function NavItem({
@@ -85,8 +109,23 @@ export function AppShell({ children }: { children: ReactNode }) {
             textClassName="text-[15px]"
           />
         ))}
+        <View className="mt-auto border-t border-border pt-4">
+          <LanguageToggle className="self-start" />
+        </View>
       </View>
       <View className="flex-1">
+        <View
+          className="flex-row items-center justify-between gap-3 border-b border-border bg-card px-4 pb-3 md:hidden"
+          style={{ paddingTop: insets.top + 12 }}
+        >
+          <Text
+            className="flex-1 text-[17px] font-semibold text-foreground"
+            numberOfLines={1}
+          >
+            {t(screenTitleKey(pathname))}
+          </Text>
+          <LanguageToggle />
+        </View>
         <View className="flex-1 md:mx-auto md:w-full md:max-w-3xl">
           {children}
         </View>
