@@ -4,7 +4,7 @@
 
 **Blocked by:** 35: App shell with responsive navigation, 36: Interface language for logged-out users and account-language precedence
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
