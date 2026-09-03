@@ -4,14 +4,14 @@
 
 **Blocked by:** 35: App shell with responsive navigation
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
-- [ ] A pending-access user visiting the home route or the create-recipe route is redirected to the Account screen.
-- [ ] The shell does not offer the Recipe collection or Add recipe destinations to a pending-access user (Account remains).
-- [ ] The Account screen still shows the pending status message and email; activation flips the state and unlocks the destinations.
-- [ ] Routing tests cover pending-access redirects; `apps/mobile` typecheck, lint, and tests pass.
+- [x] A pending-access user visiting the home route or the create-recipe route is redirected to the Account screen.
+- [x] The shell does not offer the Recipe collection or Add recipe destinations to a pending-access user (Account remains).
+- [x] The Account screen still shows the pending status message and email; activation flips the state and unlocks the destinations.
+- [x] Routing tests cover pending-access redirects; `apps/mobile` typecheck, lint, and tests pass.
 
 ## Comments
 
