@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from '@/components/ui/card';
+import { RecipeTile } from '@/components/recipe-tile';
 import { Text } from '@/components/ui/text';
 import { apiClient } from '../src/api/client';
 import { formatServings, useI18n } from '../src/i18n/i18n';
@@ -131,23 +126,27 @@ export default function Index() {
             </View>
           )}
           {recipesQuery.isSuccess && recipesQuery.data.length > 0 && (
-            <View className="mt-3 w-full">
-              {recipesQuery.data.map((recipe) => (
-                <Pressable
-                  key={recipe.id}
-                  className="mt-3"
-                  onPress={() => router.push(`/recipes/${recipe.id}`)}
-                >
-                  <Card className="gap-1 py-4">
-                    <CardTitle className="text-lg">{recipe.title}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {formatServings(recipe.servingCount, language)}
-                    </CardDescription>
-                  </Card>
-                </Pressable>
-              ))}
+            <View className="mt-6 w-full">
+              <View className="-mx-2 -mb-2 flex-row flex-wrap">
+                {recipesQuery.data.map((recipe) => (
+                  <View
+                    key={recipe.id}
+                    className="w-full p-2 md:w-1/2 lg:w-1/3"
+                  >
+                    <RecipeTile
+                      title={recipe.title}
+                      description={recipe.description}
+                      servingsLabel={formatServings(
+                        recipe.servingCount,
+                        language,
+                      )}
+                      onPress={() => router.push(`/recipes/${recipe.id}`)}
+                    />
+                  </View>
+                ))}
+              </View>
               <Link href="/create-recipe" asChild>
-                <Button className="mt-5">
+                <Button className="mt-4 self-center">
                   <Text className="text-base font-semibold">
                     {t('home.addRecipe')}
                   </Text>
