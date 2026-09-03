@@ -16,10 +16,6 @@ const pl = {
   'nav.addRecipe': 'Dodaj przepis',
   'nav.user': 'Użytkownik',
 
-  'home.connecting': 'Łączenie z API...',
-  'home.connectFailed': 'Nie udało się połączyć z API.',
-  'home.apiWorking': 'API działa prawidłowo',
-  'home.connected': 'Połączenie zostało ustanowione.',
   'home.collection': 'Twoja kolekcja',
   'home.loadingRecipes': 'Ładowanie przepisów...',
   'home.loadRecipesFailed': 'Nie udało się pobrać przepisów.',
@@ -178,10 +174,6 @@ const en: Record<TranslationKey, string> = {
   'nav.addRecipe': 'Add recipe',
   'nav.user': 'User',
 
-  'home.connecting': 'Connecting to the API...',
-  'home.connectFailed': 'Could not connect to the API.',
-  'home.apiWorking': 'API is working correctly',
-  'home.connected': 'Connection established.',
   'home.collection': 'Your collection',
   'home.loadingRecipes': 'Loading recipes...',
   'home.loadRecipesFailed': 'Could not load recipes.',

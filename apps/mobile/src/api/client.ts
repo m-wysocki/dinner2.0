@@ -6,11 +6,9 @@ import {
   recipeCollectionResponseSchema,
   ingredientCatalogEntrySchema,
   extractRecipeDraftSchema,
-  healthResponseSchema,
   loginResponseSchema,
   type ApiErrorCode,
   type ConfirmEmailResponse,
-  type HealthResponse,
   type AuthUserResponse,
   type LoginRequest,
   type LoginResponse,
@@ -132,10 +130,6 @@ export async function request<T>(
 }
 
 export const apiClient = {
-  health(): Promise<HealthResponse> {
-    return request('/health', healthResponseSchema);
-  },
-
   register(input: RegisterRequest): Promise<RegisterResponse> {
     return request('/auth/register', authUserResponseSchema, {
       method: 'POST',
