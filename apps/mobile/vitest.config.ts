@@ -50,6 +50,33 @@ export default defineConfig({
           import.meta.url,
         ).pathname,
       },
+      // react-native-safe-area-context is native-only in tests; the shell only
+      // reads the insets, so a zeroed stub keeps the import graph loadable.
+      {
+        find: /^react-native-safe-area-context$/,
+        replacement: new URL(
+          './test/mocks/react-native-safe-area-context.js',
+          import.meta.url,
+        ).pathname,
+      },
+      // react-native-svg pulls React Native's Flow source through its
+      // "react-native" entry when loaded by Node; lucide icons only need
+      // renderable shape components, so stub them.
+      {
+        find: /^react-native-svg$/,
+        replacement: new URL(
+          './test/mocks/react-native-svg.js',
+          import.meta.url,
+        ).pathname,
+      },
+      // nativewind's runtime requires React Native's Flow source outside
+      // Metro; the Icon wrapper only needs cssInterop registration and the
+      // layout needs useColorScheme, so keep thin substitutes.
+      {
+        find: /^nativewind$/,
+        replacement: new URL('./test/mocks/nativewind.js', import.meta.url)
+          .pathname,
+      },
     ],
   },
   test: {
@@ -62,7 +89,7 @@ export default defineConfig({
         // Node's loader rejects when externalized; lib/theme.ts (pulled in by
         // className-migrated screens for spinner colors) imports its themes,
         // so let Vite transform the package instead.
-        inline: ['@react-navigation/native'],
+        inline: ['@react-navigation/native', 'lucide-react-native'],
       },
     },
   },

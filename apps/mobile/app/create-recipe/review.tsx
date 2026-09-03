@@ -3,6 +3,7 @@ import { router, Redirect } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { AppShell } from '@/components/app-shell';
 import { Text } from '@/components/ui/text';
 import { apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
@@ -37,60 +38,64 @@ export default function CreateReview() {
 
   if (savedRecipe) {
     return (
-      <View className="flex-1 bg-background p-6">
-        <Text className="pt-10 text-3xl font-bold text-foreground">
-          {t('create.savedTitle')}
-        </Text>
-        <Text className="mt-2 text-[22px] font-semibold text-foreground">
-          {savedRecipe.title}
-        </Text>
-        <Text className="mt-5 text-base leading-6 text-muted-foreground">
-          {t('create.savedMessage', {
-            servings: formatServings(
-              savedRecipe.servingCount,
-              language,
-              'accusative',
-            ),
-          })}
-        </Text>
-        <Button onPress={() => router.replace('/')} className="mt-6">
-          <Text>{t('app.backToHomeScreen')}</Text>
-        </Button>
-      </View>
+      <AppShell>
+        <View className="flex-1 bg-background p-6">
+          <Text className="pt-10 text-3xl font-bold text-foreground">
+            {t('create.savedTitle')}
+          </Text>
+          <Text className="mt-2 text-[22px] font-semibold text-foreground">
+            {savedRecipe.title}
+          </Text>
+          <Text className="mt-5 text-base leading-6 text-muted-foreground">
+            {t('create.savedMessage', {
+              servings: formatServings(
+                savedRecipe.servingCount,
+                language,
+                'accusative',
+              ),
+            })}
+          </Text>
+          <Button onPress={() => router.replace('/')} className="mt-6">
+            <Text>{t('app.backToHomeScreen')}</Text>
+          </Button>
+        </View>
+      </AppShell>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
-      <Text className="px-6 pt-10 text-3xl font-bold text-foreground">
-        {t('review.title')}
-      </Text>
-      <ScrollView className="max-h-[260px] grow-0 px-6">
-        <View className="mt-4 rounded-lg border border-panel-border bg-secondary p-3.5">
-          <Text className="text-[15px] font-bold text-panel-label">
-            {t('review.originalRecipe')}
-          </Text>
-          <Text className="mt-1 text-[13px] text-panel-hint">
-            {t('review.originalHint')}
-          </Text>
-          <Text className="mt-2 text-[15px] leading-[22px] text-secondary-foreground">
-            {stored.sourceText}
-          </Text>
-        </View>
-      </ScrollView>
-      <RecipeForm
-        initialValues={recipeFormValuesFromDraft(stored.draft)}
-        submitLabel={t('create.submit')}
-        onSubmit={async (input) => {
-          const saved = await apiClient.createRecipe({
-            ...input,
-            sourceText: stored.sourceText,
-          });
-          clearCreateDraft();
-          setSavedRecipe(saved);
-        }}
-        onCancel={() => router.back()}
-      />
-    </View>
+    <AppShell>
+      <View className="flex-1 bg-background">
+        <Text className="px-6 pt-10 text-3xl font-bold text-foreground">
+          {t('review.title')}
+        </Text>
+        <ScrollView className="max-h-[260px] grow-0 px-6">
+          <View className="mt-4 rounded-lg border border-panel-border bg-secondary p-3.5">
+            <Text className="text-[15px] font-bold text-panel-label">
+              {t('review.originalRecipe')}
+            </Text>
+            <Text className="mt-1 text-[13px] text-panel-hint">
+              {t('review.originalHint')}
+            </Text>
+            <Text className="mt-2 text-[15px] leading-[22px] text-secondary-foreground">
+              {stored.sourceText}
+            </Text>
+          </View>
+        </ScrollView>
+        <RecipeForm
+          initialValues={recipeFormValuesFromDraft(stored.draft)}
+          submitLabel={t('create.submit')}
+          onSubmit={async (input) => {
+            const saved = await apiClient.createRecipe({
+              ...input,
+              sourceText: stored.sourceText,
+            });
+            clearCreateDraft();
+            setSavedRecipe(saved);
+          }}
+          onCancel={() => router.back()}
+        />
+      </View>
+    </AppShell>
   );
 }

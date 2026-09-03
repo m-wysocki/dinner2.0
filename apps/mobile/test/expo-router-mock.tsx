@@ -29,6 +29,16 @@ export function useSegments() {
   return [];
 }
 
+let currentPathname = '/';
+
+export function usePathname() {
+  return currentPathname;
+}
+
+export function setPathname(pathname: string) {
+  currentPathname = pathname;
+}
+
 export function Redirect({ href }: { href: string }) {
   return null;
 }
@@ -60,8 +70,7 @@ export function Link({
     if (isValidElement(child)) {
       const childElement = child as ReactElement<Record<string, unknown>>;
       const childOnPress = childElement.props.onPress as
-        | (() => void)
-        | undefined;
+        (() => void) | undefined;
       return cloneElement(childElement, {
         onPress: () => {
           childOnPress?.();

@@ -113,7 +113,8 @@ describe('mobile shell routing', () => {
     expect(
       await screen.findByText('Nie masz jeszcze przepisów'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Dodaj przepis')).toBeInTheDocument();
+    // The action appears on the empty-collection screen and in the shell nav.
+    expect(screen.getAllByText('Dodaj przepis').length).toBeGreaterThan(0);
     expect(listRecipesMock).toHaveBeenCalled();
   });
 

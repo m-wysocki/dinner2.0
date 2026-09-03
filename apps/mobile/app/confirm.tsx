@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import * as Linking from 'expo-linking';
 import { Link } from 'expo-router';
-import { ActivityIndicator, ScrollView, useColorScheme, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { Button } from '@/components/ui/button';
+import { AppShell } from '@/components/app-shell';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { confirmEmailViaLink } from '../src/auth/confirm';
@@ -65,54 +71,54 @@ export default function Confirm() {
   }, [t]);
 
   return (
-    <ScrollView
-      contentContainerClassName="grow justify-center bg-background p-6"
-    >
-      <Text className="text-[28px] font-bold text-foreground">
-        {t('confirm.title')}
-      </Text>
+    <AppShell>
+      <ScrollView contentContainerClassName="grow bg-background p-6">
+        <Text className="text-[28px] font-bold text-foreground">
+          {t('confirm.title')}
+        </Text>
 
-      {state.kind === 'pending' && (
-        <View className="mt-8 items-center">
-          <ActivityIndicator color={THEME[colorScheme ?? 'light'].brand} />
-          <Text className="mt-3 text-base text-muted-foreground">
-            {t('confirm.checking')}
-          </Text>
-        </View>
-      )}
+        {state.kind === 'pending' && (
+          <View className="mt-8 items-center">
+            <ActivityIndicator color={THEME[colorScheme ?? 'light'].brand} />
+            <Text className="mt-3 text-base text-muted-foreground">
+              {t('confirm.checking')}
+            </Text>
+          </View>
+        )}
 
-      {state.kind === 'success' && (
-        <>
-          <Text className="mt-6 text-lg font-bold text-brand">
-            {t('confirm.success')}
-          </Text>
-          <Text className="mt-3 text-base leading-6 text-muted-foreground">
-            {t('confirm.successMessage')}
-          </Text>
-          <Link href="/" asChild>
-            <Button className="mt-6">
-              <Text className="text-base font-semibold">
-                {t('app.backToHome')}
-              </Text>
-            </Button>
-          </Link>
-        </>
-      )}
+        {state.kind === 'success' && (
+          <>
+            <Text className="mt-6 text-lg font-bold text-brand">
+              {t('confirm.success')}
+            </Text>
+            <Text className="mt-3 text-base leading-6 text-muted-foreground">
+              {t('confirm.successMessage')}
+            </Text>
+            <Link href="/" asChild>
+              <Button className="mt-6">
+                <Text className="text-base font-semibold">
+                  {t('app.backToHome')}
+                </Text>
+              </Button>
+            </Link>
+          </>
+        )}
 
-      {state.kind === 'failure' && (
-        <>
-          <Text className="mt-6 text-base font-semibold leading-6 text-destructive">
-            {state.message}
-          </Text>
-          <Link href="/" asChild>
-            <Button className="mt-6">
-              <Text className="text-base font-semibold">
-                {t('app.backToHome')}
-              </Text>
-            </Button>
-          </Link>
-        </>
-      )}
-    </ScrollView>
+        {state.kind === 'failure' && (
+          <>
+            <Text className="mt-6 text-base font-semibold leading-6 text-destructive">
+              {state.message}
+            </Text>
+            <Link href="/" asChild>
+              <Button className="mt-6">
+                <Text className="text-base font-semibold">
+                  {t('app.backToHome')}
+                </Text>
+              </Button>
+            </Link>
+          </>
+        )}
+      </ScrollView>
+    </AppShell>
   );
 }
