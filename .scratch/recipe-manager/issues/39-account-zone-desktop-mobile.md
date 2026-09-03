@@ -4,7 +4,7 @@
 
 **Blocked by:** 35: App shell with responsive navigation
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
