@@ -29,6 +29,18 @@ beforeEach(() => {
 });
 
 describe('Register screen', () => {
+  it('renders full-screen without the shell, with a PL/EN toggle in the corner', () => {
+    render(<Register />);
+
+    // No sidebar navigation, no tab bar.
+    expect(screen.queryByText('Kolekcja')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dodaj przepis')).not.toBeInTheDocument();
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
+    // Compact language toggle is available before logging in.
+    expect(screen.getByText('PL')).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
+  });
+
   it('renders the registration form initially', () => {
     render(<Register />);
 
@@ -62,7 +74,7 @@ describe('Register screen', () => {
     expect(await screen.findByText('Konto utworzone')).toBeInTheDocument();
   });
 
-  it('shows the pending-activation message after success', async () => {
+  it('shows the pending-activation message after success and links to login', async () => {
     submitRegistrationMock.mockResolvedValue({ kind: 'success' });
 
     const user = userEvent.setup();
@@ -74,6 +86,10 @@ describe('Register screen', () => {
     expect(
       screen.getByText(/oczekiwać na aktywację przez administratora/),
     ).toBeInTheDocument();
+
+    await user.click(screen.getByText('Przejdź do logowania'));
+
+    expect(router.push).toHaveBeenCalledWith('/login');
   });
 
   it('presents the API error message on failure', async () => {

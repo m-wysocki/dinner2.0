@@ -26,8 +26,6 @@ const pl = {
   'home.addRecipe': 'Dodaj przepis',
   'home.accessPending': 'Dostęp oczekuje na aktywację',
   'home.checkAccount': 'Sprawdź status konta',
-  'home.login': 'Zaloguj się',
-  'home.noAccount': 'Nie masz konta? Zarejestruj się.',
 
   'servings.one': 'porcja',
   'servings.few': 'porcje',
@@ -50,6 +48,8 @@ const pl = {
   'login.passwordPlaceholder': 'Hasło',
   'login.submit': 'Zaloguj się',
   'login.noAccount': 'Nie masz jeszcze konta? Zarejestruj się.',
+
+  'auth.goToLogin': 'Przejdź do logowania',
 
   'register.title': 'Załóż konto',
   'register.subtitle': 'Zarejestruj się, aby zarządzać swoimi przepisami.',
@@ -182,8 +182,6 @@ const en: Record<TranslationKey, string> = {
   'home.addRecipe': 'Add recipe',
   'home.accessPending': 'Access is pending activation',
   'home.checkAccount': 'Check account status',
-  'home.login': 'Log in',
-  'home.noAccount': "Don't have an account? Register.",
 
   'servings.one': 'serving',
   'servings.few': 'servings',
@@ -201,6 +199,8 @@ const en: Record<TranslationKey, string> = {
 
   'login.title': 'Log in',
   'login.subtitle': 'Enter your account details to manage your recipes.',
+
+  'auth.goToLogin': 'Go to login',
   'login.emailPlaceholder': 'Email address',
   'login.passwordPlaceholder': 'Password',
   'login.submit': 'Log in',

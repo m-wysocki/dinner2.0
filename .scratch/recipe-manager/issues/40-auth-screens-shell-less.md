@@ -8,11 +8,11 @@
 
 ## Definition of done
 
-- [ ] Login and registration screens have no sidebar and no bottom tab bar.
-- [ ] Both screens show a compact PL/EN toggle in a corner; switching works for logged-out users and persists per ticket 36.
-- [ ] Logged-out visit to the home route redirects to the login screen; no landing buttons remain.
-- [ ] The email confirmation screen is consistent with the auth screens' shell-less layout.
-- [ ] Routing tests cover the redirect; `apps/mobile` typecheck, lint, and tests pass.
+- [x] Login and registration screens have no sidebar and no bottom tab bar.
+- [x] Both screens show a compact PL/EN toggle in a corner; switching works for logged-out users and persists per ticket 36.
+- [x] Logged-out visit to the home route redirects to the login screen; no landing buttons remain.
+- [x] The email confirmation screen is consistent with the auth screens' shell-less layout.
+- [x] Routing tests cover the redirect; `apps/mobile` typecheck, lint, and tests pass.
 
 ## Comments
 

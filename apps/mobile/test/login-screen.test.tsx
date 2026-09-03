@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Login from '../app/login';
 import { submitLogin } from '../src/auth/login';
 import type { LoginFormResult } from '../src/auth/login';
+import { I18nProvider } from '../src/i18n/i18n';
 import { router } from './expo-router-mock';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
@@ -29,6 +30,35 @@ beforeEach(() => {
 });
 
 describe('Login screen', () => {
+  it('renders full-screen without the shell, with a PL/EN toggle in the corner', () => {
+    render(<Login />);
+
+    // No sidebar navigation, no tab bar.
+    expect(screen.queryByText('Kolekcja')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dodaj przepis')).not.toBeInTheDocument();
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
+    // Compact language toggle is available before logging in.
+    expect(screen.getByText('PL')).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
+  });
+
+  it('switches the interface to English from the login screen while logged out', async () => {
+    const user = userEvent.setup();
+    render(
+      <I18nProvider>
+        <Login />
+      </I18nProvider>,
+    );
+
+    await user.click(screen.getByText('EN'));
+
+    expect(screen.queryByText('Logowanie')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Enter your account details to manage your recipes.'),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Email address')).toBeInTheDocument();
+  });
+
   it('renders the login form initially', () => {
     render(<Login />);
 

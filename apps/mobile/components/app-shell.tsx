@@ -27,9 +27,6 @@ const SCREEN_TITLES = [
   { prefix: '/edit-recipe', titleKey: 'edit.title' },
   { prefix: '/recipes', titleKey: 'details.title' },
   { prefix: '/user', titleKey: 'nav.user' },
-  { prefix: '/login', titleKey: 'login.title' },
-  { prefix: '/register', titleKey: 'register.title' },
-  { prefix: '/confirm', titleKey: 'confirm.title' },
   { prefix: '/', titleKey: 'nav.collection' },
 ] as const satisfies ReadonlyArray<{
   prefix: string;
