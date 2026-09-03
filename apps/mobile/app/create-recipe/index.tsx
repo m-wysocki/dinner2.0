@@ -15,6 +15,7 @@ import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { ApiError, apiClient } from '../../src/api/client';
 import { getAuthenticatedState } from '../../src/auth/session';
+import { isAccessActive } from '../../src/auth/access';
 import { useI18n } from '../../src/i18n/i18n';
 import { setCreateDraft } from '../../src/recipe/create-draft';
 
@@ -32,7 +33,7 @@ export default function CreateRecipe() {
     return <Redirect href="/login" />;
   }
 
-  if (state.user.accessStatus !== 'ACTIVE' || !state.user.emailConfirmedAt) {
+  if (!isAccessActive(state)) {
     return <Redirect href="/user" />;
   }
 
