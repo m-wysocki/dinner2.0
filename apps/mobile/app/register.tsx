@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
-import { AppShell } from '@/components/app-shell';
+import { AuthScreen } from '@/components/auth-screen';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
@@ -48,7 +48,7 @@ export default function Register() {
 
   if (submit.kind === 'success') {
     return (
-      <AppShell>
+      <AuthScreen>
         <View className="flex-1 bg-background p-6">
           <Text className="text-[28px] font-bold text-foreground">
             {t('register.successTitle')}
@@ -56,20 +56,20 @@ export default function Register() {
           <Text className="mb-8 mt-3 text-base leading-6 text-muted-foreground">
             {t('register.successMessage')}
           </Text>
-          <Link href="/" asChild>
+          <Link href="/login" asChild>
             <Button>
               <Text className="text-base font-semibold">
-                {t('app.backToHome')}
+                {t('auth.goToLogin')}
               </Text>
             </Button>
           </Link>
         </View>
-      </AppShell>
+      </AuthScreen>
     );
   }
 
   return (
-    <AppShell>
+    <AuthScreen>
       <KeyboardAvoidingView
         className="flex-1 bg-background"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -128,13 +128,8 @@ export default function Register() {
             )}
           </Button>
 
-          <Link href="/" asChild>
-            <Text className="mt-5 text-center text-[15px] text-muted-foreground">
-              {t('app.back')}
-            </Text>
-          </Link>
         </ScrollView>
       </KeyboardAvoidingView>
-    </AppShell>
+    </AuthScreen>
   );
 }

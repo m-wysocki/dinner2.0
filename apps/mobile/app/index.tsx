@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, router } from 'expo-router';
+import { Link, Redirect, router } from 'expo-router';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/app-shell';
@@ -20,6 +20,11 @@ export default function Index() {
     queryFn: () => apiClient.listRecipes(),
     enabled: isActiveUser,
   });
+
+  if (!authenticatedState) {
+    // There is no landing page: logged-out visitors go straight to login.
+    return <Redirect href="/login" />;
+  }
 
   return (
     <AppShell>
@@ -123,22 +128,7 @@ export default function Index() {
               </Button>
             </Link>
           </View>
-        ) : (
-          <>
-            <Link href="/login" asChild>
-              <Button className="mt-5 w-full">
-                <Text className="text-base font-semibold">
-                  {t('home.login')}
-                </Text>
-              </Button>
-            </Link>
-            <Link href="/register" asChild>
-              <Text className="mt-3 text-center text-[15px] text-muted-foreground">
-                {t('home.noAccount')}
-              </Text>
-            </Link>
-          </>
-        )}
+        ) : null}
       </ScrollView>
     </AppShell>
   );

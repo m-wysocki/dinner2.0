@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
-import { AppShell } from '@/components/app-shell';
+import { AuthScreen } from '@/components/auth-screen';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { confirmEmailViaLink } from '../src/auth/confirm';
@@ -71,7 +71,7 @@ export default function Confirm() {
   }, [t]);
 
   return (
-    <AppShell>
+    <AuthScreen>
       <ScrollView contentContainerClassName="grow bg-background p-6">
         <Text className="text-[28px] font-bold text-foreground">
           {t('confirm.title')}
@@ -94,10 +94,10 @@ export default function Confirm() {
             <Text className="mt-3 text-base leading-6 text-muted-foreground">
               {t('confirm.successMessage')}
             </Text>
-            <Link href="/" asChild>
+            <Link href="/login" asChild>
               <Button className="mt-6">
                 <Text className="text-base font-semibold">
-                  {t('app.backToHome')}
+                  {t('auth.goToLogin')}
                 </Text>
               </Button>
             </Link>
@@ -109,16 +109,16 @@ export default function Confirm() {
             <Text className="mt-6 text-base font-semibold leading-6 text-destructive">
               {state.message}
             </Text>
-            <Link href="/" asChild>
+            <Link href="/login" asChild>
               <Button className="mt-6">
                 <Text className="text-base font-semibold">
-                  {t('app.backToHome')}
+                  {t('auth.goToLogin')}
                 </Text>
               </Button>
             </Link>
           </>
         )}
       </ScrollView>
-    </AppShell>
+    </AuthScreen>
   );
 }

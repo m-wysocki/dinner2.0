@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Linking from 'expo-linking';
 import Confirm from '../app/confirm';
@@ -31,6 +32,20 @@ beforeEach(() => {
 });
 
 describe('Confirm screen', () => {
+  it('renders full-screen without the shell, with a PL/EN toggle in the corner', () => {
+    getInitialURL.mockReturnValue(new Promise(() => {}));
+
+    render(<Confirm />);
+
+    // No sidebar navigation, no tab bar.
+    expect(screen.queryByText('Kolekcja')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dodaj przepis')).not.toBeInTheDocument();
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
+    // Compact language toggle is available while confirming.
+    expect(screen.getByText('PL')).toBeInTheDocument();
+    expect(screen.getByText('EN')).toBeInTheDocument();
+  });
+
   it('shows a pending state while the link is being checked', () => {
     getInitialURL.mockReturnValue(new Promise(() => {}));
 
@@ -50,6 +65,18 @@ describe('Confirm screen', () => {
       await screen.findByText('Adres e-mail został potwierdzony.'),
     ).toBeInTheDocument();
     expect(confirmMock).toHaveBeenCalledWith(url);
+  });
+
+  it('links to the login screen after a successful confirmation', async () => {
+    const user = userEvent.setup();
+    getInitialURL.mockResolvedValue(url);
+    confirmMock.mockResolvedValue({ kind: 'success' });
+
+    render(<Confirm />);
+
+    await user.click(await screen.findByText('Przejdź do logowania'));
+
+    expect(router.push).toHaveBeenCalledWith('/login');
   });
 
   it('presents the API error message when confirmation fails', async () => {

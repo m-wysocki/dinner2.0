@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Index from '../app/index';
-import Register from '../app/register';
+import Login from '../app/login';
 import { apiClient } from '../src/api/client';
 import { router } from './expo-router-mock';
 import {
@@ -33,35 +33,28 @@ beforeEach(() => {
   clearAuthenticatedState();
   router.push.mockClear();
   router.back.mockClear();
+  router.replace.mockClear();
   listRecipesMock.mockResolvedValue([]);
 });
 
 describe('mobile shell routing', () => {
-  it('navigates from the root screen to the register route', async () => {
-    const user = userEvent.setup();
+  it('redirects logged-out visits to the login route instead of a landing page', () => {
     renderRootScreen();
 
-    await user.click(screen.getByText('Nie masz konta? Zarejestruj się.'));
+    expect(router.replace).toHaveBeenCalledWith('/login');
+    // No landing buttons remain.
+    expect(
+      screen.queryByText('Nie masz konta? Zarejestruj się.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('navigates from the login screen to the register route', async () => {
+    const user = userEvent.setup();
+    render(<Login />);
+
+    await user.click(screen.getByText('Nie masz jeszcze konta? Zarejestruj się.'));
 
     expect(router.push).toHaveBeenCalledWith('/register');
-  });
-
-  it('navigates from the root screen to the login route', async () => {
-    const user = userEvent.setup();
-    renderRootScreen();
-
-    await user.click(screen.getByText('Zaloguj się'));
-
-    expect(router.push).toHaveBeenCalledWith('/login');
-  });
-
-  it('navigates back from the register screen to the root', async () => {
-    const user = userEvent.setup();
-    render(<Register />);
-
-    await user.click(screen.getByText('Wróć'));
-
-    expect(router.push).toHaveBeenCalledWith('/');
   });
 
   it('does not duplicate the account zone inside the collection screen body', async () => {

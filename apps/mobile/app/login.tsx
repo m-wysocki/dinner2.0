@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Button } from '@/components/ui/button';
-import { AppShell } from '@/components/app-shell';
+import { AuthScreen } from '@/components/auth-screen';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
@@ -46,7 +46,7 @@ export default function Login() {
   }
 
   return (
-    <AppShell>
+    <AuthScreen>
       <KeyboardAvoidingView
         className="flex-1 bg-background"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -110,13 +110,8 @@ export default function Login() {
               {t('login.noAccount')}
             </Text>
           </Link>
-          <Link href="/" asChild>
-            <Text className="mt-5 text-center text-[15px] text-muted-foreground">
-              {t('app.back')}
-            </Text>
-          </Link>
         </ScrollView>
       </KeyboardAvoidingView>
-    </AppShell>
+    </AuthScreen>
   );
 }

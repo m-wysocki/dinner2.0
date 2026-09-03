@@ -40,6 +40,7 @@ export function setPathname(pathname: string) {
 }
 
 export function Redirect({ href }: { href: string }) {
+  router.replace(href);
   return null;
 }
 
