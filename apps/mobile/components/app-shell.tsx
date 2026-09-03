@@ -6,6 +6,7 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/ui/icon';
 import { LanguageToggle } from '@/components/language-toggle';
+import { UserMenu } from '@/components/user-menu';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { useI18n, type TranslationKey } from '@/src/i18n/i18n';
@@ -111,6 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
         <View className="mt-auto border-t border-border pt-4">
           <LanguageToggle className="self-start" />
+          <UserMenu className="mt-3" />
         </View>
       </View>
       <View className="flex-1">

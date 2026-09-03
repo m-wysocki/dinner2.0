@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppShell } from '@/components/app-shell';
 import { Text } from '@/components/ui/text';
 import { router, setPathname } from './expo-router-mock';
+import {
+  clearAuthenticatedState,
+  getAuthenticatedState,
+  setAuthenticatedState,
+} from '../src/auth/session';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
 
@@ -16,9 +21,26 @@ function renderShell(pathname = '/') {
   );
 }
 
+const activeState = {
+  session: {
+    accessToken: 'access-token',
+    refreshToken: 'refresh-token',
+    expiresAt: Math.floor(Date.now() / 1000) + 3600,
+  },
+  user: {
+    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    email: 'user@example.com',
+    emailConfirmedAt: '2026-08-27T12:00:00.000Z',
+    accessStatus: 'ACTIVE' as const,
+    interfaceLanguage: 'pl' as const,
+  },
+};
+
 beforeEach(() => {
   setPathname('/');
+  clearAuthenticatedState();
   router.push.mockClear();
+  router.replace.mockClear();
 });
 
 describe('AppShell', () => {
@@ -105,5 +127,51 @@ describe('AppShell', () => {
 
     expect(screen.getAllByText('PL')).toHaveLength(2);
     expect(screen.getAllByText('EN')).toHaveLength(2);
+  });
+
+  it('hides the user menu when there is no session', () => {
+    renderShell();
+
+    expect(screen.queryByText('user@example.com')).not.toBeInTheDocument();
+  });
+
+  it('shows the signed-in email in the sidebar with an expandable sign-out menu', async () => {
+    await setAuthenticatedState(activeState);
+    const user = userEvent.setup();
+    renderShell();
+
+    // The email appears only once: in the sidebar user control.
+    expect(screen.getAllByText('user@example.com')).toHaveLength(1);
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('user@example.com'));
+    expect(screen.getByText('Wyloguj się')).toBeInTheDocument();
+  });
+
+  it('signs out from the user menu without a confirmation and lands on login', async () => {
+    await setAuthenticatedState(activeState);
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(screen.getByText('user@example.com'));
+    await user.click(screen.getByText('Wyloguj się'));
+
+    expect(router.replace).toHaveBeenCalledWith('/login');
+    expect(getAuthenticatedState()).toBeNull();
+    // The menu closes on selection.
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
+    expect(screen.queryByText('user@example.com')).not.toBeInTheDocument();
+  });
+
+  it('closes the user menu on an interaction outside of it', async () => {
+    await setAuthenticatedState(activeState);
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(screen.getByText('user@example.com'));
+    expect(screen.getByText('Wyloguj się')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Screen content'));
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
   });
 });

@@ -64,7 +64,7 @@ describe('mobile shell routing', () => {
     expect(router.push).toHaveBeenCalledWith('/');
   });
 
-  it('shows the authenticated state and logout action on the root screen', async () => {
+  it('does not duplicate the account zone inside the collection screen body', async () => {
     await setAuthenticatedState({
       session: {
         accessToken: 'access-token',
@@ -79,15 +79,13 @@ describe('mobile shell routing', () => {
         interfaceLanguage: 'pl',
       },
     });
-    const user = userEvent.setup();
     renderRootScreen();
 
     expect(screen.getByText('Twoja kolekcja')).toBeInTheDocument();
-    expect(screen.getByText('user@example.com')).toBeInTheDocument();
-
-    await user.click(screen.getByText('Wyloguj się'));
-
-    expect(router.replace).toHaveBeenCalledWith('/');
+    // The email lives only in the sidebar user control, not in the screen body.
+    expect(screen.getAllByText('user@example.com')).toHaveLength(1);
+    // Sign-out is not offered in the collection screen body.
+    expect(screen.queryByText('Wyloguj się')).not.toBeInTheDocument();
   });
 
   it('shows an empty collection with an action to create a recipe', async () => {

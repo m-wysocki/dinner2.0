@@ -6,7 +6,10 @@ import CreateRecipe from '../app/create-recipe/index';
 import { mockI18n } from './i18n-mock';
 
 vi.mock('expo-router', async () => await import('./expo-router-mock'));
-vi.mock('../src/auth/session', () => ({ getAuthenticatedState: vi.fn() }));
+vi.mock('../src/auth/session', () => ({
+  getAuthenticatedState: vi.fn(),
+  subscribeToSession: vi.fn(() => () => undefined),
+}));
 vi.mock('../src/api/client', () => ({
   ApiError: class ApiError extends Error {
     status = 0;

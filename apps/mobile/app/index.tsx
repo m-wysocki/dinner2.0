@@ -7,10 +7,7 @@ import { RecipeTile } from '@/components/recipe-tile';
 import { Text } from '@/components/ui/text';
 import { apiClient } from '../src/api/client';
 import { formatServings, useI18n } from '../src/i18n/i18n';
-import {
-  clearAuthenticatedState,
-  getAuthenticatedState,
-} from '../src/auth/session';
+import { getAuthenticatedState } from '../src/auth/session';
 
 export default function Index() {
   const { t, language } = useI18n();
@@ -39,9 +36,6 @@ export default function Index() {
           <View className="mt-8 w-full items-center">
             <Text className="text-2xl font-bold text-foreground">
               {t('home.collection')}
-            </Text>
-            <Text className="mt-2 text-center text-muted-foreground">
-              {authenticatedState.user.email}
             </Text>
             {recipesQuery.isPending && (
               <View className="mt-6 items-center">
@@ -115,26 +109,11 @@ export default function Index() {
                 </Link>
               </View>
             )}
-            <Button
-              variant="ghost"
-              className="mt-4"
-              onPress={() => {
-                clearAuthenticatedState();
-                router.replace('/');
-              }}
-            >
-              <Text className="text-[15px] font-semibold text-destructive">
-                {t('app.logout')}
-              </Text>
-            </Button>
           </View>
         ) : authenticatedState ? (
           <View className="mt-8 w-full items-center">
             <Text className="text-2xl font-bold text-foreground">
               {t('home.accessPending')}
-            </Text>
-            <Text className="mt-2 text-center text-muted-foreground">
-              {authenticatedState.user.email}
             </Text>
             <Link href="/user" asChild>
               <Button className="mt-5">
@@ -143,18 +122,6 @@ export default function Index() {
                 </Text>
               </Button>
             </Link>
-            <Button
-              variant="ghost"
-              className="mt-4"
-              onPress={() => {
-                clearAuthenticatedState();
-                router.replace('/');
-              }}
-            >
-              <Text className="text-[15px] font-semibold text-destructive">
-                {t('app.logout')}
-              </Text>
-            </Button>
           </View>
         ) : (
           <>

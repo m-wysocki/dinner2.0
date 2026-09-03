@@ -8,12 +8,12 @@
 
 ## Definition of done
 
-- [ ] Desktop sidebar bottom shows the user's email and a user control that expands to reveal "Wyloguj się".
-- [ ] Mobile keeps sign-out on the Account screen.
-- [ ] No sign-out button remains in the collection screen body; the email is not duplicated in screen content.
-- [ ] Signing out clears the session and lands on the login screen without a confirmation dialog.
-- [ ] Dropdown closes on selection and on outside interaction; works with keyboard/reader on web.
-- [ ] `apps/mobile` typecheck, lint, and tests pass (sign-out tests updated to the new placement).
+- [x] Desktop sidebar bottom shows the user's email and a user control that expands to reveal "Wyloguj się".
+- [x] Mobile keeps sign-out on the Account screen.
+- [x] No sign-out button remains in the collection screen body; the email is not duplicated in screen content.
+- [x] Signing out clears the session and lands on the login screen without a confirmation dialog.
+- [x] Dropdown closes on selection and on outside interaction; works with keyboard/reader on web.
+- [x] `apps/mobile` typecheck, lint, and tests pass (sign-out tests updated to the new placement).
 
 ## Comments
 
