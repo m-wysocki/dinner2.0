@@ -52,13 +52,6 @@ export default function User() {
             </Text>
           </Button>
         </Link>
-        <Link href="/language" asChild>
-          <Button className="mt-8 w-full">
-            <Text className="text-base font-semibold">
-              {t('user.language')}
-            </Text>
-          </Button>
-        </Link>
         <Button
           variant="ghost"
           className="mt-5 w-full"
