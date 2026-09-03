@@ -4,16 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 ## Definition of done
 
-- [ ] Desktop shows a left sidebar with the three navigation destinations; mobile shows a bottom tab bar with the same three destinations.
-- [ ] The active destination is visually highlighted in both sidebar and tab bar.
-- [ ] Screen content is top-aligned and constrained to a centered max-width container on desktop; the old vertical centering is gone.
-- [ ] All current screens (collection, create/review, details, edit, account) render inside the shell.
-- [ ] Layout verified on both narrow (mobile) and wide (desktop/web) viewports.
-- [ ] `apps/mobile` typecheck, lint, and tests pass (existing tests updated to the new markup).
+- [x] Desktop shows a left sidebar with the three navigation destinations; mobile shows a bottom tab bar with the same three destinations.
+- [x] The active destination is visually highlighted in both sidebar and tab bar.
+- [x] Screen content is top-aligned and constrained to a centered max-width container on desktop; the old vertical centering is gone.
+- [x] All current screens (collection, create/review, details, edit, account) render inside the shell.
+- [x] Layout verified on both narrow (mobile) and wide (desktop/web) viewports.
+- [x] `apps/mobile` typecheck, lint, and tests pass (existing tests updated to the new markup).
 
 ## Comments
 
